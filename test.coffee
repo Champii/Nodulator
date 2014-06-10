@@ -1,11 +1,16 @@
 CoffeeHelper = require './lib/CoffeeHelper'
 
-class TestResource extends CoffeeHelper.Resource
+TestResource = CoffeeHelper.Resource 'test'
 
-  constructor: (blob) ->
-    super blob
+toAdd =
+  test: 1
 
-TestResource.name = 'Test'
+TestResource.Deserialize toAdd, (err, test) ->
+  return console.log err if err?
 
-TestResource.Fetch 1, (err, test) ->
-  console.log err, test
+  test.Save (err) ->
+    return console.log err if err?
+
+#   TestResource.Fetch 1, (err, test) ->
+#     console.log err, test
+

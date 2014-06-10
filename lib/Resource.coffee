@@ -1,13 +1,12 @@
 _ = require 'underscore'
 async = require 'async'
 
-Db = require './Db'
+table = require './connectors/sql'
 
 class Resource
 
-  @db = null
-  @type = null
-  @name = null
+  @table = null
+  @resName = null
 
   constructor: (blob) ->
     for key, value of blob
@@ -16,7 +15,7 @@ class Resource
   Save: (done) ->
     exists = @id?
 
-    Resource.db.Save @Serialize(), (err, id) =>
+    Resource.table.Save @Serialize(), (err, id) =>
       return done err if err?
 
       if !exists
@@ -28,25 +27,24 @@ class Resource
     res = {}
     for key, value of @ when typeof value isnt 'function'
       res[key] = value
-
     res
 
   ToJSON: ->
     @Serialize()
 
   @Fetch: (id, done) ->
-    Resource.db.Fetch id, (err, blob) ->
+    Resource.table.Find id, (err, blob) ->
       return done err if err?
 
       Resource.Deserialize blob, done
 
   @List: (done) ->
-    @db.List (err, ids) =>
+    Resource.table.Select 'id', {}, {}, (err, ids) =>
       return done err if err?
 
-      async.map _(ids).pluck('id'), Resource.type.Fetch, done
+      async.map _(ids).pluck('id'), Resource.Fetch, done
 
   @Deserialize: (blob, done) ->
-    done null, new @type blob
+    done null, new Resource blob
 
 module.exports = Resource
