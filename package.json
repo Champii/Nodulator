@@ -1,0 +1,21 @@
+{
+  "name": "coffeehelper",
+  "version": "0.0.1",
+  "dependencies": {
+    "async": "*",
+    "express": "*",
+    "underscore": "*",
+    "coffee-middleware": "*",
+    "socket.io": "*",
+    "passport": "*",
+    "passport-local": "*",
+    "cookie-parser": "*",
+    "body-parser": "*",
+    "express-session": "*",
+    "jade": "*",
+    "mocha": "*",
+    "assert": "*",
+    "superagent": "*",
+    "supertest": "*"
+  }
+}
