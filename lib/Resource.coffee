@@ -1,12 +1,23 @@
 _ = require 'underscore'
 async = require 'async'
 
-table = require './connectors/sql'
+table = require('./connectors/sql').table
+Model = require './Model'
+
+# sql = null
+
+self = null
+
+excludedMembers = [
+  'table'
+  'app'
+  'resName']
 
 class Resource
 
-  @table = null
-  @resName = null
+  table: null
+  app: null
+  resName: null
 
   constructor: (blob) ->
     for key, value of blob
@@ -15,7 +26,7 @@ class Resource
   Save: (done) ->
     exists = @id?
 
-    Resource.table.Save @Serialize(), (err, id) =>
+    @table.Save @Serialize(), (err, id) =>
       return done err if err?
 
       if !exists
@@ -25,26 +36,49 @@ class Resource
 
   Serialize: ->
     res = {}
-    for key, value of @ when typeof value isnt 'function'
+    for key, value of @ when typeof value isnt 'function' and key not in excludedMembers
       res[key] = value
     res
 
   ToJSON: ->
     @Serialize()
 
+  # @Method: (name, instanciated, func) =>
+  #   if instanciated
+  #     @::[name] = func
+  #     # console.log @[name]
+  #   else
+  #     Resource[name] = func
+  #     # console.log Resource[name]
+
+  @Route: (type, url, done) ->
+    @app[type] '/api/1/' + @resName + url, done
+
   @Fetch: (id, done) ->
-    Resource.table.Find id, (err, blob) ->
+    @table.Find id, (err, blob) ->
       return done err if err?
 
       Resource.Deserialize blob, done
 
   @List: (done) ->
-    Resource.table.Select 'id', {}, {}, (err, ids) =>
+    @table.Select 'id', {}, {}, (err, ids) =>
       return done err if err?
 
-      async.map _(ids).pluck('id'), Resource.Fetch, done
+      async.map _(ids).pluck('id'), (item, done) =>
+        @Fetch item, done
+      , done
 
   @Deserialize: (blob, done) ->
-    done null, new Resource blob
+    res = new Resource blob
+    res.table = @table
+    res.resName = @resName
+    res.app = @app
 
-module.exports = Resource
+    done null, res
+
+  @SetHelpers: (resName, app) ->
+    @table = table resName
+    @resName = resName
+    @app = app
+
+module.exports = -> _({}).extend Resource

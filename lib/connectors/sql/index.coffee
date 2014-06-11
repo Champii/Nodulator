@@ -49,4 +49,3 @@ module.exports.table = (name) ->
     driver.tables[name] = []
 
   return new Table name
-
