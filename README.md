@@ -18,6 +18,8 @@ Set of class for CoffeeScript to handle arbstract models
 
         @Save done
 
+  (Here we have a custom method: LevelUp)
+
   It create automaticaly a table (in ram for the moment)
 
   It create also default routes
@@ -29,9 +31,9 @@ Set of class for CoffeeScript to handle arbstract models
 
   It create automaticaly 4 method
 
-    Fetch(id, done)*
-    List(done)*
-    Deserialize(blob, done)*
+    *Fetch(id, done)
+    *List(done)
+    *Deserialize(blob, done)
     Save(done)
     Serialize()
     ToJSON()
