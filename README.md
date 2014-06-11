@@ -19,13 +19,16 @@ Set of class for CoffeeScript to handle arbstract models
         @Save done
 
   It create automaticaly a table (in ram for the moment)
+
   It create also default routes
+
     GET   /api/1/player       => List
     GET   /api/1/player/:id   => Get One
     POST  /api/1/player       => Create
     PUT   /api/1/player/:id   => Update
 
   It create automaticaly 4 method
+
     Fetch(id, done)*
     List(done)*
     Deserialize(blob, done)*
