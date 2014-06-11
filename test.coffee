@@ -2,7 +2,8 @@ CoffeeHelper = require './lib/CoffeeHelper'
 
 class TestResource extends CoffeeHelper.Resource 'test'
 
-  constructor: (blob) ->
+  # constructor: (blob) ->
+  #   super blob
 
   LevelUp: (done) ->
     @level++
