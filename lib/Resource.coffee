@@ -2,11 +2,6 @@ _ = require 'underscore'
 async = require 'async'
 
 table = require('./connectors/sql').table
-Model = require './Model'
-
-# sql = null
-
-self = null
 
 excludedMembers = [
   'table'

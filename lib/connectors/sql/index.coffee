@@ -1,8 +1,3 @@
-# Settings = require 'settings'
-
-# env = require '../../../../settings/environement.js'
-# config = new Settings(require '../../../../settings/config', {env: env.forceEnv})
-
 driver = require './SqlMem'
 
 class Table

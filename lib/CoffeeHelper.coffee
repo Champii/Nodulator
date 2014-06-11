@@ -3,11 +3,6 @@ express = require 'express'
 http = require 'http'
 bodyParser = require 'body-parser'
 
-# Resource = require './Resource'
-# Model = require './Model'
-
-sql = require './connectors/sql'
-
 class CoffeeHelper
 
   app: null
