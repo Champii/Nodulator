@@ -1,7 +1,27 @@
 CoffeeHelper
 ============
 
-Set of class for CoffeeScript to handle arbstract models
+  Set of class for CoffeeScript to create tiny API easely
+
+  (Can be used in Javascript, obviously, but not tested yet)
+
+  Based on:
+    async
+    express
+    underscore
+    coffee-middleware
+    socket.io
+    passport
+    passport-local
+    cookie-parser
+    body-parser
+    express-session
+    jade
+    mocha
+    assert
+    superagent
+    supertest
+
 
 #Usage#
 
@@ -46,7 +66,6 @@ Set of class for CoffeeScript to handle arbstract models
 
     * Class methods
 
-
   You can define custom routes:
 
     PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
@@ -58,5 +77,18 @@ Set of class for CoffeeScript to handle arbstract models
 
           res.send 200, player.ToJSON()
 
+  It define :
+    PUT   /api/1/player/:id/levelUp
 
 
+#To Do#
+
+  By order of priority
+
+    Persistant DB (sql/mongo)
+    Clean dirty tricks (@SetHelpers in Resource)
+    Config system (ex: Table/Document, depends on db type)
+    General architecture and file generation
+    Basic view system
+    Better routing system (Auto add on custom method ?)
+    Basic Auth (Passport ?)
