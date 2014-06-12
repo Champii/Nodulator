@@ -6,6 +6,7 @@ CoffeeHelper
   (Can be used in Javascript, obviously, but not tested yet)
 
   Based on:
+
     async
     express
     underscore
