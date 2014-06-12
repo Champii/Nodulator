@@ -79,6 +79,7 @@ CoffeeHelper
           res.send 200, player.ToJSON()
 
   It define :
+
     PUT   /api/1/player/:id/levelUp
 
 
