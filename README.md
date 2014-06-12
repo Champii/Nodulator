@@ -34,7 +34,7 @@ CoffeeHelper
 
     APlayer = CoffeeHelper.Resource 'player'
 
-  It create automaticaly a table (in ram for the moment)
+  It create automaticaly a Document (in ram for the moment, and no fixed fields)
 
   It create also default routes
 
@@ -54,7 +54,7 @@ CoffeeHelper
 
     * Class methods
 
-  Now can now extends the resource
+  You can now extends the resource
 
     class PlayerResource extends APlayer
 
