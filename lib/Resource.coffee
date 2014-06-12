@@ -8,72 +8,64 @@ excludedMembers = [
   'app'
   'resName']
 
-class Resource
+module.exports = ->
 
-  table: null
-  app: null
-  resName: null
+  class Resource
 
-  constructor: (blob) ->
-    for key, value of blob
-      @[key] = value
+    table: null
+    app: null
+    resName: null
 
-  Save: (done) ->
-    exists = @id?
+    constructor: (blob) ->
+      for key, value of blob
+        @[key] = value
 
-    @table.Save @Serialize(), (err, id) =>
-      return done err if err?
+    Save: (done) ->
+      exists = @id?
 
-      if !exists
-        @id = id
+      @table.Save @Serialize(), (err, id) =>
+        return done err if err?
 
-      done null, @
+        if !exists
+          @id = id
 
-  Serialize: ->
-    res = {}
-    for key, value of @ when typeof value isnt 'function' and key not in excludedMembers
-      res[key] = value
-    res
+        done null, @
 
-  ToJSON: ->
-    @Serialize()
+    Serialize: ->
+      res = {}
+      for key, value of @ when typeof value isnt 'function' and key not in excludedMembers
+        res[key] = value
+      res
 
-  # @Method: (name, instanciated, func) =>
-  #   if instanciated
-  #     @::[name] = func
-  #     # console.log @[name]
-  #   else
-  #     Resource[name] = func
-  #     # console.log Resource[name]
+    ToJSON: ->
+      @Serialize()
 
-  @Route: (type, url, done) ->
-    @app[type] '/api/1/' + @resName + url, done
+    @Route: (type, url, done) ->
+      @app[type] '/api/1/' + @resName + url, done
 
-  @Fetch: (id, done) ->
-    @table.Find id, (err, blob) ->
-      return done err if err?
+    @Fetch: (id, done) ->
+      @table.Find id, (err, blob) =>
+        return done err if err?
 
-      Resource.Deserialize blob, done
+        @Deserialize blob, done
 
-  @List: (done) ->
-    @table.Select 'id', {}, {}, (err, ids) =>
-      return done err if err?
+    @List: (done) ->
+      @table.Select 'id', {}, {}, (err, ids) =>
+        return done err if err?
 
-      async.map _(ids).pluck('id'), (item, done) =>
-        @Fetch item, done
-      , done
+        async.map _(ids).pluck('id'), (item, done) =>
+          @Fetch item, done
+        , done
 
-  @Deserialize: (blob, done) ->
-    res = new Resource blob
-    res.table = @table
-    res.resName = @resName
-    res.app = @app
+    @Deserialize: (blob, done) ->
+      res = new @ blob
+      res.table = @table
+      res.resName = @resName
+      res.app = @app
+      done null, res
 
-    done null, res
+    @SetHelpers: (resName, app) ->
+      @table = table resName
+      @resName = resName
+      @app = app
 
-  @SetHelpers: (resName, app) ->
-    @table = table resName
-    @resName = resName
-    @app = app
-
-module.exports = -> _({}).extend Resource

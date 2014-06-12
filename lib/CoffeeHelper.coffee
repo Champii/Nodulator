@@ -8,7 +8,6 @@ class CoffeeHelper
   app: null
   server: null
   resources: {}
-  routes: {}
 
   constructor: ->
     @app = express()
@@ -25,14 +24,13 @@ class CoffeeHelper
 
     @resources[resourceName] = require('./Resource')()
 
-    @resources[resourceName].SetHelpers resourceName, @app
+    resource = @resources[resourceName]
 
-    # for key, res of @resources
-    #   console.log 'Table', key, res.table, res.resName
+    resource.SetHelpers resourceName, @app
 
-    @_DefaultRoutes @resources[resourceName], resourceName
+    @_DefaultRoutes resource, resourceName
 
-    @resources[resourceName]
+    resource
 
   _DefaultRoutes: (Resource, resName) ->
     @app.get '/api/1/' + resName, (req, res) ->

@@ -9,13 +9,19 @@ Set of class for CoffeeScript to handle arbstract models
 
     CoffeeHelper = require './lib/CoffeeHelper'
 
-  Resource creation is easy.
+  Resource declaration is easy.
 
-    class PlayerResource extends CoffeeHelper.Resource 'player'
+    APlayer = CoffeeHelper.Resource 'player'
+
+  Now you can create the resource itself
+
+    class PlayerResource extends APlayer
+
+      constructor: (blob) ->    # Optional
+        super blob              #
 
       LevelUp: (done) ->
         @level++
-
         @Save done
 
   (Here we have a custom method: LevelUp)
@@ -29,7 +35,7 @@ Set of class for CoffeeScript to handle arbstract models
     POST  /api/1/player       => Create
     PUT   /api/1/player/:id   => Update
 
-  It create automaticaly 4 method
+  It include 6 methods
 
     *Fetch(id, done)
     *List(done)
@@ -47,7 +53,7 @@ Set of class for CoffeeScript to handle arbstract models
       PlayerResource.Fetch req.params.id, (err, player) ->
         return res.send 500 if err?
 
-        test.LevelUp (err) ->
+        player.LevelUp (err) ->
           return res.send 500 if err?
 
           res.send 200, player.ToJSON()
