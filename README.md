@@ -88,6 +88,7 @@ CoffeeHelper
   By order of priority
 
     Persistant DB (sql/mongo)
+    Relational models
     Clean dirty tricks (@SetHelpers in Resource)
     Config system (ex: Table/Document, depends on db type)
     General architecture and file generation
