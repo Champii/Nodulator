@@ -34,19 +34,6 @@ CoffeeHelper
 
     APlayer = CoffeeHelper.Resource 'player'
 
-  Now you can create the resource itself
-
-    class PlayerResource extends APlayer
-
-      constructor: (blob) ->    # Optional
-        super blob              #
-
-      LevelUp: (done) ->
-        @level++
-        @Save done
-
-  (Here we have a custom method: LevelUp)
-
   It create automaticaly a table (in ram for the moment)
 
   It create also default routes
@@ -66,6 +53,19 @@ CoffeeHelper
     ToJSON()
 
     * Class methods
+
+  Now can now extends the resource
+
+    class PlayerResource extends APlayer
+
+      constructor: (blob) ->    # Optional
+        super blob              #
+
+      LevelUp: (done) ->
+        @level++
+        @Save done
+
+  (Here we have a custom method: LevelUp)
 
   You can define custom routes:
 
