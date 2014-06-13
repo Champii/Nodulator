@@ -1,7 +1,7 @@
 _ = require 'underscore'
 async = require 'async'
 
-table = require('./connectors/sql').table
+db = require('./connectors/sql').table
 
 excludedMembers = [
   'table'
@@ -10,11 +10,11 @@ excludedMembers = [
 
 module.exports = ->
 
-  class Resource
+  table = null
+  app = null
+  resName = null
 
-    table: null
-    app: null
-    resName: null
+  class Resource
 
     constructor: (blob) ->
       for key, value of blob
@@ -23,7 +23,7 @@ module.exports = ->
     Save: (done) ->
       exists = @id?
 
-      @table.Save @Serialize(), (err, id) =>
+      table.Save @Serialize(), (err, id) =>
         return done err if err?
 
         if !exists
@@ -41,16 +41,16 @@ module.exports = ->
       @Serialize()
 
     @Route: (type, url, done) ->
-      @app[type] '/api/1/' + @resName + url, done
+      app[type] '/api/1/' + resName + url, done
 
     @Fetch: (id, done) ->
-      @table.Find id, (err, blob) =>
+      table.Find id, (err, blob) =>
         return done err if err?
 
         @Deserialize blob, done
 
     @List: (done) ->
-      @table.Select 'id', {}, {}, (err, ids) =>
+      table.Select 'id', {}, {}, (err, ids) =>
         return done err if err?
 
         async.map _(ids).pluck('id'), (item, done) =>
@@ -58,14 +58,10 @@ module.exports = ->
         , done
 
     @Deserialize: (blob, done) ->
-      res = new @ blob
-      res.table = @table
-      res.resName = @resName
-      res.app = @app
-      done null, res
+      done null, new @ blob
 
-    @SetHelpers: (resName, app) ->
-      @table = table resName
-      @resName = resName
-      @app = app
+    @SetHelpers: (_resName, _app) ->
+      table = db _resName
+      resName = _resName
+      app = _app
 
