@@ -1,18 +1,14 @@
 _ = require 'underscore'
 async = require 'async'
 
-db = require('./connectors/sql').table
-
-excludedMembers = [
-  'table'
-  'app'
-  'resName']
+Route = require './Route'
 
 module.exports = ->
 
   table = null
-  app = null
   resName = null
+  route = null
+  config = null
 
   class Resource
 
@@ -33,7 +29,7 @@ module.exports = ->
 
     Serialize: ->
       res = {}
-      for key, value of @ when typeof value isnt 'function' and key not in excludedMembers
+      for key, value of @ when typeof value isnt 'function'
         res[key] = value
       res
 
@@ -41,7 +37,7 @@ module.exports = ->
       @Serialize()
 
     @Route: (type, url, done) ->
-      app[type] '/api/1/' + resName + url, done
+      route.Add type, url, done
 
     @Fetch: (id, done) ->
       table.Find id, (err, blob) =>
@@ -60,8 +56,8 @@ module.exports = ->
     @Deserialize: (blob, done) ->
       done null, new @ blob
 
-    @SetHelpers: (_resName, _app) ->
-      table = db _resName
+    @_SetHelpers: (_table, _resName, _app, _config) ->
+      table = _table
       resName = _resName
-      app = _app
-
+      route = new Route _app, _resName, @
+      config = _config

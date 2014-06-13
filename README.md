@@ -31,10 +31,10 @@ CoffeeHelper
 
   It create also default routes
 
-    GET   /api/1/player       => List
-    GET   /api/1/player/:id   => Get One
-    POST  /api/1/player       => Create
-    PUT   /api/1/player/:id   => Update
+    GET   /api/1/players       => List
+    GET   /api/1/players/:id   => Get One
+    POST  /api/1/players       => Create
+    PUT   /api/1/players/:id   => Update
 
   It include 6 methods
 
@@ -73,7 +73,9 @@ CoffeeHelper
 
   It define :
 
-    PUT   /api/1/player/:id/levelUp
+    PUT   /api/1/players/:id/levelUp
+
+  Open exemple.coffee to see a better exemple
 
 
 #To Do#
@@ -87,3 +89,4 @@ CoffeeHelper
     Basic view system
     Better routing system (Auto add on custom method ?)
     Basic Auth (Passport ?)
+    Error management

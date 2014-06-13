@@ -8,6 +8,8 @@ class CoffeeHelper
   app: null
   server: null
   resources: {}
+  config: {}
+  table: null
 
   constructor: ->
     @app = express()
@@ -26,46 +28,16 @@ class CoffeeHelper
 
     resource = @resources[resourceName]
 
-    resource.SetHelpers resourceName, @app
+    @config = @_DefaultConfig() if @config is {}
 
-    @_DefaultRoutes resource, resourceName
+    resource._SetHelpers @table(resourceName), resourceName, @app, @config
 
     resource
 
-  _DefaultRoutes: (Resource, resName) ->
-    @app.get '/api/1/' + resName, (req, res) ->
+  Config: (@config) ->
+    @table = require('./connectors/sql')(@config).table
 
-      Resource.List (err, results) ->
-        return console.log err if err?
-
-        res.send 200, _(results).invoke 'ToJSON'
-
-    @app.get '/api/1/' + resName + '/:id', (req, res) ->
-
-      Resource.Fetch req.params.id, (err, result) ->
-        return console.log err if err?
-
-        res.send 200, result.ToJSON()
-
-    @app.post '/api/1/' + resName, (req, res) ->
-
-      Resource.Deserialize req.body, (err, result) ->
-        return console.log err if err?
-
-        result.Save (err) ->
-          return console.log err if err?
-
-          res.send 200, result.ToJSON()
-
-    @app.put '/api/1/' + resName + '/:id', (req, res) ->
-      Resource.Fetch req.params.id, (err, result) ->
-        return console.log err if err?
-
-        _(result).extend req.body
-
-        result.Save (err) ->
-          return console.log err if err?
-
-          res.send 200, result.ToJSON()
+  _DefaultConfig: ->
+    dbType: 'SqlMem'
 
 module.exports = new CoffeeHelper

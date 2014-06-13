@@ -1,4 +1,4 @@
-driver = require './SqlMem'
+driver = null
 
 class Table
 
@@ -39,8 +39,14 @@ class Table
   Update: (blob, where, done) ->
     driver.Update @name, blob, where, done
 
-module.exports.table = (name) ->
-  if !(driver.tables[name]?)
-    driver.tables[name] = []
+module.exports = (config) ->
 
-  return new Table name
+  driver = require('./' + config.dbType)
+  tables = driver.tables
+  driver = driver(config)
+
+  table: (name) ->
+    if !(tables[name]?)
+      tables[name] = []
+
+    new Table name

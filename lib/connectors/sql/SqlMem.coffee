@@ -31,5 +31,7 @@ class SqlMem
 
     done()
 
-module.exports = new SqlMem
+module.exports = (config) ->
+  new SqlMem()
+
 module.exports.tables = tables
