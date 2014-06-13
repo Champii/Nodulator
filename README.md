@@ -10,14 +10,7 @@ CoffeeHelper
     async
     express
     underscore
-    coffee-middleware
-    socket.io
-    passport
-    passport-local
-    cookie-parser
     body-parser
-    express-session
-    jade
     mocha
     assert
     superagent
