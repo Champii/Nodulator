@@ -2,9 +2,9 @@
 # Requirements
 #
 
-CoffeeHelper = require './lib/CoffeeHelper'
+Modulator = require './lib/Modulator'
 
-CoffeeHelper.Config
+Modulator.Config
   dbType: 'SqlMem'
   dbAuth:
     host: 'localhost'
@@ -16,9 +16,9 @@ CoffeeHelper.Config
 # Resources declaration
 #
 
-APlayer = CoffeeHelper.Resource 'player'
+APlayer = Modulator.Resource 'player'
 
-AMonster = CoffeeHelper.Resource 'monster'
+AMonster = Modulator.Resource 'monster'
 
 #
 # Resources extension

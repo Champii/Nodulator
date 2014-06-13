@@ -1,4 +1,4 @@
-CoffeeHelper
+Modulator
 ============
 
   Set of class for CoffeeScript to create tiny API easely
@@ -21,11 +21,11 @@ CoffeeHelper
 
   Requirement:
 
-    CoffeeHelper = require './lib/CoffeeHelper'
+    Modulator = require './lib/Modulator'
 
   Resource declaration is easy.
 
-    APlayer = CoffeeHelper.Resource 'player'
+    APlayer = Modulator.Resource 'player'
 
   It create automaticaly a Document (in ram for the moment, and no fixed fields)
 
