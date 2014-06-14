@@ -18,7 +18,7 @@ Modulator.Config
 
 APlayer = Modulator.Resource 'player'
 
-AWeapon = Modulator.Resource 'weapon'
+WeaponResource = Modulator.Resource 'weapon'
 
 AMonster = Modulator.Resource 'monster'
 
@@ -44,8 +44,6 @@ class PlayerResource extends APlayer
       return done err if err?
 
       done null, new PlayerResource blob, weapon
-
-class WeaponResource extends AWeapon
 
 class MonsterResource extends AMonster
 
