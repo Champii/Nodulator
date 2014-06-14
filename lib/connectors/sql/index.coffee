@@ -24,9 +24,6 @@ class Table
   Select: (fields, where, options, done) ->
     driver.Select @name, fields, where, options, done
 
-  SelectNear: (fields, where, done) ->
-    driver.SelectNear @name, fields, where, done
-
   Save: (blob, done) ->
     if blob.id?
       @Update blob, {id: blob.id}, done

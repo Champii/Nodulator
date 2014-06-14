@@ -19,8 +19,7 @@ Modulator.Config
 
 APlayer = Modulator.Resource 'player'
 
-# Weapon resource will not be extended, so we named it that way to keep things clear
-WeaponResource = Modulator.Resource 'weapon'
+AWeapon = Modulator.Resource 'weapon'
 
 AMonster = Modulator.Resource 'monster'
 
@@ -33,7 +32,7 @@ class PlayerResource extends APlayer
   # We override the constructor to attach a weapon
   constructor: (blob, @weapon) ->
     # Never forget to call the super with blob attached
-    # If you do, you'll have to define yourself properties attached to blob
+    # If you do, you'll have to define yourself properties that are attached to blob
     super blob
 
   # New instance method
@@ -50,10 +49,23 @@ class PlayerResource extends APlayer
 
   # Overriding of APlayer's @Deserialize class method to fetch and attach Weapon
   @Deserialize: (blob, done) ->
-    WeaponResource.Fetch blob.weapon_id, (err, weapon) ->
+    if !(blob.id?)
+      return super blob, done
+
+    WeaponResource.FetchByUserId blob.id, (err, weapon) ->
       return done err if err?
 
       done null, new PlayerResource blob, weapon
+
+class WeaponResource extends AWeapon
+
+  # We add a new class method to fetch weapon by userId
+  # Added for usecase exemple of @table
+  @FetchByUserId: (userId, done) ->
+    @table.FindWhere '*', {userId: userId}, (err, blob) =>
+      return done err if err?
+
+      @Deserialize blob, done
 
 class MonsterResource extends AMonster
 
@@ -107,25 +119,25 @@ MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
 #
 
 toAdd =
-  hitPoint: 2
+  life: 10
+  level: 1
 
-WeaponResource.Deserialize toAdd, (err, weapon) ->
+PlayerResource.Deserialize toAdd, (err, player) ->
   return res.send 500 if err?
 
-  weapon.Save (err) ->
+  player.Save (err) ->
     return res.send 500 if err?
 
-    # Now that we have a weapon, we attach it as we create the player
     toAdd =
-      life: 10
-      level: 1
-      weapon_id: weapon.id
+      userId: player.id
+      hitPoint: 2
 
-    PlayerResource.Deserialize toAdd, (err, player) ->
+    WeaponResource.Deserialize toAdd, (err, weapon) ->
       return res.send 500 if err?
 
-      player.Save (err) ->
+      weapon.Save (err) ->
         return res.send 500 if err?
+
 
 toAdd =
   life: 10

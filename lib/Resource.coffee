@@ -29,7 +29,7 @@ module.exports = ->
 
     Serialize: ->
       res = {}
-      for key, value of @ when typeof value isnt 'function'
+      for key, value of @ when typeof value isnt 'function' and typeof value isnt 'object'
         res[key] = value
       res
 
@@ -57,7 +57,7 @@ module.exports = ->
       done null, new @ blob
 
     @_SetHelpers: (_table, _resName, _app, _config) ->
-      table = _table
-      resName = _resName
-      route = new Route _app, _resName, @
-      config = _config
+      @table = table = _table
+      @resName = resName = _resName
+      @route = route = new Route _app, _resName, @
+      @config = config = _config
