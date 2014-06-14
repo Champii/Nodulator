@@ -83,10 +83,10 @@ Modulator
   By order of priority
 
     Persistant DB (sql/mongo)
-    Relational models
     Config system (ex: Table/Document, depends on db type)
     General architecture and file generation
-    Basic view system
     Better routing system (Auto add on custom method ?)
     Basic Auth (Passport ?)
     Error management
+    Basic view system
+    Relational models

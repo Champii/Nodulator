@@ -18,6 +18,8 @@ Modulator.Config
 
 APlayer = Modulator.Resource 'player'
 
+AWeapon = Modulator.Resource 'weapon'
+
 AMonster = Modulator.Resource 'monster'
 
 #
@@ -26,17 +28,26 @@ AMonster = Modulator.Resource 'monster'
 
 class PlayerResource extends APlayer
 
-  constructor: (blob) ->
+  constructor: (blob, @weapon) ->
     super blob
 
   LevelUp: (done) ->
     @level++
     @Save done
 
-class MonsterResource extends AMonster
+  Attack: (target, done) ->
+    target.life -= @weapon.hitPoint
+    target.Save done
 
-  constructor: (blob) ->
-    super blob
+  @Deserialize: (blob, done) ->
+    WeaponResource.Fetch blob.weapon_id, (err, weapon) ->
+      return done err if err?
+
+      done null, new PlayerResource blob, weapon
+
+class WeaponResource extends AWeapon
+
+class MonsterResource extends AMonster
 
   Attack: (target, done) ->
     target.life -= @hitPoint
@@ -55,6 +66,18 @@ PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
 
       res.send 200, player.ToJSON()
 
+PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
+  PlayerResource.Fetch req.params.id, (err, player) ->
+    return res.send 500 if err?
+
+    MonsterResource.Fetch req.params.monsterId, (err, monster) ->
+      return res.send 500 if err?
+
+      player.Attack monster, (err) ->
+        return res.send 500 if err?
+
+        res.send 200, monster.ToJSON()
+
 MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
   MonsterResource.Fetch req.params.id, (err, monster) ->
     return res.send 500 if err?
@@ -72,16 +95,27 @@ MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
 #
 
 toAdd =
-  life: 10
-  level: 1
+  hitPoint: 2
 
-PlayerResource.Deserialize toAdd, (err, player) ->
+WeaponResource.Deserialize toAdd, (err, weapon) ->
   return res.send 500 if err?
 
-  player.Save (err) ->
+  weapon.Save (err) ->
     return res.send 500 if err?
 
+    toAdd =
+      life: 10
+      level: 1
+      weapon_id: weapon.id
+
+    PlayerResource.Deserialize toAdd, (err, player) ->
+      return res.send 500 if err?
+
+      player.Save (err) ->
+        return res.send 500 if err?
+
 toAdd =
+  life: 10
   hitPoint: 1
 
 MonsterResource.Deserialize toAdd, (err, monster) ->
