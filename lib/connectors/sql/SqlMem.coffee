@@ -7,6 +7,9 @@ class SqlMem
   constructor: ->
 
   Select: (table, fields, where, options, done) ->
+    if !(tables[table]?)
+      tables[table] = []
+
     if where.id? and typeof where.id is 'string'
       where.id = parseInt where.id
 
@@ -14,10 +17,9 @@ class SqlMem
 
     done null, res
 
-  SelectNear: (table, fields, where, done) ->
-    done null, []
-
   Insert: (table, fields, done) ->
+    if !(tables[table]?)
+      tables[table] = []
 
     tables[table].push fields
 
@@ -25,6 +27,9 @@ class SqlMem
     done null, tables[table].length
 
   Update: (table, fields, where, done) ->
+    if !(tables[table]?)
+      tables[table] = []
+
     row = _(tables[table]).findWhere(where)
 
     _(row).extend fields
@@ -33,5 +38,3 @@ class SqlMem
 
 module.exports = (config) ->
   new SqlMem()
-
-module.exports.tables = tables

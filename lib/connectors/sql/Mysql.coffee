@@ -1,77 +1,79 @@
 _ = require 'underscore'
 mysql = require 'mysql'
 
-connection = mysql.createConnection
-  host     : 'localhost'
-  user     : 'test'
-  password : 'test'
-  database : 'test'
-  typeCast: (field, next) ->
-    if field.type is 'TINY' and field.length is 1
-      return field.string() is '1'
-    return next()
+module.exports = (config) ->
 
-connection.on 'error', ->
-  console.error 'MYSQL ERROR'
+  connection = mysql.createConnection
+    host     : config.dbAuth.host
+    user     : config.dbAuth.user
+    password : config.dbAuth.pass
+    database : config.dbAuth.database
+    typeCast: (field, next) ->
+      if field.type is 'TINY' and field.length is 1
+        return field.string() is '1'
+      return next()
 
-class Mysql
+  connection.on 'error', ->
+    console.error 'MYSQL ERROR'
 
-  constructor: ->
+  class Mysql
 
-  Select: (table, fields, where, options, done) ->
-    f = fields
-    if Array.isArray fields
-      f = fields.join(',')
+    constructor: ->
 
-    query = 'select ' + f + ' from ' + table
+    Select: (table, fields, where, options, done) ->
+      f = fields
+      if Array.isArray fields
+        f = fields.join(',')
 
-    hasConditions = _(where).size() > 0 if where?
+      query = 'select ' + f + ' from ' + table
 
-    if (hasConditions)
-      query += ' where ' + _(where).map(@_MakeSQLCondition).join(' and ');
+      hasConditions = _(where).size() > 0 if where?
 
-    if options?
+      if (hasConditions)
+        query += ' where ' + _(where).map(@_MakeSQLCondition).join(' and ');
 
-      if options.sortBy?
-        query += ' order by ' + options.sortBy
+      if options?
 
-        if options.reverse
-          query += ' desc'
+        if options.sortBy?
+          query += ' order by ' + options.sortBy
 
-      if options.limit?
-        query += ' limit ' + options.limit
+          if options.reverse
+            query += ' desc'
 
-    connection.query query, where, (err, rows) ->
-      return done err if err?
+        if options.limit?
+          query += ' limit ' + options.limit
 
-      done null, rows
+      connection.query query, where, (err, rows) ->
+        return done err if err?
 
-  Insert: (table, fields, done) ->
-    query = 'insert into ' + table + ' set ?'
+        done null, rows
 
-    connection.query query, fields, (err, results) ->
-      return done err if err?
+    Insert: (table, fields, done) ->
+      query = 'insert into ' + table + ' set ?'
 
-      done null, results.insertId
+      connection.query query, fields, (err, results) ->
+        return done err if err?
 
-  Update: (table, fields, where, done) ->
-    query = 'update ' + table + ' set ? where ' + _(where).map((value, key) ->
-      return mysql.escapeId(key) + ' = ' + mysql.escape(value)
-    ).join(' and ')
+        done null, results.insertId
 
-    connection.query query, fields, (err, results) ->
-      return done err if err?
+    Update: (table, fields, where, done) ->
+      query = 'update ' + table + ' set ? where ' + _(where).map((value, key) ->
+        return mysql.escapeId(key) + ' = ' + mysql.escape(value)
+      ).join(' and ')
 
-      done null, results.affectedRows
+      connection.query query, fields, (err, results) ->
+        return done err if err?
 
-  _MakeSQLCondition: (value, key) ->
-    safeKey = mysql.escapeId key
+        done null, results.affectedRows
 
-    # normal case A = B
-    if !_.isObject value
-      return safeKey + ' = ' + mysql.escape value
+    _MakeSQLCondition: (value, key) ->
+      safeKey = mysql.escapeId key
 
-    op = if value.sup then ' > ' else ' < '
-    return safeKey + op + mysql.escape value.val
+      # normal case A = B
+      if !_.isObject value
+        return safeKey + ' = ' + mysql.escape value
 
-module.exports = new Mysql
+      op = if value.sup then ' > ' else ' < '
+      return safeKey + op + mysql.escape value.val
+
+  new Mysql

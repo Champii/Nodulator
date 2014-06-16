@@ -10,6 +10,7 @@ Modulator
     async
     express
     underscore
+    mysql
     body-parser
     cookie-parser
     passport
@@ -121,7 +122,8 @@ Modulator
 
   By order of priority
 
-    Persistant DB (sql/mongo)
+    Document DB (mongo)
+    Delete record system
     Config system (ex: Table/Document, depends on db type)
     General architecture and file generation
     Better routing system (Auto add on custom method ?)

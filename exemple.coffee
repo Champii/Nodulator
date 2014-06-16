@@ -4,9 +4,8 @@
 
 Modulator = require './lib/Modulator'
 
-# NOT WORKING NOW
 Modulator.Config
-  dbType: 'SqlMem'
+  dbType: 'Mysql'   # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test)
   dbAuth:
     host: 'localhost'
     user: 'test'
@@ -136,20 +135,20 @@ toAdd =
   level: 1
 
 PlayerResource.Deserialize toAdd, (err, player) ->
-  return res.send 500 if err?
+  return console.error err if err?
 
   player.Save (err) ->
-    return res.send 500 if err?
+    return console.error err if err?
 
     toAdd =
       userId: player.id
       hitPoint: 2
 
     WeaponResource.Deserialize toAdd, (err, weapon) ->
-      return res.send 500 if err?
+      return console.error err if err?
 
       weapon.Save (err) ->
-        return res.send 500 if err?
+        return console.error err if err?
 
 
 toAdd =
@@ -157,8 +156,8 @@ toAdd =
   hitPoint: 1
 
 MonsterResource.Deserialize toAdd, (err, monster) ->
-  return res.send 500 if err?
+  return console.error err if err?
 
   monster.Save (err) ->
-    return res.send 500 if err?
+    return console.error err if err?
 

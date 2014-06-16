@@ -5,6 +5,7 @@
     "async": "*",
     "express": "*",
     "underscore": "*",
+    "mysql": "*",
     "body-parser": "*",
     "cookie-parser": "*",
     "passport": "*",

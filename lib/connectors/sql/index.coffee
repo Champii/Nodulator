@@ -39,11 +39,7 @@ class Table
 module.exports = (config) ->
 
   driver = require('./' + config.dbType)
-  tables = driver.tables
   driver = driver(config)
 
   table: (name) ->
-    if !(tables[name]?)
-      tables[name] = []
-
     new Table name

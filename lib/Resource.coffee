@@ -29,7 +29,7 @@ module.exports = ->
 
     Serialize: ->
       res = {}
-      for key, value of @ when typeof value isnt 'function' and typeof value isnt 'object'
+      for key, value of @ when typeof value isnt 'function' and typeof value isnt 'object' and value?
         res[key] = value
       res
 

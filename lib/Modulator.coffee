@@ -30,7 +30,7 @@ class Modulator
 
     @config = @_DefaultConfig() if @config is {}
 
-    resource._SetHelpers @table(resourceName), resourceName, @app, config
+    resource._SetHelpers @table(resourceName + 's'), resourceName, @app, config
 
     resource
 
