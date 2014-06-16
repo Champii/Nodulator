@@ -82,6 +82,22 @@ Modulator
 
   Open exemple.coffee to see a better exemple
 
+#Config#
+
+  Config system actualy permit to switch betwin InRAM Document system (Default value, no persistant data) and Mysql.
+
+  You have to call Config method only once, and before declaring any resources.
+
+    Modulator.Config
+      dbType: 'Mysql'   # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test)
+      dbAuth:
+        host: 'localhost'
+        user: 'test'
+        pass: 'test'
+        database: 'test'
+
+  If you omit to call Config, it will takes default value (dbType: 'SqlMem')
+
 #Auth#
 
   You can assign a Ressource as AccountResource :
@@ -124,10 +140,10 @@ Modulator
 
     Document DB (mongo)
     Delete record system
-    Config system (ex: Table/Document, depends on db type)
     General architecture and file generation
     Better routing system (Auto add on custom method ?)
-    Advanced Auth (Social + custom)
     Error management
+    Advanced Auth (Social + custom)
     Basic view system
     Relational models
+    Better Config system

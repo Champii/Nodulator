@@ -8,7 +8,7 @@ class Modulator
   app: null
   server: null
   resources: {}
-  config: {}
+  config: null
   table: null
 
   constructor: ->
@@ -20,6 +20,8 @@ class Modulator
 
     @server.listen 3000
 
+    @db = require('./connectors/sql')
+
   Resource: (resourceName, config) ->
     if @resources[resourceName]?
       return @resources[resourceName]
@@ -28,14 +30,16 @@ class Modulator
 
     resource = @resources[resourceName]
 
-    @config = @_DefaultConfig() if @config is {}
+    @Config() if !(@config?)
 
     resource._SetHelpers @table(resourceName + 's'), resourceName, @app, config
 
     resource
 
   Config: (@config) ->
-    @table = require('./connectors/sql')(@config).table
+    @config = @_DefaultConfig() if !(@config?)
+
+    @table = @db(@config).table
 
   _DefaultConfig: ->
     dbType: 'SqlMem'
