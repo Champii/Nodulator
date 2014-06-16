@@ -17,11 +17,16 @@ Modulator.Config
 # Resources declaration
 #
 
-APlayer = Modulator.Resource 'player'
+APlayer = Modulator.Resource 'player',
+  account:
+    fields:
+      usernameField: "login"
+      passwordField: "pass"
 
 AWeapon = Modulator.Resource 'weapon'
 
 AMonster = Modulator.Resource 'monster'
+
 
 #
 # Resources extension
@@ -80,8 +85,11 @@ class MonsterResource extends AMonster
 
 # Player LevelUp
 PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
+  return res.send 403 if !(req.user?)
+
   PlayerResource.Fetch req.params.id, (err, player) ->
     return res.send 500 if err?
+    return res.send 403 if req.user.login isnt player.login
 
     player.LevelUp (err) ->
       return res.send 500 if err?
@@ -90,8 +98,11 @@ PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
 
 # Player Attack
 PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
+  return res.send 403 if !(req.user?)
+
   PlayerResource.Fetch req.params.id, (err, player) ->
     return res.send 500 if err?
+    return res.send 403 if req.user.login isnt player.login
 
     MonsterResource.Fetch req.params.monsterId, (err, monster) ->
       return res.send 500 if err?
@@ -119,6 +130,8 @@ MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
 #
 
 toAdd =
+  login: "lol"
+  pass: "lol"
   life: 10
   level: 1
 

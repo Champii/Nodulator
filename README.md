@@ -77,6 +77,36 @@ Modulator
 
   Open exemple.coffee to see a better exemple
 
+#Auth#
+
+  You can assign a Ressource as AccountResource :
+
+    APlayer = Modulator.Resource 'player',
+      account: true
+
+  Defaults fields are 'username' and 'password'
+
+  You can change them :
+
+    APlayer = Modulator.Resource 'player',
+      account:
+        fields:
+          usernameField: "login"
+          passwordField: "pass"
+
+  It creates a custom method from usernameField
+
+    FetchByLogin
+
+  It defines 2 routes :
+
+    POST  /api/1/login
+    POST  /api/1/logout
+
+  It setup session system, and thanks to Passport,
+
+  it fills req.user variable to handle public/authenticated routes
+
 
 #To Do#
 

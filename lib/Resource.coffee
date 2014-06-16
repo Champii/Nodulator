@@ -59,5 +59,5 @@ module.exports = ->
     @_SetHelpers: (_table, _resName, _app, _config) ->
       @table = table = _table
       @resName = resName = _resName
-      @route = route = new Route _app, _resName, @
+      @route = route = new Route _app, _resName, @, _config
       @config = config = _config

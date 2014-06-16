@@ -1,10 +1,17 @@
 _ = require 'underscore'
 async = require 'async'
 
+Account = require './Account'
+
 class Route
 
-  constructor: (@app, resName, Resource) ->
+  constructor: (@app, resName, Resource, @config) ->
     @resName = resName + 's'
+
+    # console.log @config
+
+    if @config? and @config.account?
+      @account = new Account @app, resName, Resource, @config
 
     @app.get '/api/1/' + @resName, (req, res) ->
 

@@ -20,7 +20,7 @@ class Modulator
 
     @server.listen 3000
 
-  Resource: (resourceName) ->
+  Resource: (resourceName, config) ->
     if @resources[resourceName]?
       return @resources[resourceName]
 
@@ -30,7 +30,7 @@ class Modulator
 
     @config = @_DefaultConfig() if @config is {}
 
-    resource._SetHelpers @table(resourceName), resourceName, @app, @config
+    resource._SetHelpers @table(resourceName), resourceName, @app, config
 
     resource
 
