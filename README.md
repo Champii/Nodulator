@@ -100,12 +100,13 @@ Modulator
 
   It creates a custom method from usernameField
 
-    FetchByUsername(username, done)
+    *FetchByUsername(username, done)
 
       or if customized
 
-    FetchByLogin(login, done)
+    *FetchByLogin(login, done)
 
+    * Class methods
   It defines 2 routes :
 
     POST  /api/1/login
@@ -124,7 +125,7 @@ Modulator
     Config system (ex: Table/Document, depends on db type)
     General architecture and file generation
     Better routing system (Auto add on custom method ?)
-    Basic Auth (Passport ?)
+    Advanced Auth (Social + custom)
     Error management
     Basic view system
     Relational models
