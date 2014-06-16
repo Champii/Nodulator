@@ -21,7 +21,7 @@ class Account
 
     @InitPassport Resource
 
-    @InitRoutes()
+    @InitRoutes resName
 
   InitPassport: (Resource) ->
 
@@ -42,11 +42,11 @@ class Account
         return done null, false, {message: 'Incorrect Username/password'} if err? or !(user?) or user[@userField.passwordField] isnt password
         return done null, user
 
-  InitRoutes: ->
-    @app.post '/api/1/login', passport.authenticate('local'), (req, res) ->
+  InitRoutes: (resName) ->
+    @app.post '/api/1/' + resName + 's' + '/login', passport.authenticate('local'), (req, res) ->
       res.send 200
 
-    @app.post '/api/1/logout', (req, res) ->
+    @app.post '/api/1/' + resName + 's' + '/logout', (req, res) ->
       req.logout()
       res.send 200
 

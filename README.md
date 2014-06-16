@@ -3,6 +3,8 @@ Modulator
 
   Set of class for CoffeeScript to create tiny API easely
 
+  Tends to be a easy to use library, with basic auth system, classic Db system
+
   (Can be used in Javascript, obviously, but not tested yet)
 
   Based on:
@@ -124,10 +126,14 @@ Modulator
     *FetchByLogin(login, done)
 
     * Class methods
+
+    /!\ WARNING BUG /!\
+    Theses methods return Resource object instead of extended object
+
   It defines 2 routes :
 
-    POST  /api/1/login
-    POST  /api/1/logout
+    POST  /api/1/players/login
+    POST  /api/1/players/logout
 
   It setup session system, and thanks to Passport,
 
