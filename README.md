@@ -11,6 +11,10 @@ Modulator
     express
     underscore
     body-parser
+    cookie-parser
+    passport
+    passport-local
+    express-session
     mocha
     assert
     superagent
@@ -96,7 +100,11 @@ Modulator
 
   It creates a custom method from usernameField
 
-    FetchByLogin
+    FetchByUsername(username, done)
+
+      or if customized
+
+    FetchByLogin(login, done)
 
   It defines 2 routes :
 
