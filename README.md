@@ -47,7 +47,7 @@ Modulator
     PUT     /api/1/players/:id   => Update
     DELETE  /api/1/players/:id   => Delete
 
-  It include 6 methods
+  It include 7 methods
 
     *Fetch(id, done)
     *List(done)
