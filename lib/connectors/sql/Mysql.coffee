@@ -5,6 +5,7 @@ module.exports = (config) ->
 
   connection = mysql.createConnection
     host     : config.dbAuth.host || 'localhost'
+    port     : condif.dbAuth.port || 3306
     user     : config.dbAuth.user || ''
     password : config.dbAuth.pass || ''
     database : config.dbAuth.database || ''
@@ -62,6 +63,16 @@ module.exports = (config) ->
       ).join(' and ')
 
       connection.query query, fields, (err, results) ->
+        return done err if err?
+
+        done null, results.affectedRows
+
+    Delete: (table, where, done) ->
+      query = 'delete from ' + table + ' where ' + _(where).map((value, key) ->
+        return mysql.escapeId(key) + ' = ' + mysql.escape(value)
+      ).join(' and ')
+
+      connection.query query, {}, (err, results) ->
         return done err if err?
 
         done null, results.affectedRows

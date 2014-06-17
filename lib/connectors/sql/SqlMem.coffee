@@ -7,9 +7,6 @@ class SqlMem
   constructor: ->
 
   Select: (table, fields, where, options, done) ->
-    if !(tables[table]?)
-      tables[table] = []
-
     if where.id? and typeof where.id is 'string'
       where.id = parseInt where.id
 
@@ -18,8 +15,6 @@ class SqlMem
     done null, res
 
   Insert: (table, fields, done) ->
-    if !(tables[table]?)
-      tables[table] = []
 
     tables[table].push fields
 
@@ -27,14 +22,17 @@ class SqlMem
     done null, tables[table].length
 
   Update: (table, fields, where, done) ->
-    if !(tables[table]?)
-      tables[table] = []
-
     row = _(tables[table]).findWhere(where)
 
     _(row).extend fields
 
     done()
+
+  Delete: (table, where, done) ->
+    tables[table] = _(tables[table]).reject (item) ->
+                      item.id is where.id
+    done null, 1
+
 
 module.exports = (config) ->
   new SqlMem()

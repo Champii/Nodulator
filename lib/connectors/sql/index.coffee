@@ -7,6 +7,7 @@ class Table
   constructor: (@name) ->
 
   Find: (id, done) ->
+    id = parseInt id, 10 if typeof id isnt 'number'
     @FindWhere '*', {id: id}, done
 
   FindWhere: (fields, where, done) ->
@@ -35,6 +36,13 @@ class Table
 
   Update: (blob, where, done) ->
     driver.Update @name, blob, where, done
+
+  Delete: (id, done) ->
+    driver.Delete @name, {id: id}, (err, affected) ->
+      return done err if err?
+      return done {error: 'Error on Delete'} if !affected
+
+      done()
 
 module.exports = (config) ->
 

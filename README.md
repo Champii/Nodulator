@@ -41,10 +41,11 @@ Modulator
 
   It create also default routes
 
-    GET   /api/1/players       => List
-    GET   /api/1/players/:id   => Get One
-    POST  /api/1/players       => Create
-    PUT   /api/1/players/:id   => Update
+    GET     /api/1/players       => List
+    GET     /api/1/players/:id   => Get One
+    POST    /api/1/players       => Create
+    PUT     /api/1/players/:id   => Update
+    DELETE  /api/1/players/:id   => Delete
 
   It include 6 methods
 
@@ -52,6 +53,7 @@ Modulator
     *List(done)
     *Deserialize(blob, done)
     Save(done)
+    Delete(done)
     Serialize()
     ToJSON()
 
@@ -83,7 +85,7 @@ Modulator
 
   It define :
 
-    PUT   /api/1/players/:id/levelUp
+    PUT     /api/1/players/:id/levelUp
 
   Open exemple.coffee to see a better exemple
 
@@ -98,7 +100,7 @@ Modulator
       dbAuth:
         host: 'localhost'
         database: 'test'
-        port: 27017           # Working only for Mongo (can be ignored, default value is 27017)
+        # port: 27017         # Can be ignored, default values taken
         # user: 'test'        # For Mongo, these fields are optionals
         # pass: 'test'        #
 
@@ -138,8 +140,8 @@ Modulator
 
   It defines 2 routes :
 
-    POST  /api/1/players/login
-    POST  /api/1/players/logout
+    POST    /api/1/players/login
+    POST    /api/1/players/logout
 
   It setup session system, and thanks to Passport,
 
@@ -150,11 +152,11 @@ Modulator
 
   By order of priority
 
-    Delete record system
     Override default routes
-    General architecture and file generation
-    Better routing system (Auto add on custom method ?)
+    Test suite
     Error management
+    Better routing system (Auto add on custom method ?)
+    General architecture and file generation
     Advanced Auth (Social + custom)
     Basic view system
     Relational models

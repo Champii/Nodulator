@@ -27,6 +27,9 @@ module.exports = ->
 
         done null, @
 
+    Delete: (done) ->
+      table.Delete @id, done
+
     Serialize: ->
       res = {}
       for key, value of @ when typeof value isnt 'function' and typeof value isnt 'object' and value?
@@ -35,6 +38,7 @@ module.exports = ->
 
     ToJSON: ->
       @Serialize()
+
 
     @Route: (type, url, done) ->
       route.Add type, url, done

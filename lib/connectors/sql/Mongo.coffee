@@ -26,6 +26,10 @@ module.exports = (config) ->
       db(config.database + '.' + table).update {id: fields.id}, fields
       done()
 
+    Delete: (table, where, done) ->
+      db(config.database + '.' + table).remove {id: where.id}
+      done null, 1
+
   new Mongo()
 
 module.exports.AddTable = (name) ->
