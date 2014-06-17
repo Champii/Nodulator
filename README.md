@@ -35,7 +35,8 @@ Modulator
 
     APlayer = Modulator.Resource 'player'
 
-  It create automaticaly a Document (in ram for the moment, and no fixed fields)
+  It create automaticaly a Document (for Mongo or SqlMem)
+  No fixed fields, excepted for Mysql: you have to follow fields you have defined in your database
 
   It create also default routes
 
