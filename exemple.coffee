@@ -84,46 +84,31 @@ class MonsterResource extends AMonster
 #
 
 # Player LevelUp
-PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
-  return res.send 403 if !(req.user?)
-
-  PlayerResource.Fetch req.params.id, (err, player) ->
+PlayerResource.Route 'put', '/:id/levelUp', true, (req, res) ->
+  req.player.LevelUp (err) ->
     return res.send 500 if err?
-    return res.send 403 if req.user.login isnt player.login
 
-    player.LevelUp (err) ->
-      return res.send 500 if err?
-
-      res.send 200, player.ToJSON()
+    res.send 200, req.player.ToJSON()
 
 # Player Attack
-PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
-  return res.send 403 if !(req.user?)
-
-  PlayerResource.Fetch req.params.id, (err, player) ->
+PlayerResource.Route 'put', '/:id/attack/:monsterId', true, (req, res) ->
+  MonsterResource.Fetch req.params.monsterId, (err, monster) ->
     return res.send 500 if err?
-    return res.send 403 if req.user.login isnt player.login
 
-    MonsterResource.Fetch req.params.monsterId, (err, monster) ->
+    req.player.Attack monster, (err) ->
       return res.send 500 if err?
 
-      player.Attack monster, (err) ->
-        return res.send 500 if err?
-
-        res.send 200, monster.ToJSON()
+      res.send 200, monster.ToJSON()
 
 # Monster Attack
 MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
-  MonsterResource.Fetch req.params.id, (err, monster) ->
+  PlayerResource.Fetch req.params.playerId, (err, player) ->
     return res.send 500 if err?
 
-    PlayerResource.Fetch req.params.playerId, (err, player) ->
+    req.monster.Attack player, (err) ->
       return res.send 500 if err?
 
-      monster.Attack player, (err) ->
-        return res.send 500 if err?
-
-        res.send 200, player.ToJSON()
+      res.send 200, player.ToJSON()
 
 #
 # Default values

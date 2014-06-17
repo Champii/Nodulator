@@ -47,6 +47,8 @@ Modulator
     PUT     /api/1/players/:id   => Update
     DELETE  /api/1/players/:id   => Delete
 
+  For those that need an id, resource is automaticaly fetched and put in req.player (if your resource is 'player')
+
   It include 7 methods
 
     *Fetch(id, done)
@@ -75,13 +77,14 @@ Modulator
   You can define custom routes:
 
     PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
-      PlayerResource.Fetch req.params.id, (err, player) ->
+      req.player.LevelUp (err) ->
         return res.send 500 if err?
 
-        player.LevelUp (err) ->
-          return res.send 500 if err?
+        res.send 200, req.player.ToJSON()
 
-          res.send 200, player.ToJSON()
+  Here we used a route that take an id.
+
+  A middleware has automaticaly fetched our resource and has put it in req.player
 
   It defines :
 
@@ -148,6 +151,69 @@ Modulator
   it fills req.user variable to handle public/authenticated routes
 
 
+#DOC#
+
+  Modulator
+
+    Modulator.Resource(resourceName, [config])
+
+      Create the resource Class to be extended (if necessary)
+
+    Modulator.Config(config)
+
+      Change config
+
+    Modulator.app
+
+      The express main app object
+
+  Resource
+
+  (Uppercase for Class, lowercase for instance)
+
+    Resource.Route(type, url, [registrated], done)
+
+      Create a route.
+
+      'type' can be 'all', 'get', 'post', 'put' and 'delete'
+      'url' will be concatenated with '/api/{VERSION}/{RESOURCE_NAME}'
+      'registrated' is optional and defines if user must be registrated to see
+      'done' is the express app callback: (req, res, next) ->
+
+    Resource.Fetch(id, done)
+
+      Take an id and return it from the DB in done callback: (err, resource) ->
+
+    Resource.List(done)
+
+      Return every records in DB for this resource and give them to done: (err, resources) ->
+
+    Resource.Deserialize(blob, done)
+
+      Method that take the blob returned from DB to make a new instance
+
+    resource.Save(done)
+
+      Save the instance in DB
+
+      If the resource doesn't exists, it create and give it an id
+      It return to done the current instance
+
+    resource.Delete(done)
+
+      Delete the record in DB, and return affected rows in done
+
+    resource.Serialize()
+
+      Return every properties that aren't functions or objects or are undefined
+      This method is used to get what must be saved in DB
+
+    resource.ToJSON()
+
+      This method is used to get what must be send to client
+      Call @Serialize() by default, but can be overrided
+
+
 #To Do#
 
   By order of priority
@@ -155,7 +221,7 @@ Modulator
     Override default routes
     Test suite
     Error management
-    Better routing system (Auto add on custom method ?)
+    Better++ routing system (Auto add on custom method ?)
     General architecture and file generation
     Advanced Auth (Social + custom)
     Basic view system

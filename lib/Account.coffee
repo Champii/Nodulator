@@ -8,7 +8,7 @@ LocalStrategy = require('passport-local').Strategy
 
 class Account
 
-  constructor: (@app, resName, Resource, @config) ->
+  constructor: (@app, @resName, Resource, @config) ->
 
     @userField =
       usernameField: 'username'
@@ -62,5 +62,11 @@ class Account
         return done err if err?
 
         @Deserialize blob, done
+
+  WrapDone: (done) ->
+    newDone = (req, res, next) =>
+      return res.send 403 if !(req.user?)
+
+      done req, res, next
 
 module.exports = Account
