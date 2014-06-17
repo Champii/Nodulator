@@ -83,7 +83,7 @@ Modulator
 
           res.send 200, player.ToJSON()
 
-  It define :
+  It defines :
 
     PUT     /api/1/players/:id/levelUp
 
@@ -91,7 +91,7 @@ Modulator
 
 #Config#
 
-  Config system actualy permit to switch betwin InRAM Document system (Default value, no persistant data), Mysql and Mongo.
+  Config system actualy permit to switch between Mysql, Mongo and 'In RAM' Document system (Default value, no persistant data).
 
   You have to call Config method only once, and before declaring any resources.
 
@@ -117,7 +117,7 @@ Modulator
 
   Defaults fields are 'username' and 'password'
 
-  You can change them :
+  You can change them (optional) :
 
     APlayer = Modulator.Resource 'player',
       account:
