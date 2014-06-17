@@ -3,7 +3,7 @@ Modulator
 
   Set of class for CoffeeScript to create tiny API easely
 
-  Tends to be a easy to use library, with basic auth system, classic Db system
+  Tends to be a easy to use library, with basic auth system (Passport) and classic DB systems (Mysql/Mongo/RAM)
 
   (Can be used in Javascript, obviously, but not tested yet)
 
@@ -36,7 +36,8 @@ Modulator
     APlayer = Modulator.Resource 'player'
 
   It create automaticaly a Document (for Mongo or SqlMem)
-  No fixed fields, excepted for Mysql: you have to follow fields you have defined in your database
+
+  No fixed fields, excepted for Mysql: you have to follow thefields you have defined in your database
 
   It create also default routes
 
@@ -104,6 +105,8 @@ Modulator
   If you omit to call Config, it will takes default value (dbType: 'SqlMem')
 
 #Auth#
+
+  Authentication is based on Passport
 
   You can assign a Ressource as AccountResource :
 
