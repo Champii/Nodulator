@@ -38,3 +38,7 @@ class SqlMem
 
 module.exports = (config) ->
   new SqlMem()
+
+module.exports.AddTable = (name) ->
+  if !(tables[name]?)
+    tables[name] = []

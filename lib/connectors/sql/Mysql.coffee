@@ -4,10 +4,10 @@ mysql = require 'mysql'
 module.exports = (config) ->
 
   connection = mysql.createConnection
-    host     : config.dbAuth.host
-    user     : config.dbAuth.user
-    password : config.dbAuth.pass
-    database : config.dbAuth.database
+    host     : config.dbAuth.host || 'localhost'
+    user     : config.dbAuth.user || ''
+    password : config.dbAuth.pass || ''
+    database : config.dbAuth.database || ''
     typeCast: (field, next) ->
       if field.type is 'TINY' and field.length is 1
         return field.string() is '1'
@@ -77,3 +77,5 @@ module.exports = (config) ->
       return safeKey + op + mysql.escape value.val
 
   new Mysql
+
+module.exports.AddTable = (name) ->

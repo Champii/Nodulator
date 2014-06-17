@@ -13,6 +13,7 @@ Modulator
     express
     underscore
     mysql
+    mongous
     body-parser
     cookie-parser
     passport
@@ -86,17 +87,18 @@ Modulator
 
 #Config#
 
-  Config system actualy permit to switch betwin InRAM Document system (Default value, no persistant data) and Mysql.
+  Config system actualy permit to switch betwin InRAM Document system (Default value, no persistant data), Mysql and Mongo.
 
   You have to call Config method only once, and before declaring any resources.
 
     Modulator.Config
-      dbType: 'Mysql'   # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test)
+      dbType: 'Mongo'         # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
       dbAuth:
         host: 'localhost'
-        user: 'test'
-        pass: 'test'
         database: 'test'
+        port: 27017           # Working only for Mongo (can be ignored, default value is 27017)
+        # user: 'test'        # For Mongo, these fields are optionals
+        # pass: 'test'        #
 
   If you omit to call Config, it will takes default value (dbType: 'SqlMem')
 
@@ -144,7 +146,6 @@ Modulator
 
   By order of priority
 
-    Document DB (mongo)
     Delete record system
     Override default routes
     General architecture and file generation
@@ -153,4 +154,3 @@ Modulator
     Advanced Auth (Social + custom)
     Basic view system
     Relational models
-    Better Config system

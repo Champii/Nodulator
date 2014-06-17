@@ -6,6 +6,7 @@
     "express": "*",
     "underscore": "*",
     "mysql": "*",
+    "mongous": "*",
     "body-parser": "*",
     "cookie-parser": "*",
     "passport": "*",

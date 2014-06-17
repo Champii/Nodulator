@@ -38,8 +38,9 @@ class Table
 
 module.exports = (config) ->
 
-  driver = require('./' + config.dbType)
-  driver = driver(config)
+  file = require('./' + config.dbType)
+  driver = file(config)
 
   table: (name) ->
+    file.AddTable name
     new Table name

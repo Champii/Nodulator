@@ -5,12 +5,13 @@
 Modulator = require './lib/Modulator'
 
 Modulator.Config
-  dbType: 'Mysql'   # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test)
+  dbType: 'Mongo'         # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
   dbAuth:
     host: 'localhost'
-    user: 'test'
-    pass: 'test'
     database: 'test'
+    port: 27017           # Working only for Mongo (can be ignored, default value is 27017)
+    # user: 'test'        # For Mongo and SqlMem, these fields are optionals
+    # pass: 'test'        #
 
 #
 # Resources declaration
