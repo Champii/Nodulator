@@ -218,6 +218,7 @@ Modulator
 
   By order of priority
 
+    Better auth restriction system on routes
     Override default routes
     Test suite
     Error management

@@ -36,7 +36,7 @@ class Route
     @Add 'get', '/:id', (req, res) ->
       res.send 200, req[resName].ToJSON()
 
-    @Add 'post', '', @account?, (req, res) ->
+    @Add 'post', '', (req, res) ->
       Resource.Deserialize req.body, (err, result) ->
         return res.send 500, err if err?
 
