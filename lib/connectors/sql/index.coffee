@@ -52,3 +52,6 @@ module.exports = (config) ->
   table: (name) ->
     file.AddTable name
     new Table name
+
+module.exports._reset = ->
+  driver._Reset() if driver?

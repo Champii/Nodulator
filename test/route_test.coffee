@@ -10,10 +10,11 @@ request = null
 describe 'Modulator Route', ->
 
   before (done) ->
-    TestResource = Modulator.Resource 'test'
-    assert TestResource?
-    request = supertest Modulator.app
-    done()
+    Modulator.Reset ->
+      TestResource = Modulator.Resource 'test'
+      assert TestResource?
+      request = supertest Modulator.app
+      done()
 
   it 'should add first resource (POST)', (done) ->
     request

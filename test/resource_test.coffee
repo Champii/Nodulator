@@ -10,9 +10,10 @@ TestResource = null
 describe 'Modulator Resource', ->
 
   before (done) ->
-    TestResource = Modulator.Resource 'test'
-    assert TestResource?
-    done()
+    Modulator.Reset ->
+      TestResource = Modulator.Resource 'test'
+      assert TestResource?
+      done()
 
   it 'should add first resource', (done) ->
     TestResource.Deserialize {test: 'test'}, (err, test) ->

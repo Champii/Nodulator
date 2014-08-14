@@ -44,4 +44,23 @@ class Modulator
   _DefaultConfig: ->
     dbType: 'SqlMem'
 
+  Reset: (done) ->
+    @server.close()
+    @resources = {}
+    @config = null
+    @table = null
+
+    @app = express()
+
+    @app.use bodyParser()
+
+    @server = http.createServer @app
+
+    @server.listen 3000
+
+    @db._reset()
+    @db = require('./connectors/sql')
+
+    done() if done?
+
 module.exports = new Modulator

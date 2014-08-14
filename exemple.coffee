@@ -4,11 +4,11 @@
 
 Modulator = require './lib/Modulator'
 
-Modulator.Config
-  dbType: 'Mongo'       # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
-  dbAuth:
-    host: 'localhost'
-    database: 'test'
+# Modulator.Config
+#   dbType: 'Mongo'       # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
+#   dbAuth:
+#     host: 'localhost'
+#     database: 'test'
     # port: 27017       # Can be ignored, default values taken
     # user: 'test'      # For Mongo and SqlMem, these fields are optionals
     # pass: 'test'      #
@@ -84,14 +84,14 @@ class MonsterResource extends AMonster
 #
 
 # Player LevelUp
-PlayerResource.Route 'put', '/:id/levelUp', true, (req, res) ->
+PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
   req.player.LevelUp (err) ->
     return res.send 500 if err?
 
     res.send 200, req.player.ToJSON()
 
 # Player Attack
-PlayerResource.Route 'put', '/:id/attack/:monsterId', true, (req, res) ->
+PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
   MonsterResource.Fetch req.params.monsterId, (err, monster) ->
     return res.send 500 if err?
 

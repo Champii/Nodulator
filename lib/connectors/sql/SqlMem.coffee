@@ -15,7 +15,6 @@ class SqlMem
     done null, res
 
   Insert: (table, fields, done) ->
-
     tables[table].push fields
 
     fields.id = tables[table].length
@@ -29,10 +28,11 @@ class SqlMem
     done()
 
   Delete: (table, where, done) ->
-    tables[table] = _(tables[table]).reject (item) ->
-                      item.id is where.id
+    tables[table] = _(tables[table]).reject (item) -> item.id is where.id
     done null, 1
 
+  _Reset: ->
+    tables = {}
 
 module.exports = (config) ->
   new SqlMem()

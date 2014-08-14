@@ -63,9 +63,15 @@ class Account
 
         @Deserialize blob, done
 
-  WrapDone: (done) ->
+  WrapDoneIsAuth: (done) ->
     newDone = (req, res, next) =>
       return res.send 403 if !(req.user?)
+
+      done req, res, next
+
+  WrapDoneIsSelf: (done) ->
+    newDone = (req, res, next) =>
+      return res.send 403 if !(req.user?) or req.user.id isnt req[@resName].id
 
       done req, res, next
 

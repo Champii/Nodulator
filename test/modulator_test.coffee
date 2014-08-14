@@ -8,7 +8,7 @@ Modulator = require '../lib/Modulator'
 describe 'Modulator', ->
 
   before (done) ->
-    done()
+    Modulator.Reset done
 
   it 'should create server', (done) ->
     assert Modulator.app
