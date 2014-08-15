@@ -37,7 +37,7 @@ Modulator
 
   It create automaticaly a Document (for Mongo or SqlMem)
 
-  No fixed fields, excepted for Mysql: you have to follow thefields you have defined in your database
+  No fixed fields, excepted for Mysql: you have to follow the fields you have defined in your database
 
   It create also default routes
 
@@ -150,6 +150,55 @@ Modulator
 
   it fills req.user variable to handle public/authenticated routes
 
+#Restriction#
+
+  USER:
+
+  You can restrict access to a resource :
+
+    APlayer = Modulator.Resource 'player',
+      account: true
+      restricted: 'user' #Can be 'user', 'auth', or an object
+
+  This code create a APlayer resource that is an account,
+
+  and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)
+
+  /!\ 'user' keyword must only be used on account resource
+
+
+  AUTH:
+
+  You can restrict access to a resource for authenticated users only :
+
+    ATest = Modulator.Resource 'test',
+      restricted: 'auth'
+
+  This code create a ATest resource that can only be accessed by auth users
+
+
+  OBJECT:
+
+  You can restrict access to a resource for users that have particular property set :
+
+    ATest = Modulator.Resource 'test',
+      restricted:
+        group: 1
+        x: 'test'
+
+  It will deny access to whole resource for any users that don't have theses properties set
+
+
+
+  AND ALSO:
+
+  When adding new route, you can also give a restrict object (optional) to configure routes access :
+
+    ATest.Route 'get', '/test', restrict: 'auth', done
+
+    or
+
+    ATest.Route 'put', '/:id/test', restrict: {group: 1}, done
 
 #DOC#
 
@@ -171,13 +220,13 @@ Modulator
 
   (Uppercase for Class, lowercase for instance)
 
-    Resource.Route(type, url, [registrated], done)
+    Resource.Route(type, url, [restricted], done)
 
       Create a route.
 
       'type' can be 'all', 'get', 'post', 'put' and 'delete'
       'url' will be concatenated with '/api/{VERSION}/{RESOURCE_NAME}'
-      'registrated' is optional and defines if user must be registrated to see
+      'restricted' is optional and defines if user must be restricted to see
       'done' is the express app callback: (req, res, next) ->
 
     Resource.Fetch(id, done)
