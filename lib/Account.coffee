@@ -44,6 +44,7 @@ class Account
 
   InitRoutes: (resName) ->
     @app.post '/api/1/' + resName + 's' + '/login', passport.authenticate('local'), (req, res) ->
+      req[resName] = req.user
       res.send 200
 
     @app.post '/api/1/' + resName + 's' + '/logout', (req, res) ->
@@ -62,17 +63,5 @@ class Account
         return done err if err?
 
         @Deserialize blob, done
-
-  WrapDoneIsAuth: (done) ->
-    newDone = (req, res, next) =>
-      return res.send 403 if !(req.user?)
-
-      done req, res, next
-
-  WrapDoneIsSelf: (done) ->
-    newDone = (req, res, next) =>
-      return res.send 403 if !(req.user?) or req.user.id isnt req[@resName].id
-
-      done req, res, next
 
 module.exports = Account

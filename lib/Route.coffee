@@ -64,18 +64,35 @@ class Route
       done = config
       config = @config
 
-    if config? and @account? and type isnt 'post'
-      done = @account.WrapDoneIsAuth done
-
-    # if config? and config.restrict?
-    #   oldDone = done
-    #   done = (req, res, next) =>
-    #     config.restrict.resource.Fetch @Resource
-    #     return res.send 403 if req.user[]
-
-    #     done req, res, next
+    if config? and config.restrict?
+      if config.restrict is 'auth' and type isnt 'post'
+        done = @WrapDoneAuth done
+      else if config.restrict is 'user' and type isnt 'post'
+        throw new Error 'Restricted \'user\' needs to be on account resource' if not @account?
+        done = @WrapDoneUser done
+      else if typeof config.restrict is 'object'
+        done = @WrapDoneObject config.restrict, done
 
     @app[type] @apiVersion + @resName + url, done
 
+  WrapDoneUser: (done) ->
+    newUserDone = (req, res, next) =>
+      return done req, res, next if not req.params.id?
+      return res.send 403 if !(req.user?) or req.user.id isnt parseInt(req.params.id, 10)
+
+      done req, res, next
+
+  WrapDoneAuth: (done) ->
+    newAuthDone = (req, res, next) ->
+      return res.send 403 if !(req.user?)
+
+      done req, res, next
+
+  WrapDoneObject: (obj, done) ->
+    newDone = (req, res, next) ->
+      for key, val of obj
+        return res.send 403 if not req.user? or not req.user[key]? or req.user[key] isnt val
+
+      done req, res, next
 
 module.exports = Route

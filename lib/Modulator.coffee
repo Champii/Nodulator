@@ -23,6 +23,9 @@ class Modulator
     @db = require('./connectors/sql')
 
   Resource: (resourceName, config) ->
+    if resourceName is 'user'
+      throw new Error 'Resource name \'user\' is reserved'
+
     if @resources[resourceName]?
       return @resources[resourceName]
 

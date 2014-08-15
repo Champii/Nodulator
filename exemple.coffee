@@ -22,6 +22,7 @@ APlayer = Modulator.Resource 'player',
     fields:
       usernameField: "login"
       passwordField: "pass"
+  restricted: 'user'
 
 AWeapon = Modulator.Resource 'weapon'
 

@@ -39,8 +39,8 @@ module.exports = ->
     ToJSON: ->
       @Serialize()
 
-    @Route: (type, url, registrated, done) ->
-      route.Add type, url, registrated, done
+    @Route: (type, url, restricted, done) ->
+      route.Add type, url, restricted, done
 
     @Fetch: (id, done) ->
       table.Find id, (err, blob) =>

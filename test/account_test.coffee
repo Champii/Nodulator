@@ -8,7 +8,7 @@ Modulator = require '../lib/Modulator'
 
 client = null
 
-UserResource = null
+PlayerResource = null
 TestResource = null
 
 describe 'Modulator Account', ->
@@ -16,28 +16,43 @@ describe 'Modulator Account', ->
   before (done) ->
     Modulator.Reset ->
 
-      UserResource = Modulator.Resource 'user',
+      PlayerResource = Modulator.Resource 'player',
         account: true
+        restrict: 'user'
 
       TestResource = Modulator.Resource 'test',
-        restrict:
-          resource: UserResource
-          foreignId: 'user_id'
+        restrict: 'auth'
 
-      assert UserResource?
+      RestrictedResource = Modulator.Resource 'restricted',
+        restrict:
+          group: 1
+
+      assert PlayerResource?
       assert TestResource?
 
       client = new Client Modulator.app
 
       async.auto
-        user1: (done) -> client.Post '/api/1/users', {username: 'user1', password: 'pass', test: 'test'}, done
-        test1: ['user1', (done, results) -> client.Post '/api/1/tests', {user_id: results.user1.body.id, nb: 1}, done ]
-        user2: ['test1', (done, results) -> client.Post '/api/1/users', {username: 'user2', password: 'pass', test: 'test'}, done ]
-        test2: ['user2', (done, results) -> client.Post '/api/1/tests', {user_id: results.user2.body.id, nb: 2}, done ]
+        user1: (done) -> client.Post '/api/1/players', {username: 'user1', password: 'pass', test: 'test', group: 1}, done
+        test1: ['user1', (done, results) -> client.Post '/api/1/tests', {nb: 1}, done ]
+        user2: ['test1', (done, results) -> client.Post '/api/1/players', {username: 'user2', password: 'pass', test: 'test', group: 2}, done ]
+        # restricted: ['user2', (done, results) -> client.Post '/api/1/restricteds', {nb: 2}, done ]
       , (err, results) ->
         throw new Error err if err?
 
         done()
+
+  it 'should refuse access to TestResource', (done) ->
+    client.Get '/api/1/tests', (err, res) ->
+      throw new Error 'Got access' if not err?
+
+      done()
+
+  it 'should refuse access to RestrictedResource', (done) ->
+    client.Get '/api/1/restricteds', (err, res) ->
+      throw new Error 'Got access' if not err?
+
+      done()
 
   it 'should login user1', (done) ->
     client.SetIdentity 'user1', 'pass'
@@ -47,8 +62,20 @@ describe 'Modulator Account', ->
 
       done()
 
+  it 'should have access to RestrictedResource', (done) ->
+    client.Get '/api/1/restricteds', (err, res) ->
+      throw new Error err if err?
+
+      done()
+
+  it 'should now have access to TestResource', (done) ->
+    client.Get '/api/1/tests', (err, res) ->
+      throw new Error err if err?
+
+      done()
+
   it 'should allow user to PUT on self UserReource', (done) ->
-    client.Put '/api/1/users/1', {test: 'test2'}, (err, res) ->
+    client.Put '/api/1/players/1', {test: 'test2'}, (err, res) ->
       throw new Error err if err?
 
       done()
@@ -64,8 +91,14 @@ describe 'Modulator Account', ->
 
         done()
 
+  it 'should refuse access to RestrictedResource', (done) ->
+    client.Get '/api/1/restricteds', (err, res) ->
+      throw new Error 'Got access' if not err?
+
+      done()
+
   it 'should deny acces to other users', (done) ->
-    client.Put '/api/1/users/1', {test: 'test3'}, (err, res) ->
+    client.Put '/api/1/players/1', {test: 'test3'}, (err, res) ->
       return done() if err?
 
-      throw new Error 'Error'
+      throw new Error 'Got access'

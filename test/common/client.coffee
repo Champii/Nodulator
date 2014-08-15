@@ -11,7 +11,7 @@ class Client
 
   Login: (done) ->
     @request
-      .post('/api/1/users/login')
+      .post('/api/1/players/login')
       .send(@identity)
       .expect(200)
       .end (err, res) ->
@@ -22,7 +22,7 @@ class Client
 
   Logout: (done) ->
     @request
-      .post('/api/1/users/logout')
+      .post('/api/1/players/logout')
       .expect(200)
       .end done
 
