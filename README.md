@@ -164,6 +164,8 @@ Modulator
 
   and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)
 
+  POST and GET-without-id are still accessible for anyone (you can override them)
+
   /!\ 'user' keyword must only be used on account resource
 
 
@@ -192,13 +194,15 @@ Modulator
 
   AND ALSO:
 
-  When adding new route, you can also give a restrict object (optional) to configure routes access :
+  When adding new route, you can also give a restrict object (optional, by default it use the config object passed to the resource)
 
     ATest.Route 'get', '/test', restrict: 'auth', done
 
     or
 
     ATest.Route 'put', '/:id/test', restrict: {group: 1}, done
+
+    To override default resource config, give {restrict: false}
 
 #DOC#
 

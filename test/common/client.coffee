@@ -21,8 +21,10 @@ class Client
         done()
 
   Logout: (done) ->
-    @request
-      .post('/api/1/players/logout')
+    req = @request.post('/api/1/players/logout')
+
+    @AttachCookie req
+    req
       .expect(200)
       .end done
 

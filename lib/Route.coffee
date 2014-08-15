@@ -20,7 +20,7 @@ class Route
     if @config? and @config.account?
       @account = new Account @app, resName, @Resource, @config
 
-    @Add 'all', '/:id*', @config, (req, res, next) =>
+    @Add 'all', '/:id*', restrict: false, (req, res, next) =>
       @Resource.Fetch req.params.id, (err, result) ->
         return res.send 500, err if err?
 
@@ -64,31 +64,36 @@ class Route
       done = config
       config = @config
 
+    done = @_MatchWrap type, config, done
+
+    @app.route(@apiVersion + @resName + url)[type] done
+
+  _MatchWrap: (type, config, done) ->
     if config? and config.restrict?
-      if config.restrict is 'auth' and type isnt 'post'
-        done = @WrapDoneAuth done
+      if config.restrict is 'auth'
+        done = @_WrapDoneAuth done
       else if config.restrict is 'user' and type isnt 'post'
         throw new Error 'Restricted \'user\' needs to be on account resource' if not @account?
-        done = @WrapDoneUser done
+        done = @_WrapDoneUser done
       else if typeof config.restrict is 'object'
-        done = @WrapDoneObject config.restrict, done
+        done = @_WrapDoneObject config.restrict, done
 
-    @app[type] @apiVersion + @resName + url, done
+    done
 
-  WrapDoneUser: (done) ->
+  _WrapDoneUser: (done) ->
     newUserDone = (req, res, next) =>
       return done req, res, next if not req.params.id?
       return res.send 403 if !(req.user?) or req.user.id isnt parseInt(req.params.id, 10)
 
       done req, res, next
 
-  WrapDoneAuth: (done) ->
+  _WrapDoneAuth: (done) ->
     newAuthDone = (req, res, next) ->
       return res.send 403 if !(req.user?)
 
       done req, res, next
 
-  WrapDoneObject: (obj, done) ->
+  _WrapDoneObject: (obj, done) ->
     newDone = (req, res, next) ->
       for key, val of obj
         return res.send 403 if not req.user? or not req.user[key]? or req.user[key] isnt val

@@ -6,6 +6,7 @@ assert = require 'assert'
 Modulator = require '../lib/Modulator'
 
 request = null
+TestResource = null
 
 describe 'Modulator Route', ->
 
@@ -87,3 +88,26 @@ describe 'Modulator Route', ->
             return done() if err?
 
             throw new Error 'Has not deleted resource'
+
+  it 'should override default get route (GET)', (done) ->
+    TestResource.Route 'get', '', (req, res) ->
+      res.send 200, {message: 'Coucou'}
+
+    # console.log Modulator.app.route('/api/1/tests')
+    # Modulator.app.route('/api/1/tests').get (req, res) ->
+    #   res.send 200, {message: 'Coucou'}
+    # console.log Modulator.app.route('/api/1/tests').get()
+
+    request = supertest Modulator.app
+
+    request
+      .get('/api/1/tests')
+      .expect(200)
+      .end (err, res) ->
+        throw new Error err if err?
+
+        console.log res.body
+        assert.equal res.body, 'coucou'
+
+        done()
+

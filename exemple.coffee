@@ -20,13 +20,15 @@ Modulator = require './lib/Modulator'
 APlayer = Modulator.Resource 'player',
   account:
     fields:
-      usernameField: "login"
-      passwordField: "pass"
-  restricted: 'user'
+      usernameField: 'login'
+      passwordField: 'pass'
+  restrict: 'user'
 
-AWeapon = Modulator.Resource 'weapon'
+AWeapon = Modulator.Resource 'weapon',
+  restrict: 'auth'
 
-AMonster = Modulator.Resource 'monster'
+AMonster = Modulator.Resource 'monster',
+  restrict: 'auth'
 
 
 #
@@ -37,8 +39,8 @@ class PlayerResource extends APlayer
 
   # We override the constructor to attach a weapon
   constructor: (blob, @weapon) ->
-    # Never forget to call the super with blob attached
-    # If you do, you'll have to define yourself properties that are attached to blob
+    # If you define a constructor, never forget to call the super with blob attached
+    # If you don't, you'll have to define yourself properties that are attached to blob
     super blob
 
   # New instance method
@@ -86,10 +88,13 @@ class MonsterResource extends AMonster
 
 # Player LevelUp
 PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
-  req.player.LevelUp (err) ->
-    return res.send 500 if err?
+  PlayerResource.Fetch req.params.id, (err, player) ->
+    return res.send 500 if err
 
-    res.send 200, req.player.ToJSON()
+    player.LevelUp (err) ->
+      return res.send 500 if err?
+
+      res.send 200, player.ToJSON()
 
 # Player Attack
 PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
@@ -116,8 +121,8 @@ MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
 #
 
 toAdd =
-  login: "lol"
-  pass: "lol"
+  login: 'lol'
+  pass: 'lol'
   life: 10
   level: 1
 

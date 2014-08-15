@@ -44,7 +44,6 @@ class Account
 
   InitRoutes: (resName) ->
     @app.post '/api/1/' + resName + 's' + '/login', passport.authenticate('local'), (req, res) ->
-      req[resName] = req.user
       res.send 200
 
     @app.post '/api/1/' + resName + 's' + '/logout', (req, res) ->

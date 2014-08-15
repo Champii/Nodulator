@@ -34,9 +34,11 @@ describe 'Modulator Account', ->
 
       async.auto
         user1: (done) -> client.Post '/api/1/players', {username: 'user1', password: 'pass', test: 'test', group: 1}, done
-        test1: ['user1', (done, results) -> client.Post '/api/1/tests', {nb: 1}, done ]
+        login: ['user1', (done) -> client.SetIdentity('user1', 'pass') and client.Login done ]
+        test1: ['login', (done, results) -> client.Post '/api/1/tests', {nb: 1}, done ]
         user2: ['test1', (done, results) -> client.Post '/api/1/players', {username: 'user2', password: 'pass', test: 'test', group: 2}, done ]
-        # restricted: ['user2', (done, results) -> client.Post '/api/1/restricteds', {nb: 2}, done ]
+        restricted: ['user2', (done, results) -> client.Post '/api/1/restricteds', {nb: 2}, done ]
+        logout: ['restricted', (done) -> client.Logout done ]
       , (err, results) ->
         throw new Error err if err?
 
