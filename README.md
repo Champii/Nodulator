@@ -267,9 +267,7 @@ Modulator
 
   By order of priority
 
-    Better auth restriction system on routes
     Override default routes
-    Test suite
     Error management
     Better++ routing system (Auto add on custom method ?)
     General architecture and file generation
