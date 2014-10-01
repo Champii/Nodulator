@@ -60,7 +60,7 @@ class Route
       req[resName].Delete (err) ->
         return res.status(500).send(err) if err?
 
-        res.status(200)
+        res.status(200).send()
 
   Add: (type, url, config, done) ->
     if !(done?)
@@ -86,20 +86,20 @@ class Route
   _WrapDoneUser: (done) ->
     newUserDone = (req, res, next) =>
       return done req, res, next if not req.params.id?
-      return res.status(403) if !(req.user?) or req.user.id isnt parseInt(req.params.id, 10)
+      return res.status(403).send() if !(req.user?) or req.user.id isnt parseInt(req.params.id, 10)
 
       done req, res, next
 
   _WrapDoneAuth: (done) ->
     newAuthDone = (req, res, next) ->
-      return res.status(403) if !(req.user?)
+      return res.status(403).send() if !(req.user?)
 
       done req, res, next
 
   _WrapDoneObject: (obj, done) ->
     newDone = (req, res, next) ->
       for key, val of obj
-        return res.status(403) if not req.user? or not req.user[key]? or req.user[key] isnt val
+        return res.status(403).send() if not req.user? or not req.user[key]? or req.user[key] isnt val
 
       done req, res, next
 

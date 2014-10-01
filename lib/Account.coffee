@@ -51,18 +51,18 @@ class Account
     @app.post '/api/1/' + resName + 's' + '/login', passport.authenticate('local'), (req, res) =>
       if @config.account? and @config.account.loginCallback?
         @config.account.loginCallback req.user, ->
-          res.status 200
+          res.status(200).send()
       else
-        res.status 200
+        res.status(200).send()
 
     @app.post '/api/1/' + resName + 's' + '/logout', (req, res) =>
       if @config.account? and @config.account.logoutCallback?
         @config.account.logoutCallback req.user, ->
           req.logout()
-          res.status 200
+          res.status(200).send()
       else
         req.logout()
-        res.status 200
+        res.status(200).send()
 
   ExtendResource: (Resource) ->
     @methodName = 'FetchBy' + @userField.usernameField[0].toUpperCase() + @userField.usernameField[1..].toLowerCase()
