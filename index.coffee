@@ -1,3 +1,3 @@
-Modulator = require 'lib/Modulator'
+Modulator = require './lib/Modulator'
 
 module.exports = Modulator
