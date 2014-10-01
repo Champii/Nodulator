@@ -17,7 +17,10 @@ class Modulator
 
     @app = express()
 
-    @app.use bodyParser()
+    @app.use bodyParser.urlencoded
+      extended: true
+
+    @app.use bodyParser.json()
 
     @server = http.createServer @app
 
