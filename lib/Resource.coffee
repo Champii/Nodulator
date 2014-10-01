@@ -9,6 +9,7 @@ module.exports = ->
   resName = null
   route = null
   config = null
+  extendRes = null
 
   class Resource
 
@@ -46,18 +47,30 @@ module.exports = ->
       table.Find id, (err, blob) =>
         return done err if err?
 
-        @Deserialize blob, done
+        if extendRes?
+          extendRes.Deserialize blob, done
+        else
+          @Deserialize blob, done
 
     @List: (done) ->
       table.Select 'id', {}, {}, (err, ids) =>
         return done err if err?
 
         async.map _(ids).pluck('id'), (item, done) =>
-          @Fetch item, done
+          if extendRes?
+            extendRes.Fetch item, done
+          else
+            @Fetch item, done
         , done
 
     @Deserialize: (blob, done) ->
-      done null, new @ blob
+      res = @
+      res = extendRes if extendRes?
+
+      done null, new res blob
+
+    @ExtendedBy: (res) ->
+      extendRes = res
 
     @_SetHelpers: (_table, _resName, _app, _config) ->
       @table = table = _table

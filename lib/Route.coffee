@@ -20,6 +20,9 @@ class Route
     if @config? and @config.account?
       @account = new Account @app, resName, @Resource, @config
 
+    if @config? and @config.empty
+      return
+
     @Add 'all', '/:id*', restrict: false, (req, res, next) =>
       @Resource.Fetch req.params.id, (err, result) ->
         return res.send 500, err if err?
@@ -73,7 +76,7 @@ class Route
       if config.restrict is 'auth'
         done = @_WrapDoneAuth done
       else if config.restrict is 'user' and type isnt 'post'
-        throw new Error 'Restricted \'user\' needs to be on account resource' if not @account?
+        throw new Error 'Restricted \'user\' needs to be on account resource config' if not @account?
         done = @_WrapDoneUser done
       else if typeof config.restrict is 'object'
         done = @_WrapDoneObject config.restrict, done

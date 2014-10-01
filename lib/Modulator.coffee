@@ -6,12 +6,15 @@ bodyParser = require 'body-parser'
 class Modulator
 
   app: null
+  express: null
   server: null
   resources: {}
   config: null
   table: null
 
   constructor: ->
+    @express = express
+
     @app = express()
 
     @app.use bodyParser()

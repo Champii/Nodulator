@@ -65,6 +65,10 @@ class PlayerResource extends APlayer
 
       done null, new PlayerResource blob, weapon
 
+# Used to warn Modulator resource has changed
+# If you forget to use it, you'll experience probleme overriding @Fetch and @Deserialize
+APlayer.ExtendedBy PlayerResource
+
 class WeaponResource extends AWeapon
 
   # We add a new class method to fetch weapon by userId
@@ -75,12 +79,16 @@ class WeaponResource extends AWeapon
 
       @Deserialize blob, done
 
+AWeapon.ExtendedBy WeaponResource
+
 class MonsterResource extends AMonster
 
   # Here we only define a new Attack instance method
   Attack: (target, done) ->
     target.life -= @hitPoint
     target.Save done
+
+AMonster.ExtendedBy MonsterResource
 
 #
 # Routes extension
