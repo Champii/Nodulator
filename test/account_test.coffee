@@ -5,6 +5,8 @@ assert = require 'assert'
 Client = require './common/client'
 
 Modulator = require '../lib/Modulator'
+Authentication = require '../lib/Authentication'
+Permissions = require '../lib/Permissions'
 
 client = null
 
@@ -18,14 +20,15 @@ describe 'Modulator Account', ->
 
       PlayerResource = Modulator.Resource 'player',
         account: true
-        restrict: 'user'
+        authentication: Authentication.user
 
       TestResource = Modulator.Resource 'test',
-        restrict: 'auth'
+        authentication: Authentication.auth
 
       RestrictedResource = Modulator.Resource 'restricted',
-        restrict:
-          group: 1
+        permissions: Permissions.objectBased
+         group: 1
+        authentication: Authentication.auth
 
       assert PlayerResource?
       assert TestResource?

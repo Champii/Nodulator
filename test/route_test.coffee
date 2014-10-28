@@ -7,13 +7,24 @@ Modulator = require '../lib/Modulator'
 
 request = null
 TestResource = null
+TestOverloadResource = null
+
+class TestRoute extends Modulator.Route
+  constructor: (resource, app) ->
+    super resource, app
+
+  get: (req, res) ->
+      res.send 200, {message: 'Coucou'}
 
 describe 'Modulator Route', ->
 
   before (done) ->
     Modulator.Reset ->
       TestResource = Modulator.Resource 'test'
+      TestOverloadResource = Modulator.Resource 'overload', TestRoute
+      TestOverloadResource.setRoutes()
       assert TestResource?
+      assert TestOverloadResource?
       request = supertest Modulator.app
       done()
 
@@ -90,8 +101,8 @@ describe 'Modulator Route', ->
             throw new Error 'Has not deleted resource'
 
   it 'should override default get route (GET)', (done) ->
-    TestResource.Route 'get', '', (req, res) ->
-      res.send 200, {message: 'Coucou'}
+#    TestResource.routes.add 'get', (req, res) ->
+#      res.send 200, {message: 'Coucou'}
 
     # console.log Modulator.app.route('/api/1/tests')
     # Modulator.app.route('/api/1/tests').get (req, res) ->
@@ -101,13 +112,12 @@ describe 'Modulator Route', ->
     request = supertest Modulator.app
 
     request
-      .get('/api/1/tests')
+      .get('/api/1/overloads')
       .expect(200)
       .end (err, res) ->
         throw new Error err if err?
 
-        console.log res.body
-        assert.equal res.body, 'coucou'
+        assert.equal res.body.message, 'Coucou'
 
         done()
 
