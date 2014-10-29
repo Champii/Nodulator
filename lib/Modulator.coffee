@@ -9,9 +9,10 @@ class Modulator
   express: null
   server: null
   resources: {}
+  routes: {}
   config: null
   table: null
-
+ 
   constructor: ->
     @express = express
 
@@ -29,20 +30,25 @@ class Modulator
 
     @db = require('./connectors/sql')
 
-  Resource: (resourceName, config) ->
-    if resourceName is 'user'
+  Resource: (name, routes, config) ->
+    name = name.toLowerCase()
+    if name is 'user'
       throw new Error 'Resource name \'user\' is reserved'
 
-    if @resources[resourceName]?
-      return @resources[resourceName]
+    if @resources[name]?
+      return @resources[name]
 
-    @resources[resourceName] = require('./Resource')()
+    if routes? and not routes.prototype
+      config = routes
+      routes = null
+ 
+    @Config() if !(@config?) # config of Modulator instance
 
-    resource = @resources[resourceName]
-
-    @Config() if !(@config?)
-
-    resource._SetHelpers @table(resourceName + 's'), resourceName, @app, config
+    if not routes? or routes.prototype not instanceof @Route
+      routes = @Route
+    
+    @resources[name] = resource =
+      require('./resource')(@table(name + 's'), config, @app, routes, name)
 
     resource
 
@@ -54,6 +60,8 @@ class Modulator
   _DefaultConfig: ->
     dbType: 'SqlMem'
 
+  Route: require('./route')
+
   Reset: (done) ->
     @server.close()
     @resources = {}
@@ -62,7 +70,11 @@ class Modulator
 
     @app = express()
 
-    @app.use bodyParser()
+    @app.use bodyParser.urlencoded
+      extended: true
+
+    @app.use bodyParser.json
+      extended: true
 
     @server = http.createServer @app
 
@@ -72,5 +84,14 @@ class Modulator
     @db = require('./connectors/sql')
 
     done() if done?
+ 
+  ListEndpoints: (done) ->
+    endpoints = []
+    for endpoint in @app._router.stack
+      if endpoint.route?
+        res = {}
+        res[endpoint.route.path] = key for key of endpoint.route.methods
+        endpoints.push res
+    done(endpoints) if done?
 
 module.exports = new Modulator
