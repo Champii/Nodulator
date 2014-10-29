@@ -44,9 +44,10 @@ module.exports =
       done
 
     all: (req, res, next) =>
-      @resource.Fetch req.params.id, (err, result) ->
+      @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
+        req['resource'] = @name
         req[@name] = result
         next()
 
@@ -56,7 +57,7 @@ module.exports =
 
         res.status(200).send _(results).invoke 'ToJSON'
 
-    get_id: (req, res) ->
+    get_id: (req, res) =>
       res.status(200).send req[@name].ToJSON()
 
     post: (req, res) =>
@@ -68,15 +69,15 @@ module.exports =
 
           res.status(200).send result.ToJSON()
 
-    put: (req, res) ->
+    put: (req, res) =>
       _(req[@name]).extend req.body
 
-      req[@name].Save (err) ->
+      req[@name].Save (err) =>
         return res.status(500).send(err) if err?
 
         res.status(200).send req[@name].ToJSON()
 
-    delete: (req, res) ->
+    delete: (req, res) =>
       req[@name].Delete (err) ->
         return res.status(500).send(err) if err?
 

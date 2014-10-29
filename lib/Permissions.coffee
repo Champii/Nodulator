@@ -6,11 +6,11 @@ module.exports =
   class Permissions
     @ownedBy: (done) ->
       (req, res, next) ->
-    # FIXME : implement by pulling the user row
-    #                      check that the user own the object
-    # user = User.Fetch req.id
-    # return res.status(403).send() if obj.user != user
-      done req, res, next
+        if req['resource']? and req[req['resource']]?
+            obj = req[req['resource']]
+            return res.status(403).send() if obj.user != req.user.id
+
+        done req, res, next
 
     @objectBased: (obj) ->
       (done) ->
