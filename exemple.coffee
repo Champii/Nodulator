@@ -124,6 +124,8 @@ MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
 
       res.send 200, player.ToJSON()
 
+
+
 #
 # Default values
 #
@@ -160,4 +162,3 @@ MonsterResource.Deserialize toAdd, (err, monster) ->
 
   monster.Save (err) ->
     return console.error err if err?
-

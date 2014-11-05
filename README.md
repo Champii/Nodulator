@@ -138,9 +138,6 @@ Modulator
 
     * Class methods
 
-    /!\ WARNING BUG /!\
-    Theses methods return Resource object instead of extended object
-
   It defines 2 routes :
 
     POST    /api/1/players/login

@@ -40,3 +40,4 @@ module.exports = (config) ->
 module.exports.AddTable = (name) ->
   if !(tables[name]?)
     tables[name] = []
+  tables[name]

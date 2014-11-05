@@ -1,46 +1,72 @@
 _ = require 'underscore'
-async = require 'async'
-
-Account = require './Account'
 
 class Route
-
-  routes:
-    get: []
-    post: []
-    put: []
-    del: []
   apiVersion: '/api/1/'
 
-  constructor: (@app, resName, @Resource, @config) ->
-    @resName = resName + 's'
+  constructor: (@resource, @app, @config) ->
+    @name = @resource.lname + 's'
 
-    # console.log @config
+    @Config()
 
-    if @config? and @config.account?
-      @account = new Account @app, resName, @Resource, @config
+  Add: (type, url, done) ->
+    if not done?
+      done = url
+      url = '/'
 
-    if @config? and @config.empty
-      return
+    done = @_AddMiddleware type, url, done
+    if not @[type + url]?
+      @[type + url] = done
+      @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
+    else
+      @[type + url] = done
 
-    @Add 'all', '/:id*', restrict: false, (req, res, next) =>
-      @Resource.Fetch req.params.id, (err, result) ->
+  _AddMiddleware: (type, url, done) ->
+    if !@config?
+      return done
+
+    for element, content of @config
+      if typeof content is 'function'
+        done = content done
+      else if typeof content is 'object' and not content.prototype
+        for method, wrapper of content
+          if method == type
+            done = wrapper done
+          else
+            method = method.split('-')
+            if method.length > 1
+              if method[0] == type and method[1] == url
+                done = wrapper done
+            else if method[0] == type
+              done = wrapper done
+
+    done
+
+  Config: ->
+
+class DefaultRoute extends Route
+  Config: ->
+    @Add 'all', '/:id*', (req, res, next) =>
+      if not isFinite req.params.id
+        console.log 'Not finite :', isFinite req.params.id
+        return next()
+
+      @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
-        req[resName] = result
+        req[@resource.lname] = result
         next()
 
-    @Add 'get', '', @config, (req, res) =>
-      @Resource.List (err, results) ->
+    @Add 'get', (req, res) =>
+      @resource.List (err, results) ->
         return res.status(500).send(err) if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
-    @Add 'get', '/:id', @config, (req, res) ->
-      res.status(200).send req[resName].ToJSON()
+    @Add 'get', '/:id', (req, res) =>
+      res.status(200).send req[@resource.lname].ToJSON()
 
-    @Add 'post', '', @config, (req, res) =>
-      @Resource.Deserialize req.body, (err, result) ->
+    @Add 'post', (req, res) =>
+      @resource.Deserialize req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
         result.Save (err) ->
@@ -48,59 +74,21 @@ class Route
 
           res.status(200).send result.ToJSON()
 
-    @Add 'put', '/:id', @config, (req, res) ->
-      _(req[resName]).extend req.body
+    @Add 'put', '/:id', (req, res) =>
+      _(req[@resource.lname]).extend req.body
 
-      req[resName].Save (err) ->
+      req[@resource.lname].Save (err) =>
         return res.status(500).send(err) if err?
 
-        res.status(200).send req[resName].ToJSON()
+        res.status(200).send req[@resource.lname].ToJSON()
 
-    @Add 'delete', '/:id', @config, (req, res) ->
-      req[resName].Delete (err) ->
+
+    @Add 'delete', '/:id', (req, res) =>
+      req[@resource.lname].Delete (err) ->
         return res.status(500).send(err) if err?
 
-        res.status(200).send()
+        res.status(200).end()
 
-  Add: (type, url, config, done) ->
-    if !(done?)
-      done = config
-      config = @config
 
-    done = @_MatchWrap type, config, done
-
-    @app.route(@apiVersion + @resName + url)[type] done
-
-  _MatchWrap: (type, config, done) ->
-    if config? and config.restrict?
-      if config.restrict is 'auth'
-        done = @_WrapDoneAuth done
-      else if config.restrict is 'user' and type isnt 'post'
-        throw new Error 'Restricted \'user\' needs to be on account resource config' if not @account?
-        done = @_WrapDoneUser done
-      else if typeof config.restrict is 'object'
-        done = @_WrapDoneObject config.restrict, done
-
-    done
-
-  _WrapDoneUser: (done) ->
-    newUserDone = (req, res, next) =>
-      return done req, res, next if not req.params.id?
-      return res.status(403).send() if !(req.user?) or req.user.id isnt parseInt(req.params.id, 10)
-
-      done req, res, next
-
-  _WrapDoneAuth: (done) ->
-    newAuthDone = (req, res, next) ->
-      return res.status(403).send() if !(req.user?)
-
-      done req, res, next
-
-  _WrapDoneObject: (obj, done) ->
-    newDone = (req, res, next) ->
-      for key, val of obj
-        return res.status(403).send() if not req.user? or not req.user[key]? or req.user[key] isnt val
-
-      done req, res, next
-
+Route.DefaultRoute = DefaultRoute
 module.exports = Route

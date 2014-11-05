@@ -1,26 +1,22 @@
 _ = require 'underscore'
 async = require 'async'
 
-Route = require './Route'
+Modulator = require '../'
+Account = require './Account'
 
-module.exports = ->
-
-  table = null
-  resName = null
-  route = null
-  config = null
-  extendRes = null
+module.exports = (table, config, app, routes, name) ->
 
   class Resource
 
     constructor: (blob) ->
+      @table = @.__proto__.constructor.table
       for key, value of blob
         @[key] = value
 
     Save: (done) ->
       exists = @id?
 
-      table.Save @Serialize(), (err, id) =>
+      @table.Save @Serialize(), (err, id) =>
         return done err if err?
 
         if !exists
@@ -29,51 +25,85 @@ module.exports = ->
         done null, @
 
     Delete: (done) ->
-      table.Delete @id, done
+      @table.Delete @id, done
 
+    # Send to the database
     Serialize: ->
       res = {}
-      for key, value of @ when typeof value isnt 'function' and typeof value isnt 'object' and value?
-        res[key] = value
+      for key, value of @ when typeof value isnt 'function' and value? and key isnt 'table'
+        content = @_content value
+        if content?
+          res[key] = content
       res
+
+    _content: (value) ->
+      # FIXME : test linked objects
+      if typeof value is 'object' and value.Serialize?
+        value.Serialize()
+      else
+        value
 
     ToJSON: ->
       @Serialize()
 
-    @Route: (type, url, restricted, done) ->
-      route.Add type, url, restricted, done
-
     @Fetch: (id, done) ->
-      table.Find id, (err, blob) =>
+      @table.Find id, (err, blob) =>
         return done err if err?
 
-        if extendRes?
-          extendRes.Deserialize blob, done
-        else
-          @Deserialize blob, done
+        @resource.Deserialize blob, done
+
+    @FetchBy: (field, id, done) ->
+      fieldDict = {}
+      fieldDict[field] = id
+      @table.FindWhere '*', fieldDict, (err, blob) =>
+        return done err if err?
+
+        @resource.Deserialize blob, done
+
+    # FIXME : test
+    @ListBy: (field, id, done) ->
+      res = []
+      @resource.FetchBy field, id, (err, blob) ->
+        return done err if err?
+
+        res.push blob
+      res
 
     @List: (done) ->
-      table.Select 'id', {}, {}, (err, ids) =>
+      @table.Select 'id', {}, {}, (err, ids) =>
         return done err if err?
 
         async.map _(ids).pluck('id'), (item, done) =>
-          if extendRes?
-            extendRes.Fetch item, done
-          else
-            @Fetch item, done
+          @resource.Fetch item, done
         , done
 
+    # Fetch from database
     @Deserialize: (blob, done) ->
-      res = @
-      res = extendRes if extendRes?
+      res = @resource
 
       done null, new res blob
 
-    @ExtendedBy: (res) ->
-      extendRes = res
+    @_PrepareResource: (_table, _config, _app, _routes, _name) ->
+      @table = _table
+      @config = _config
+      @app = _app
+      @lname = _name.toLowerCase()
+      @resource = @
+      @_routes = _routes
 
-    @_SetHelpers: (_table, _resName, _app, _config) ->
-      @table = table = _table
-      @resName = resName = _resName
-      @route = route = new Route _app, _resName, @, _config
-      @config = config = _config
+      @
+
+    @Init: ->
+      @resource = @
+      Modulator.resources[@lname] = @
+
+      if @config? and @config.account?
+        @account = new Account @app, @lname, @, @config
+
+      if @config? and @config.abstract
+        @Extend = (name, routes, config) =>
+          Modulator.Resource name, routes, config, @
+      else if @_routes?
+        @routes = new @_routes(@, @app, @config)
+
+  Resource._PrepareResource(table, config, app, routes, name)

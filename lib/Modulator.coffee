@@ -9,6 +9,7 @@ class Modulator
   express: null
   server: null
   resources: {}
+  routes: {}
   config: null
   table: null
 
@@ -29,20 +30,34 @@ class Modulator
 
     @db = require('./connectors/sql')
 
-  Resource: (resourceName, config) ->
-    if resourceName is 'user'
+  Resource: (name, routes, config, _parent) ->
+
+    name = name.toLowerCase()
+    if name is 'user'
       throw new Error 'Resource name \'user\' is reserved'
 
-    if @resources[resourceName]?
-      return @resources[resourceName]
+    if @resources[name]?
+      return @resources[name]
 
-    @resources[resourceName] = require('./Resource')()
+    if routes? and not routes.prototype
+      config = routes
+      routes = null
 
-    resource = @resources[resourceName]
+    @Config() if !(@config?) # config of Modulator instance
 
-    @Config() if !(@config?)
+    if not routes? or routes.prototype not instanceof @Route
+      routes = @Route
 
-    resource._SetHelpers @table(resourceName + 's'), resourceName, @app, config
+    if _parent?
+      @resources[name] = resource = _parent
+      @resources[name]._PrepareResource @table(name + 's'), config, @app, routes, name
+    else
+      table = null
+      if not config? or (config? and not config.abstract)
+        table = @table(name + 's')
+
+      @resources[name] = resource =
+        require('./Resource')(table, config, @app, routes, name)
 
     resource
 
@@ -54,6 +69,8 @@ class Modulator
   _DefaultConfig: ->
     dbType: 'SqlMem'
 
+  Route: require('./Route')
+
   Reset: (done) ->
     @server.close()
     @resources = {}
@@ -62,7 +79,11 @@ class Modulator
 
     @app = express()
 
-    @app.use bodyParser()
+    @app.use bodyParser.urlencoded
+      extended: true
+
+    @app.use bodyParser.json
+      extended: true
 
     @server = http.createServer @app
 
@@ -72,5 +93,14 @@ class Modulator
     @db = require('./connectors/sql')
 
     done() if done?
+
+  ListEndpoints: (done) ->
+    endpoints = []
+    for endpoint in @app._router.stack
+      if endpoint.route?
+        res = {}
+        res[endpoint.route.path] = key for key of endpoint.route.methods
+        endpoints.push res
+    done(endpoints) if done?
 
 module.exports = new Modulator

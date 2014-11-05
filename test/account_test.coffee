@@ -4,7 +4,9 @@ assert = require 'assert'
 
 Client = require './common/client'
 
-Modulator = require '../lib/Modulator'
+Modulator = require '../'
+Authentication = require '../lib/Authentication'
+Permissions = require '../lib/Permissions'
 
 client = null
 
@@ -16,16 +18,23 @@ describe 'Modulator Account', ->
   before (done) ->
     Modulator.Reset ->
 
-      PlayerResource = Modulator.Resource 'player',
+      PlayerResource = Modulator.Resource 'player', Modulator.Route.DefaultRoute,
         account: true
-        restrict: 'user'
+        authentication: Authentication.user
 
-      TestResource = Modulator.Resource 'test',
-        restrict: 'auth'
+      PlayerResource.Init()
 
-      RestrictedResource = Modulator.Resource 'restricted',
-        restrict:
+      TestResource = Modulator.Resource 'test', Modulator.Route.DefaultRoute,
+        authentication: Authentication.auth
+
+      TestResource.Init()
+
+      RestrictedResource = Modulator.Resource 'restricted', Modulator.Route.DefaultRoute,
+        permissions: Permissions.objectBased
           group: 1
+        authentication: Authentication.auth
+
+      RestrictedResource.Init()
 
       assert PlayerResource?
       assert TestResource?

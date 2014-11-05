@@ -52,6 +52,12 @@ class Client
       .expect(200)
       .end done
 
+  Delete: (url, done) ->
+    req = @request.delete url
+
+    @AttachCookie req
+    req.expect 200, done
+
   AttachCookie: (req) ->
     agent.attachCookies req
 

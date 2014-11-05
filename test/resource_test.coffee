@@ -13,6 +13,7 @@ describe 'Modulator Resource', ->
     Modulator.Reset ->
       TestResource = Modulator.Resource 'test'
       assert TestResource?
+      TestResource.Init()
       done()
 
   it 'should add first resource', (done) ->
@@ -49,11 +50,11 @@ describe 'Modulator Resource', ->
         results.test.Save done]
       test2: ['change', (done, results) ->
         TestResource.Fetch 1, done]
-      , (err, results) ->
-        throw new Error err if err?
+    , (err, results) ->
+      throw new Error err if err?
 
-        assert.equal results.test2.test, 'test2'
-        done()
+      assert.equal results.test2.test, 'test2'
+      done()
 
   it 'should delete resource', (done) ->
     async.auto
