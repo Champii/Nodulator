@@ -11,7 +11,7 @@ class Table
     @FindWhere '*', {id: id}, done
 
   FindWhere: (fields, where, done) ->
-    @Select fields, where, {limit: 1}, (err, results) ->
+    @Select fields, where, {limit: 1}, (err, results) =>
       return done err if err?
 
       if results.length is 0

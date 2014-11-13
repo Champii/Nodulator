@@ -40,6 +40,8 @@ module.exports = (table, config, app, routes, name) ->
       # FIXME : test linked objects
       if typeof value is 'object' and value.Serialize?
         value.Serialize()
+      # else if typeof value is 'object'
+      #   JSON.stringify value
       else
         value
 
@@ -52,9 +54,9 @@ module.exports = (table, config, app, routes, name) ->
 
         @resource.Deserialize blob, done
 
-    @FetchBy: (field, id, done) ->
+    @FetchBy: (field, value, done) ->
       fieldDict = {}
-      fieldDict[field] = id
+      fieldDict[field] = value
       @table.FindWhere '*', fieldDict, (err, blob) =>
         return done err if err?
 
