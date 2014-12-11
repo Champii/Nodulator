@@ -1,0 +1,8 @@
+html
+  head
+    | !{cachify_css('/css/app.css')}
+
+  body(ng-app="app")
+    | !{cachify_js('/js/app.js')}
+    | !{modulator()}
+

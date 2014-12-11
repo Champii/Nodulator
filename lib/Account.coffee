@@ -25,8 +25,6 @@ class Account
 
   InitPassport: (Resource) ->
 
-    @app.use cookieParser()
-
     @app.use expressSession
       secret: 'Modulator secret'
       saveUninitialized: true
