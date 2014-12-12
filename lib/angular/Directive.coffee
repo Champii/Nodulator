@@ -5,26 +5,33 @@ Directive = (name, injects) ->
     constructor: ->
       if not name?
         return console.error 'Modulator.Directive must have a name'
-      @name = name
-      @injects = injects
 
-      app.directive @name, @injects.concat [(args...) => @Body.apply @, args]
+      @_name = name
+      @_injects = injects
 
-    Body: (args...) ->
-      for arg, i in args
-        @[injects[i]] = arg
+      app.directive @_name, @_injects.concat [(args...) => @_Body.apply @, args]
 
-      return {
+    _Body: (args...) ->
+
+      dir = {
 
         restrict: 'E'
 
         replace: true
 
-        templateUrl: @name + '-tpl'
+        templateUrl: @_name + '-tpl'
 
         link: (@scope, @element, @attr) =>
-          @Link()
+          @Init() if @Init?
+          @scope[name] = elem for name, elem of @ when name[0] isnt '_' and name isnt 'Init'
+
       }
 
-    Link: ->
-      return console.error 'Link not implemented for directive ', @name,
+      for arg, i in args
+        @[injects[i]] = arg
+
+      return dir
+
+    _Link: ->
+      return console.error 'Link not implemented for Directive ', @_name,
+

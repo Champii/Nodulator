@@ -15,7 +15,6 @@ class Assets
 
     @MakeAssetsList()
 
-    @CompileViews()
     @InjectViews()
 
     @Serve()
@@ -72,6 +71,7 @@ class Assets
 
   InjectViews: ->
     @app.use (req, res, next) =>
+      @CompileViews()
       res.locals.modulator = => @compiled
       next()
 
