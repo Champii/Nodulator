@@ -4,17 +4,22 @@ passportSocketIO = require("passport.socketio");
 
 bus = require './Bus'
 
+io = null
 class Socket
+
+  @rooms: []
 
   constructor: (@server, @store, @passport) ->
 
     @io = socket.listen @server
-
+    io = @io
     onAuthorizeSuccess = (data, accept) ->
+      console.log 'success'
       accept(null, true);
 
     onAuthorizeFail = (data, message, error, accept) ->
-      return accept new Error message if error
+      console.log 'fail', message, error
+      # return accept new Error message if error
 
       accept(null, false);
 
@@ -28,19 +33,33 @@ class Socket
       fail:           onAuthorizeFail
 
     @io.sockets.on 'connection', (socket) =>
-
       console.log 'Socket', socket.request.user
-      @JoinRoom 'user', socket.request.user.id, socket
+
+      socket.on 'lol', ->
+        console.log 'lol'
+
+      Socket.JoinRooms socket
 
       socket.once 'disconnect', () ->
 
-  EmitRoom: (name, id, args...) ->
-    room = @io.sockets.in(name + '-' + id)
+  @JoinRooms: (socket) ->
+    for room in Socket.rooms
+      socket.join room
+
+  @EmitRoom: (name, args...) ->
+    room = io.sockets.in(name)
     room.emit.apply room, args
+    console.log 'Emit', name, args
 
-  JoinRoom: (name, id, socket) ->
-    socket.join name + '-' + id
-    bus.on name + id, () ->
-
+  @NewRoom: (name) ->
+    @rooms.push name
+    for prefix in prefixes
+      do (prefix) ->
+        console.log 'Added for', prefix + name
+        bus.on prefix + name, (item) =>
+          console.log 'Event', prefix + name, item
+          Socket.EmitRoom name, prefix + name, item
 
 module.exports = Socket
+
+prefixes = ['new_', 'update_', 'delete_']

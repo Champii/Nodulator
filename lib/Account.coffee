@@ -25,12 +25,11 @@ class Account
 
   InitPassport: (Resource) ->
 
-    @app.use expressSession
-      secret: 'Modulator secret'
-      saveUninitialized: true
-      resave: true
+    # @app.use expressSession
+    #   secret: 'Modulator secret'
+    #   saveUninitialized: true
+    #   resave: true
 
-    @app.use passport.initialize()
     @app.use passport.session()
 
     passport.serializeUser (user, done) ->

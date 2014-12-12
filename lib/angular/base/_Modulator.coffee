@@ -7,7 +7,7 @@ class _Modulator
 
   Directive: (name, injects...) ->
     directive = Directive name, injects
-    @directives[name] = directive
+    @directives[name] = directive if not @directives[name]
     directive
 
   Service: (name, injects...) ->
@@ -25,7 +25,7 @@ class _Modulator
     @services[name] = service if not @services[name]
     service
 
-  Controller: (name, injects) ->
+  Controller: (name, injects...) ->
     throw new Error 'Controller Not implemented'
 
 Modulator = new _Modulator

@@ -91,13 +91,4 @@ class Assets
     @app.engine '.jade', jade.__express
     @app.set 'view engine', 'jade'
 
-    # FIXME: ugly fix for favicon
-    @app.get '/favicon.ico', (req, res) ->
-      res.status(200).end()
-
-    @app.get '*', (req, res) ->
-
-      res.render 'index',
-        user: {id: req.userId}
-
 module.exports = Assets

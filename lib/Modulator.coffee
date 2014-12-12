@@ -46,7 +46,6 @@ class Modulator
 
     @server = http.createServer @app
 
-
     @sessionStore = new RedisStore
      host: 'localhost'
 
@@ -57,9 +56,10 @@ class Modulator
       resave: true
       saveUninitialized: true
 
-    @socket = new Socket @server, @sessionStore, passport
+    @app.use passport.initialize()
 
     @server.listen 3000
+    @socket = new Socket @server, @sessionStore, passport
 
     @db = require('./connectors/sql')
 
@@ -135,5 +135,15 @@ class Modulator
         res[endpoint.route.path] = key for key of endpoint.route.methods
         endpoints.push res
     done(endpoints) if done?
+
+  Run: ->
+    # FIXME: ugly fix for favicon
+    @app.get '/favicon.ico', (req, res) ->
+      res.status(200).end()
+
+    @app.get '*', (req, res) ->
+
+      res.render 'index',
+        user: {id: req.userId}
 
 module.exports = new Modulator

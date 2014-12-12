@@ -17,6 +17,8 @@ Base = (name, injects) ->
     _Body: (args...) ->
       @[@_injects[i]] = arg for arg, i in args
 
+      console.log 'Body', @
+      @Init() if @Init?
       @
 
     @Init: ->

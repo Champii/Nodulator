@@ -7,6 +7,8 @@ Directive = (name, injects) ->
 
     _Body: (args...) ->
 
+      super args[0]
+
       dir = {
 
         restrict: 'E'
@@ -21,6 +23,5 @@ Directive = (name, injects) ->
 
       }
 
-      super()
 
       dir
