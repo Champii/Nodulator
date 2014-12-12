@@ -21,7 +21,7 @@ class Assets
 
   MakeAssetsList: ->
     exp =
-      '/js/app_head.js': ['/client/public/js/', '/client/', '/client/public/js/modulator-angular/']
+      '/js/app_head.js': ['/client/public/js/', '/client/', '/client/public/js/modulator-angular/base/', '/client/public/js/modulator-angular/']
       '/js/app_body.js': ['/client/services/', '/client/directives/', '/client/controllers/']
       '/css/app.css': ['/client/public/css/']
 
@@ -43,9 +43,6 @@ class Assets
           @list[name] = files
         else
           @list[name] = @list[name].concat files
-
-  MakeAngularLib: ->
-    @list['/js/app.js'].push ''
 
   CompileViews: ->
     res = ''

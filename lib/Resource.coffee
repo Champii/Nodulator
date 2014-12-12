@@ -3,6 +3,7 @@ async = require 'async'
 
 Modulator = require '../'
 Account = require './Account'
+bus = require './Bus'
 
 module.exports = (table, config, app, routes, name) ->
 

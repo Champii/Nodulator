@@ -4,9 +4,13 @@ path = require 'path'
 http = require 'http'
 jade = require 'jade'
 express = require 'express'
+passport = require 'passport'
 bodyParser = require 'body-parser'
+expressSession = require 'express-session'
+RedisStore = require('connect-redis')(expressSession)
 
 Assets = require './Assets'
+Socket = require './Socket'
 
 class Modulator
 
@@ -41,6 +45,19 @@ class Modulator
     @assets = new Assets @app, @appRoot, 'client/views'
 
     @server = http.createServer @app
+
+
+    @sessionStore = new RedisStore
+     host: 'localhost'
+
+    @app.use expressSession
+      key: 'modulator'
+      secret: 'modulator'
+      store: @sessionStore
+      resave: true
+      saveUninitialized: true
+
+    @socket = new Socket @server, @sessionStore, passport
 
     @server.listen 3000
 
