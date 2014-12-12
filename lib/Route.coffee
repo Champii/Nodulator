@@ -47,7 +47,6 @@ class DefaultRoute extends Route
   Config: ->
     @Add 'all', '/:id*', (req, res, next) =>
       if not isFinite req.params.id
-        console.log 'Not finite :', isFinite req.params.id
         return next()
 
       @resource.Fetch req.params.id, (err, result) =>

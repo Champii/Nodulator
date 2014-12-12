@@ -1,8 +1,10 @@
 _ = require 'underscore'
 async = require 'async'
 
-Modulator = require '../'
+bus = require './Bus'
+Socket = require './Socket'
 Account = require './Account'
+Modulator = require '../'
 
 module.exports = (table, config, app, routes, name) ->
 
@@ -21,11 +23,18 @@ module.exports = (table, config, app, routes, name) ->
 
         if !exists
           @id = id
+          console.log 'New', name
+          bus.emit 'new_' + name, @Serialize()
+        else
+          bus.emit 'update_' + name, @Serialize()
 
         done null, @
 
     Delete: (done) ->
-      @table.Delete @id, done
+      @table.Delete @id, (err) =>
+        return done err if err?
+        bus.emit 'delete_' + name, @Serialize()
+        done()
 
     # Send to the database
     Serialize: ->
@@ -107,5 +116,6 @@ module.exports = (table, config, app, routes, name) ->
           Modulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
+      Socket.NewRoom @lname
 
   Resource._PrepareResource(table, config, app, routes, name)
