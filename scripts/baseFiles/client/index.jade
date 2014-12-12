@@ -1,8 +1,9 @@
 html
   head
     | !{cachify_css('/css/app.css')}
+    | !{cachify_js('/js/app_head.js')}
 
   body(ng-app="app")
-    | !{cachify_js('/js/app.js')}
+    | !{cachify_js('/js/app_body.js')}
     | !{modulator()}
 

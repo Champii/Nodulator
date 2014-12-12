@@ -35,7 +35,13 @@ async.series [
     console.log 'Ok'
     console.log ''
     console.log 'Installing Modulator from LINK'
-    exec 'ln -fs ' + modulatorRoot + ' ' + (path.resolve appRoot, 'node_modules'), done]
+    exec 'ln -fs ' + modulatorRoot + ' ' + (path.resolve appRoot, 'node_modules'), done
+
+  (done) ->
+    console.log 'Ok'
+    console.log ''
+    console.log 'Installing Modulator angular from LINK'
+    exec 'ln -fs ' + modulatorRoot + '/lib/angular ' + appRoot + '/client/public/js/modulator-angular', done]
 
   , (err, results) ->
     return console.error err if err?
