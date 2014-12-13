@@ -23,7 +23,6 @@ module.exports = (table, config, app, routes, name) ->
 
         if !exists
           @id = id
-          console.log 'New', name
           bus.emit 'new_' + name, @Serialize()
         else
           bus.emit 'update_' + name, @Serialize()

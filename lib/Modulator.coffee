@@ -12,6 +12,9 @@ RedisStore = require('connect-redis')(expressSession)
 Assets = require './Assets'
 Socket = require './Socket'
 
+# Hack to prevent EADDRINUSE from mocha
+port = 3000
+
 class Modulator
 
   app: null
@@ -40,7 +43,7 @@ class Modulator
     @app.use bodyParser.json
       extended: true
 
-    if @config.boostrap
+    if @config? and @config.boostrap
       @assets = new Assets @app, @appRoot, 'client/views'
 
     @server = http.createServer @app
@@ -57,7 +60,7 @@ class Modulator
 
     @app.use passport.initialize()
 
-    @server.listen 3000
+    @server.listen port++
     @socket = new Socket @server, @sessionStore, passport
 
     @db = require('./connectors/sql')
@@ -106,25 +109,19 @@ class Modulator
   Route: require('./Route')
 
   Reset: (done) ->
+    if not @server?
+      @Init()
+      done() if done?
+      return
+
     @server.close()
+    @socket.Close()
     @resources = {}
     @config = null
     @table = null
 
-    @app = express()
-
-    @app.use bodyParser.urlencoded
-      extended: true
-
-    @app.use bodyParser.json
-      extended: true
-
-    @server = http.createServer @app
-
-    @server.listen 3000
-
-    @db._reset()
-    @db = require('./connectors/sql')
+    @db._reset() if @db?
+    @Init()
 
     done() if done?
 
@@ -137,6 +134,7 @@ class Modulator
         endpoints.push res
     done(endpoints) if done?
 
+  # Used when bootstrapped
   Run: ->
     # FIXME: ugly fix for favicon
     @app.get '/favicon.ico', (req, res) ->
