@@ -26,8 +26,6 @@ class Modulator
 
   constructor: ->
 
-    @Init()
-
   Init: ->
 
     @appRoot = path.resolve '.'
@@ -42,7 +40,8 @@ class Modulator
     @app.use bodyParser.json
       extended: true
 
-    @assets = new Assets @app, @appRoot, 'client/views'
+    if @config.boostrap
+      @assets = new Assets @app, @appRoot, 'client/views'
 
     @server = http.createServer @app
 
@@ -98,6 +97,8 @@ class Modulator
     @config = @_DefaultConfig() if !(@config?)
 
     @table = @db(@config).table
+
+    @Init()
 
   _DefaultConfig: ->
     dbType: 'SqlMem'
