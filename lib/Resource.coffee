@@ -1,7 +1,6 @@
 _ = require 'underscore'
 async = require 'async'
 
-bus = require './Bus'
 Socket = require './Socket'
 Account = require './Account'
 Modulator = require '../'
@@ -23,16 +22,16 @@ module.exports = (table, config, app, routes, name) ->
 
         if !exists
           @id = id
-          bus.emit 'new_' + name, @Serialize()
+          Modulator.bus.emit 'new_' + name, @Serialize()
         else
-          bus.emit 'update_' + name, @Serialize()
+          Modulator.bus.emit 'update_' + name, @Serialize()
 
         done null, @
 
     Delete: (done) ->
       @table.Delete @id, (err) =>
         return done err if err?
-        bus.emit 'delete_' + name, @Serialize()
+        Modulator.bus.emit 'delete_' + name, @Serialize()
         done()
 
     # Send to the database
@@ -74,7 +73,7 @@ module.exports = (table, config, app, routes, name) ->
     @ListBy: (field, value, done) ->
       fieldDict = {}
       fieldDict[field] = value
-      @table.Select 'id', fieldDict, {}, (err, ids) ->
+      @table.Select 'id', fieldDict, {}, (err, ids) =>
         return done err if err?
 
         async.map _(ids).pluck('id'), (item, done) =>

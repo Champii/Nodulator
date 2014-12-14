@@ -9,7 +9,6 @@ class Route
     @Config()
 
   Add: (type, url, middle..., done) ->
-    console.log 'Add', type, url, middle, done
     if not done?
       done = url
       url = '/'
