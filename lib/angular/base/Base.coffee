@@ -12,9 +12,10 @@ Base = (name, injects) ->
       if typeof @_injects is 'string'
         @_injects = [@_injects]
 
-      return([@_name, @_injects.concat [(args...) => @_Body.apply @, args]])
+      console.log 'Injects', @_injects
+      return [@_name, @_injects.concat [(args...) => @_Body.apply @, args]]
 
-    _Body: (args...) ->
+    _Body: (args) ->
       @[@_injects[i]] = arg for arg, i in args
 
       console.log 'Body', @

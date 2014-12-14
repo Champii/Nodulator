@@ -1,14 +1,17 @@
 _ = require 'underscore'
 async = require 'async'
-passport = require 'passport'
 expressSession = require 'express-session'
 cookieParser = require 'cookie-parser'
 
 LocalStrategy = require('passport-local').Strategy
 
+Modulator = require './Modulator'
+
 class Account
 
   constructor: (@app, @resName, Resource, @config) ->
+
+    @passport = Modulator.passport
 
     @userField =
       usernameField: 'username'
@@ -30,22 +33,22 @@ class Account
     #   saveUninitialized: true
     #   resave: true
 
-    @app.use passport.session()
+    @app.use @passport.session()
 
-    passport.serializeUser (user, done) ->
+    @passport.serializeUser (user, done) ->
       done null, user.id
 
-    passport.deserializeUser (id, done) ->
+    @passport.deserializeUser (id, done) ->
       Resource.Fetch id, done
 
-    passport.use new LocalStrategy @userField, (username, password, done) =>
+    @passport.use new LocalStrategy @userField, (username, password, done) =>
       Resource[@methodName] username, (err, user) =>
         return done err if err? and err.status isnt 'not_found'
         return done null, false, {message: 'Incorrect Username/password'} if err? or !(user?) or user[@userField.passwordField] isnt password
         return done null, user
 
   InitRoutes: (resName) ->
-    @app.post '/api/1/' + resName + 's' + '/login', passport.authenticate('local'), (req, res) =>
+    @app.post '/api/1/' + resName + 's' + '/login', @passport.authenticate('local'), (req, res) =>
       if @config.account? and @config.account.loginCallback?
         @config.account.loginCallback req.user, ->
           res.status(200).send()

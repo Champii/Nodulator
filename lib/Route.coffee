@@ -8,7 +8,8 @@ class Route
 
     @Config()
 
-  Add: (type, url, done) ->
+  Add: (type, url, middle..., done) ->
+    console.log 'Add', type, url, middle, done
     if not done?
       done = url
       url = '/'
@@ -16,7 +17,11 @@ class Route
     done = @_AddMiddleware type, url, done
     if not @[type + url]?
       @[type + url] = done
-      @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
+      if middle.length
+        middle.push (req, res, next) => @[type + url](req, res, next)
+        @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
+      else
+        @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
     else
       @[type + url] = done
 

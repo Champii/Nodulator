@@ -10,7 +10,6 @@ expressSession = require 'express-session'
 RedisStore = require('connect-redis')(expressSession)
 
 Assets = require './Assets'
-Socket = require './Socket'
 
 # Hack to prevent EADDRINUSE from mocha
 port = 3000
@@ -28,6 +27,7 @@ class Modulator
   assets: {}
 
   constructor: ->
+    @Init()
 
   Init: ->
 
@@ -43,8 +43,6 @@ class Modulator
     @app.use bodyParser.json
       extended: true
 
-    if @config? and @config.boostrap
-      @assets = new Assets @app, @appRoot, 'client/views'
 
     @server = http.createServer @app
 
@@ -58,10 +56,11 @@ class Modulator
       resave: true
       saveUninitialized: true
 
-    @app.use passport.initialize()
+    @passport = passport
+
+    @app.use @passport.initialize()
 
     @server.listen port++
-    @socket = new Socket @server, @sessionStore, passport
 
     @db = require('./connectors/sql')
 
@@ -99,14 +98,22 @@ class Modulator
   Config: (@config) ->
     @config = @_DefaultConfig() if !(@config?)
 
+    for k, v of @_DefaultConfig()
+      @config[k] = v if not @config[k]?
+
     @table = @db(@config).table
 
-    @Init()
+    console.log @config
+    if @config? and @config.bootstrap
+      @assets = new Assets @app, @appRoot, 'client/views'
 
   _DefaultConfig: ->
     dbType: 'SqlMem'
 
-  Route: require('./Route')
+  bus: require './Bus'
+  Route: require './Route'
+  Socket: ->
+    (require './Socket')(@)
 
   Reset: (done) ->
     if not @server?

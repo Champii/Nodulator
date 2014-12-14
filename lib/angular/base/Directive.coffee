@@ -3,11 +3,15 @@ Directive = (name, injects) ->
   class _Directive extends Base name, injects
 
     constructor: ->
-      app.directive.apply app, super()
+      console.log 'Constructor', name, injects, app
+      app.directive 'test', super()[1]
+      console.log 'Constructor', name, injects, app
+      @
+      # app.directive.apply app, super()
 
-    _Body: (args...) ->
+    _Body: (args) ->
 
-      super args[0]
+      super args
 
       dir = {
 
@@ -20,6 +24,7 @@ Directive = (name, injects) ->
         link: (@scope, @element, @attr) =>
           @_Init() if @_Init?
           @scope[name] = elem for name, elem of @ when name[0] isnt '_'
+          console.log 'scope', @scope
 
       }
 

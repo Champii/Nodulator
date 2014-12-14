@@ -71,13 +71,15 @@ module.exports = (table, config, app, routes, name) ->
         @resource.Deserialize blob, done
 
     # FIXME : test
-    @ListBy: (field, id, done) ->
-      res = []
-      @resource.FetchBy field, id, (err, blob) ->
+    @ListBy: (field, value, done) ->
+      fieldDict = {}
+      fieldDict[field] = value
+      @table.Select 'id', fieldDict, {}, (err, ids) ->
         return done err if err?
 
-        res.push blob
-      res
+        async.map _(ids).pluck('id'), (item, done) =>
+          @resource.Fetch item, done
+        , done
 
     @List: (done) ->
       @table.Select 'id', {}, {}, (err, ids) =>
@@ -115,6 +117,6 @@ module.exports = (table, config, app, routes, name) ->
           Modulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
-      Socket.NewRoom @lname
+      Modulator.socket.NewRoom @lname if Modulator.socket?
 
   Resource._PrepareResource(table, config, app, routes, name)
