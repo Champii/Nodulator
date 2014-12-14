@@ -11,7 +11,7 @@ RedisStore = require('connect-redis')(expressSession)
 
 Assets = require './Assets'
 
-# Hack to prevent EADDRINUSE from mocha
+#FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
 
 class Modulator
@@ -42,7 +42,6 @@ class Modulator
 
     @app.use bodyParser.json
       extended: true
-
 
     @server = http.createServer @app
 
@@ -149,7 +148,16 @@ class Modulator
 
     @app.get '*', (req, res) ->
 
-      res.render 'index',
-        user: {id: req.userId}
+      u = user: {}
+
+      if @authApp
+        rend = 'auth'
+        if req.user?
+          u.user = req.user
+          rend = 'index'
+      else
+        rend = 'index'
+
+      res.render rend, u
 
 module.exports = new Modulator

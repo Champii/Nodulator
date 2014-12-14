@@ -110,6 +110,7 @@ module.exports = (table, config, app, routes, name) ->
 
       if @config? and @config.account?
         @account = new Account @app, @lname, @, @config
+        Modulator.authApp = true
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>

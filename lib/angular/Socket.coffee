@@ -1,10 +1,10 @@
-class Socket extends Factory 'socket', '$rootScope'
+class Socket extends Modulator.Factory 'socket', '$rootScope'
+
+  socket: {}
 
   constructor: ->
-    @socket = io()
-    console.log 'Socket = ', @socket
-    @socket.emit 'lol'
     super()
+    @socket = io()
 
   On: (eventName, callback) ->
     wrapper = =>
@@ -24,4 +24,12 @@ class Socket extends Factory 'socket', '$rootScope'
         if callback
           callback.apply @socket, args
 
-Socket.Init()
+  @Init: ->
+    res = @
+    new res
+
+    # console.log 'Socket = ', @socket
+    # s.socket.Emit 'lol'
+
+document.addEventListener "DOMContentLoaded", (event) ->
+  Socket.Init()
