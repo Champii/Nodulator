@@ -5,7 +5,6 @@ ResourceService = (name, injects) ->
   if 'socket' not in injects
     injects.push 'socket'
 
-  console.log 'ResourceService', injects
   class _ResourceService extends Service name, injects
 
     list: []
@@ -14,10 +13,18 @@ ResourceService = (name, injects) ->
     _lName: name
 
     Init: ->
-      console.log 'Init', @_lName
-      @socket.On 'new_' + @_lName, (item) => console.log 'New', item
-      @socket.On 'update_' + @_lName, (item) => console.log 'Update', item
-      @socket.On 'delete_' + @_lName, (item) => console.log 'Delete', item
+      window.addEventListener "load", (event) =>
+        @socket.On 'new_' + @_lName, (item) => @OnNew item
+        @socket.On 'update_' + @_lName, (item) => @OnUpdate item
+        @socket.On 'delete_' + @_lName, (item) => @OnDelete item
+      , false
+
+    OnNew: (item) ->
+      # console.log 'new_' + @_lName, item
+    OnUpdate: (item) ->
+      # console.log 'update_' + @_lName, item
+    OnDelete: (item) ->
+      # console.log 'delete_' + @_lName, item
 
     FetchAll: (done) ->
       @$http.get '/api/1/' + @_resName

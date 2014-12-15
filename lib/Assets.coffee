@@ -31,12 +31,12 @@ class Assets
 
         files = _(files).filter (file) =>
           fs.statSync(@appRoot + dir + file).isFile() and
-            (file.match(/\.coffee$/g) or file.match(/\.js$/g))
+            (file.match(/\.coffee$/g) or file.match(/\.js$/g) or file.match(/\.css$/g))
 
         files = _(files).map (file) =>
           if file.match(/\.coffee$/g)
             dir + file.replace(/\.coffee/g, '.js')
-          else if file.match(/\.js$/g)
+          else if file.match(/\.js$/g) or file.match(/\.css$/g)
             dir + file
 
         if not @list[name]
@@ -57,9 +57,7 @@ class Assets
 
     j += '
       script(src="/socket.io/socket.io.js")\n'
-    j += '
-      script.\n
-        var __user = !{JSON.stringify(user) || \'{}\'};\n'
+
 
     res = jade.compile j,
       filename: path.resolve @appRoot, @viewsRoot

@@ -25,6 +25,7 @@ class Modulator
   config: null
   table: null
   assets: {}
+  authApp: false
 
   constructor: ->
     @Init()
@@ -143,10 +144,10 @@ class Modulator
   # Used when bootstrapped
   Run: ->
     # FIXME: ugly fix for favicon
-    @app.get '/favicon.ico', (req, res) ->
+    @app.get '/favicon.ico', (req, res) =>
       res.status(200).end()
 
-    @app.get '*', (req, res) ->
+    @app.get '*', (req, res) =>
 
       u = user: {}
 

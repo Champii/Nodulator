@@ -3,20 +3,10 @@ Directive = (name, injects) ->
   class _Directive extends Base name, injects
 
     constructor: ->
-      console.log 'Directive Constructor', name, injects
-      # test = super()
-      # console.log 'Body2', @_Body []
-      # console.log 'Super : ', test
-
-
       app.directive.apply app, super()
-      # app.directive name + '1', [ ->
-      #   console.log 'Directive !!!!!!!!!!!!', name, args
-      #   return @_Body.apply @, args]
 
     _Body: (args) ->
 
-      console.log 'Directive body', args
       super args
 
       dir = {
