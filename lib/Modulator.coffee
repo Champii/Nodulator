@@ -9,8 +9,6 @@ bodyParser = require 'body-parser'
 expressSession = require 'express-session'
 RedisStore = require('connect-redis')(expressSession)
 
-Assets = require './Assets'
-
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
 
@@ -24,8 +22,9 @@ class Modulator
   routes: {}
   config: null
   table: null
-  assets: {}
   authApp: false
+  defaultConfig:
+    dbType: 'SqlMem'
 
   constructor: ->
     @Init()
@@ -96,22 +95,29 @@ class Modulator
     resource
 
   Config: (@config) ->
-    @config = @_DefaultConfig() if !(@config?)
+    @config = @defaultConfig if !(@config?)
 
-    for k, v of @_DefaultConfig()
+    for k, v of @defaultConfig
       @config[k] = v if not @config[k]?
 
     @table = @db(@config).table
 
-    console.log @config
-    if @config? and @config.bootstrap
-      @assets = new Assets @app, @appRoot, 'client/views'
+  Use: (module) ->
+    module @
 
-  _DefaultConfig: ->
-    dbType: 'SqlMem'
+  ExtendDefaultConfig: (config) ->
+    @defaultConfig = _(@defaultConfig).extend config
+
+  ExtendRunProcess: (process) ->
+    oldRun = @Run
+    @Run = =>
+      process()
+      oldRun.call @
 
   bus: require './Bus'
+
   Route: require './Route'
+
   Socket: ->
     (require './Socket')(@)
 
@@ -143,6 +149,9 @@ class Modulator
 
   # Used when bootstrapped
   Run: ->
+    if not @assets?
+      return
+
     # FIXME: ugly fix for favicon
     @app.get '/favicon.ico', (req, res) =>
       res.status(200).end()
