@@ -14,7 +14,7 @@ If you don't give Nodulator a config, it will assume you want to use SqlMem DB s
 If you prefere to use a persistant system, here is the procedure :
 
 ```coffeescript
-    Nodulator = require 'Nodulator'
+    Nodulator = require 'nodulator'
     
     Nodulator.Config
       dbType: 'Mongo'       # You can select 'SqlMem' to use inRAM Document (no persistant data, used    to test) or 'Mongo' or 'Mysql'
@@ -321,19 +321,7 @@ ___
 
   It will deny access to whole resource for any users that don't have theses properties set
 
-
-
-  AND ALSO:
-
-  When adding new route, you can also give a restrict object (optional, by default it use the config object passed to the resource)
-
-    ATest.Route 'get', '/test', restrict: 'auth', done
-
-    or
-
-    ATest.Route 'put', '/:id/test', restrict: {group: 1}, done
-
-    To override default resource config, give {restrict: false}
+It's not possible anymore to put a certain rule on a certain route. Theses rules apply to the whole resource.
 
 ## DOC (DEPRECATED)
 
