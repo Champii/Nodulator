@@ -5,6 +5,68 @@
 
 Nodulator is designed to make it more easy to create highly modulable REST APIs, with integrated ORM (database agnostic) in CoffeeScript.
 
+
+Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee) to see a full working exemple
+
+___
+### Compatible modules
+- [Nodulator-Assets](https://github.com/Champii/Nodulator-Assets): Automatic assets management and inclusion
+- [Nodulator-Angular](https://github.com/Champii/Nodulator-Angular): Angular class set, add inheritance systeme and default behaviour.
+
+___
+## Jump To
+- [Installation](#installation)
+- [Project Generation](#project-generation)
+- [Config](#config)
+- [Resource](#resources)
+  - [Class methods](#class-methods)
+  - [Instance methods](#instance-methods)
+- [Overriding and Inheritance](#overriding-and-inheritance)
+  - [Override default behaviour](#override-default-behaviour)
+  - [Complex inheritance system](#complex-inheritance-system)
+- [Route](#routes)
+  - [Route Object](#route-object)
+  - [DefaultRoute](#default-route-object)
+  - [Route Inheritance](#route-inheritance)
+- [Auth](#auth)
+- [Restriction](#restriction)
+- [DOC (Deprecated)](#doc)
+- [TODO](#todo)
+
+___
+### Installation 
+
+Just run :
+    npm install nodulator
+
+After you can require `Nodulator` as a module :
+
+```coffeescript
+    Nodulator = require 'nodulator'
+```
+
+___
+### Project Generation
+(BETA Feature)
+USE IT IN AN EMPTY FOLDER
+
+You can use `coffee ./node_modules/nodulator/scripts/index.coffee init`    
+It creates the following structure :
+```
+main.coffee
+package.json
+settings/
+server/
+├── index.coffee
+├── processors/
+│   └── index.coffee
+├── resources/
+│   ├── index.coffee
+└── sockets/
+    └── index.coffee
+```
+
+You can immediatly start to write resources in server/resources
 ___
 ### Config
 
@@ -42,8 +104,15 @@ Here is an exemple of creating a `Resource`
 
 ```coffeescript
     PlayerResource = Nodulator.Resource 'player'
+
     PlayerResource.Init()
     # /!\ Never forget to call Init() /!\ #
+```
+
+You can pass several params to `Modulator.Resource` : 
+
+```coffeescript
+    Modulator.Resource name [, Route] [, config]
 ```
 
 #### Class methods
@@ -232,28 +301,32 @@ And you can override existing route by providing same association verb + url. Ex
 ___
 ##Auth
 
-  Authentication is based on Passport    
-  You can assign a Ressource as AccountResource :    
+Authentication is based on Passport    
+You can assign a Ressource as AccountResource :    
 
 ```coffeescript
-    APlayer = Nodulator.Resource 'player',
+    config = 
       account: true
+
+    class PlayerResource extends Nodulator.Resource 'player', config
 ```
 
-  Defaults fields are 'username' and 'password'
+Defaults fields are 'username' and 'password'
 
-  You can change them (optional) :
+You can change them (optional) :
 
 ```coffeescript
-    APlayer = Nodulator.Resource 'player',
+    config = 
       account:
         fields:
           usernameField: "login"
           passwordField: "pass"
+
+    class PlayerManager extends Nodulator.Resource 'player', config
 ```
 
 
-  It creates a custom method from usernameField
+It creates a custom method from usernameField
 
     *FetchByUsername(username, done)
 
@@ -263,67 +336,67 @@ ___
 
     * Class methods
 
-  It defines 2 routes :
+It defines 2 routes :
 
     POST    /api/1/players/login
     POST    /api/1/players/logout
 
-  It setup session system, and thanks to Passport,
+It setup session system, and thanks to Passport,    
+It fills req.user variable to handle public/authenticated routes
 
-  it fills req.user variable to handle public/authenticated routes
+You have to `extend` yourself the `post` default route (for exemple) of your resource to use it as a signup route.
 
 #Restriction#
 
-  USER:
+USER:
 
-  You can restrict access to a resource :
+You can restrict access to a resource :
 
 ```coffeescript
-    APlayer = Nodulator.Resource 'player',
+    config =
       account: true
       restricted: 'user' #Can be 'user', 'auth', or an object
+
+    class PlayerResource extends Nodulator.Resource 'player', config
 ```
 
+This code create a APlayer resource that is an account,   
+and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)   
 
-  This code create a APlayer resource that is an account,
+POST and GET-without-id are still accessible for anyone (you can override them)
+/!\ 'user' keyword must only be used on account resource
 
-  and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)
+AUTH:
 
-  POST and GET-without-id are still accessible for anyone (you can override them)
-
-  /!\ 'user' keyword must only be used on account resource
-
-
-  AUTH:
-
-  You can restrict access to a resource for authenticated users only :
+You can restrict access to a resource for authenticated users only :
 
 ```coffeescript
-    ATest = Nodulator.Resource 'test',
+    PlayerResource = Nodulator.Resource 'player',
       restricted: 'auth'
 ```
 
 
-  This code create a ATest resource that can only be accessed by auth users
+This code create a ATest resource that can only be accessed by auth users
 
 
-  OBJECT:
+OBJECT:
 
-  You can restrict access to a resource for users that have particular property set :
+You can restrict access to a resource for users that have particular property set :
 
 ```coffeescript
-    ATest = Nodulator.Resource 'test',
+    PlayerResource = Nodulator.Resource 'player',
       restricted:
         group: 1
         x: 'test'
 ```
 
-
-  It will deny access to whole resource for any users that don't have theses properties set
+It will deny access to whole resource for any users that don't have theses properties set
 
 It's not possible anymore to put a certain rule on a certain route. Theses rules apply to the whole resource.
 
-## DOC (DEPRECATED)
+___
+## DOC
+ (DEPRECATED)
 
   Nodulator
 
@@ -386,7 +459,7 @@ It's not possible anymore to put a certain rule on a certain route. Theses rules
       Call @Serialize() by default, but can be overrided
 
 
-## ToDo (TODO :p)
+## ToDo
 
   By order of priority
 
