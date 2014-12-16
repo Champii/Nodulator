@@ -29,19 +29,7 @@ async.series [
     console.log 'Ok'
     console.log ''
     console.log 'Installing base packages'
-    exec 'cd ' + appRoot + '&& mkdir -p node_modules && npm install', done
-
-  (done) ->
-    console.log 'Ok'
-    console.log ''
-    console.log 'Installing Nodulator from LINK'
-    exec 'ln -fs ' + NodulatorRoot + ' ' + (path.resolve appRoot, 'node_modules'), done
-
-  (done) ->
-    console.log 'Ok'
-    console.log ''
-    console.log 'Installing Nodulator angular from LINK'
-    exec 'ln -fs ' + NodulatorRoot + '/lib/angular ' + appRoot + '/client/public/js/Nodulator-angular', done]
+    exec 'cd ' + appRoot + '&& mkdir -p node_modules && npm install', done]
 
   , (err, results) ->
     return console.error err if err?
