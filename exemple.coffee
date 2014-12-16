@@ -1,164 +1,150 @@
-#
-# Requirements
-#
+Nodulator = require './'
+request = require 'superagent'
+async = require 'async'
 
-Modulator = require './lib/Modulator'
+class WeaponRoute extends Nodulator.Route.DefaultRoute
 
-# Modulator.Config
-#   dbType: 'Mongo'       # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
-#   dbAuth:
-#     host: 'localhost'
-#     database: 'test'
-    # port: 27017       # Can be ignored, default values taken
-    # user: 'test'      # For Mongo and SqlMem, these fields are optionals
-    # pass: 'test'      #
-
-#
-# Resources declaration
-#
-
-APlayer = Modulator.Resource 'player',
-  account:
-    fields:
-      usernameField: 'login'
-      passwordField: 'pass'
-  restrict: 'user'
-
-AWeapon = Modulator.Resource 'weapon',
-  restrict: 'auth'
-
-AMonster = Modulator.Resource 'monster',
-  restrict: 'auth'
-
-
-#
-# Resources extension
-#
-
-class PlayerResource extends APlayer
-
-  # We override the constructor to attach a weapon
-  constructor: (blob, @weapon) ->
-    # If you define a constructor, never forget to call the super with blob attached
-    # If you don't, you'll have to define yourself properties that are attached to blob
-    super blob
-
-  # New instance method
-  # Fields are dynamics. They depend on what you saved
-  LevelUp: (done) ->
-    @level++
-    @Save done
-
-  # New instance method to attack a target
-  # Here we take the weapon attached to get hitPoints
-  Attack: (target, done) ->
-    target.life -= @weapon.hitPoint
-    target.Save done
-
-  # Overriding of APlayer's @Deserialize class method to fetch and attach Weapon
-  @Deserialize: (blob, done) ->
-    if !(blob.id?)
-      return super blob, done
-
-    WeaponResource.FetchByUserId blob.id, (err, weapon) ->
-      return done err if err?
-
-      done null, new PlayerResource blob, weapon
-
-# Used to warn Modulator resource has changed
-# If you forget to use it, you'll experience probleme overriding @Fetch and @Deserialize
-APlayer.ExtendedBy PlayerResource
-
-class WeaponResource extends AWeapon
-
-  # We add a new class method to fetch weapon by userId
-  # Added for usecase exemple of @table
+class WeaponResource extends Nodulator.Resource('weapon', WeaponRoute)
   @FetchByUserId: (userId, done) ->
     @table.FindWhere '*', {userId: userId}, (err, blob) =>
       return done err if err?
 
       @Deserialize blob, done
 
-AWeapon.ExtendedBy WeaponResource
+  @FetchByMonsterId: (monsterId, done) ->
+    @table.FindWhere '*', {monsterId: monsterId}, (err, blob) =>
+      return done err if err?
 
-class MonsterResource extends AMonster
+      @Deserialize blob, done
 
-  # Here we only define a new Attack instance method
+WeaponResource.Init()
+
+class UnitRoute extends Nodulator.Route.DefaultRoute
+  Config: ->
+    super()
+
+    @Add 'put', '/:id/levelUp', (req, res) =>
+      req[@resource.lname].LevelUp (err) =>
+        return res.status(500).send err if err?
+
+        res.status(200).send req[@resource.lname].ToJSON()
+
+    @Add 'put', '/:id/attack/:targetId', (req, res) =>
+      TargetResource = MonsterResource if @name is 'players'
+      TargetResource = PlayerResource if @name is 'monsters'
+
+      TargetResource.Fetch req.params.targetId, (err, target) =>
+        return res.status(500) if err?
+
+        req[@resource.lname].Attack target, (err) ->
+          return res.status(500) if err?
+
+          res.status(200).send target.ToJSON()
+
+class UnitResource extends Nodulator.Resource('unit', {abstract: true})
+  constructor: (blob, @weapon) ->
+    super blob
+
   Attack: (target, done) ->
-    target.life -= @hitPoint
+    target.life -= @weapon.hitpoints if @weapon?
     target.Save done
 
-AMonster.ExtendedBy MonsterResource
+  LevelUp: (done) ->
+    @level++
+    @Save done
 
-#
-# Routes extension
-#
+UnitResource.Init()
 
-# Player LevelUp
-PlayerResource.Route 'put', '/:id/levelUp', (req, res) ->
-  PlayerResource.Fetch req.params.id, (err, player) ->
-    return res.send 500 if err
+class PlayerRoute extends UnitRoute
 
-    player.LevelUp (err) ->
-      return res.send 500 if err?
+class PlayerResource extends UnitResource.Extend('player', PlayerRoute)
+  @Deserialize: (blob, done) ->
+    if !(blob.id?)
+      return super blob, done
 
-      res.send 200, player.ToJSON()
+    WeaponResource.FetchByUserId blob.id, (err, weapon) =>
+      res = @
+      done null, new res blob, weapon
 
-# Player Attack
-PlayerResource.Route 'put', '/:id/attack/:monsterId', (req, res) ->
-  MonsterResource.Fetch req.params.monsterId, (err, monster) ->
-    return res.send 500 if err?
+PlayerResource.Init()
 
-    req.player.Attack monster, (err) ->
-      return res.send 500 if err?
+class MonsterRoute extends UnitRoute
 
-      res.send 200, monster.ToJSON()
+class MonsterResource extends UnitResource.Extend('monster', MonsterRoute)
+  @Deserialize: (blob, done) ->
+    if !(blob.id?)
+      return super blob, done
 
-# Monster Attack
-MonsterResource.Route 'put', '/:id/attack/:playerId', (req, res) ->
-  PlayerResource.Fetch req.params.playerId, (err, player) ->
-    return res.send 500 if err?
+    WeaponResource.FetchByMonsterId blob.id, (err, weapon) =>
+      res = @
+      done null, new res blob, weapon
 
-    req.monster.Attack player, (err) ->
-      return res.send 500 if err?
+MonsterResource.Init()
 
-      res.send 200, player.ToJSON()
+class TestResource extends UnitResource.Extend('test', {abstract: true})
+
+TestResource.Init()
+
+class TataRoute extends UnitRoute
+  Config: ->
+    super()
+
+    @Add 'get', '/:id/test', (req, res) ->
+      req.tata.LevelUp (err) ->
+        res.status(200).send req.tata.ToJSON() if not err?
+
+class TataResource extends TestResource.Extend('tata', TataRoute)
+  Test: (done) ->
+    done()
+
+TataResource.Init()
+
+Client = require './test/common/client'
+client = new Client Nodulator.app
+
+async.series
+  addPlayer: (done) ->
+    client.Post '/api/1/players', {level: 1, life: 10}, (err, res) -> done err, res.body
+
+  testGet: (done) ->
+    client.Get '/api/1/players', (err, res) -> done err, res.body
+
+  levelUp: (done) ->
+    client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
+
+  levelUp2: (done) ->
+    client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
+
+  addMonster: (done) ->
+    client.Post '/api/1/monsters', {level: 1, life: 20}, (err, res) -> done err, res.body
+
+  testGetMonster: (done) ->
+    client.Get '/api/1/monsters', (err, res) -> done err, res.body
+
+  levelUpMonster: (done) ->
+    client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
+
+  levelUpMonster2: (done) ->
+    client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
+
+  addPlayerWeapon: (done) ->
+    client.Post '/api/1/weapons', {hitpoints: 1, userId: 1}, (err, res) -> done err, res.body
+
+  addMonsterWeapon: (done) ->
+    client.Post '/api/1/weapons', {hitpoints: 3, monsterId: 1}, (err, res) -> done err, res.body
+
+  playerAttack: (done) ->
+    client.Put '/api/1/players/1/attack/1', {}, (err, res) -> done err, res.body
+
+  monsterAttack: (done) ->
+    client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+
+  test2: (done) ->
+    client.Post '/api/1/tatas', {level: 1, life: 30}, (err, res) -> done err, res.body
+
+  test3: (done) ->
+    client.Get '/api/1/tatas/1/test', (err, res) -> done err, res.body
 
 
-
-#
-# Default values
-#
-
-toAdd =
-  login: 'lol'
-  pass: 'lol'
-  life: 10
-  level: 1
-
-PlayerResource.Deserialize toAdd, (err, player) ->
-  return console.error err if err?
-
-  player.Save (err) ->
-    return console.error err if err?
-
-    toAdd =
-      userId: player.id
-      hitPoint: 2
-
-    WeaponResource.Deserialize toAdd, (err, weapon) ->
-      return console.error err if err?
-
-      weapon.Save (err) ->
-        return console.error err if err?
-
-
-toAdd =
-  life: 10
-  hitPoint: 1
-
-MonsterResource.Deserialize toAdd, (err, monster) ->
-  return console.error err if err?
-
-  monster.Save (err) ->
-    return console.error err if err?
+, (err, results) ->
+  console.log err, results

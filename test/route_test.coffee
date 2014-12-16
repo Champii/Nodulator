@@ -4,26 +4,26 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Modulator = require '../'
+Nodulator = require '../'
 
 client = null
 TestResource = null
 
-class TestRoute extends Modulator.Route
+class TestRoute extends Nodulator.Route
   Config: ->
     super()
     @Add 'get', '', (req, res) ->
       res.status(200).send {message: 'Coucou'}
 
-describe 'Modulator Route', ->
+describe 'Nodulator Route', ->
 
   before (done) ->
-    Modulator.Reset ->
-      TestResource = Modulator.Resource 'test', TestRoute
+    Nodulator.Reset ->
+      TestResource = Nodulator.Resource 'test', TestRoute
       assert TestResource?
       TestResource.Init()
 
-      client = new Client Modulator.app
+      client = new Client Nodulator.app
       done()
 
   it 'should get resource', (done) ->

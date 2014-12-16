@@ -1,8 +1,9 @@
 _ = require 'underscore'
 async = require 'async'
 
-Modulator = require '../'
+Socket = require './Socket'
 Account = require './Account'
+Nodulator = require '../'
 
 module.exports = (table, config, app, routes, name) ->
 
@@ -21,11 +22,17 @@ module.exports = (table, config, app, routes, name) ->
 
         if !exists
           @id = id
+          Nodulator.bus.emit 'new_' + name, @Serialize()
+        else
+          Nodulator.bus.emit 'update_' + name, @Serialize()
 
         done null, @
 
     Delete: (done) ->
-      @table.Delete @id, done
+      @table.Delete @id, (err) =>
+        return done err if err?
+        Nodulator.bus.emit 'delete_' + name, @Serialize()
+        done()
 
     # Send to the database
     Serialize: ->
@@ -63,13 +70,15 @@ module.exports = (table, config, app, routes, name) ->
         @resource.Deserialize blob, done
 
     # FIXME : test
-    @ListBy: (field, id, done) ->
-      res = []
-      @resource.FetchBy field, id, (err, blob) ->
+    @ListBy: (field, value, done) ->
+      fieldDict = {}
+      fieldDict[field] = value
+      @table.Select 'id', fieldDict, {}, (err, ids) =>
         return done err if err?
 
-        res.push blob
-      res
+        async.map _(ids).pluck('id'), (item, done) =>
+          @resource.Fetch item, done
+        , done
 
     @List: (done) ->
       @table.Select 'id', {}, {}, (err, ids) =>
@@ -97,15 +106,17 @@ module.exports = (table, config, app, routes, name) ->
 
     @Init: ->
       @resource = @
-      Modulator.resources[@lname] = @
+      Nodulator.resources[@lname] = @
 
       if @config? and @config.account?
         @account = new Account @app, @lname, @, @config
+        Nodulator.authApp = true
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>
-          Modulator.Resource name, routes, config, @
+          Nodulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
+      Nodulator.socket.NewRoom @lname if Nodulator.socket?
 
   Resource._PrepareResource(table, config, app, routes, name)

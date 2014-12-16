@@ -4,18 +4,18 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Modulator = require '../'
+Nodulator = require '../'
 
 client = null
 ATestResource = null
 
-class TestRoute extends Modulator.Route
+class TestRoute extends Nodulator.Route
 
-describe 'Modulator Inheritance', ->
+describe 'Nodulator Inheritance', ->
 
   before (done) ->
-    Modulator.Reset ->
-      class ATestResource extends Modulator.Resource 'atest', {abstract: true}
+    Nodulator.Reset ->
+      class ATestResource extends Nodulator.Resource 'atest', {abstract: true}
         FetchByName: (name, done) ->
           @table.FindWhere '*', {name: name}, (err, blob) =>
             throw new Error err if err?
@@ -25,7 +25,7 @@ describe 'Modulator Inheritance', ->
       assert ATestResource?
       ATestResource.Init()
 
-      client = new Client Modulator.app
+      client = new Client Nodulator.app
       done()
 
   it 'should have Extend function', (done) ->
