@@ -1,4 +1,4 @@
-Nodulator = require 'Nodulator'
+Nodulator = require 'nodulator'
 
 class Socket extends Nodulator.Socket()
 

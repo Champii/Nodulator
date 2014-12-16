@@ -1,8 +1,5 @@
-Nodulator = require 'Nodulator'
+Nodulator = require 'nodulator'
 Server = require './server'
-
-Nodulator.Config
-  bootstrap: true
 
 Server.Init()
 Nodulator.Run()
