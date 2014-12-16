@@ -3,15 +3,15 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Modulator = require '../lib/Modulator'
+Nodulator = require '../lib/Nodulator'
 
 TestResource = null
 
-describe 'Modulator Resource', ->
+describe 'Nodulator Resource', ->
 
   before (done) ->
-    Modulator.Reset ->
-      TestResource = Modulator.Resource 'test'
+    Nodulator.Reset ->
+      TestResource = Nodulator.Resource 'test'
       assert TestResource?
       TestResource.Init()
       done()

@@ -1,10 +1,10 @@
-Modulator = require './'
+Nodulator = require './'
 request = require 'superagent'
 async = require 'async'
 
-class WeaponRoute extends Modulator.Route.DefaultRoute
+class WeaponRoute extends Nodulator.Route.DefaultRoute
 
-class WeaponResource extends Modulator.Resource('weapon', WeaponRoute)
+class WeaponResource extends Nodulator.Resource('weapon', WeaponRoute)
   @FetchByUserId: (userId, done) ->
     @table.FindWhere '*', {userId: userId}, (err, blob) =>
       return done err if err?
@@ -19,7 +19,7 @@ class WeaponResource extends Modulator.Resource('weapon', WeaponRoute)
 
 WeaponResource.Init()
 
-class UnitRoute extends Modulator.Route.DefaultRoute
+class UnitRoute extends Nodulator.Route.DefaultRoute
   Config: ->
     super()
 
@@ -41,7 +41,7 @@ class UnitRoute extends Modulator.Route.DefaultRoute
 
           res.status(200).send target.ToJSON()
 
-class UnitResource extends Modulator.Resource('unit', {abstract: true})
+class UnitResource extends Nodulator.Resource('unit', {abstract: true})
   constructor: (blob, @weapon) ->
     super blob
 
@@ -100,7 +100,7 @@ class TataResource extends TestResource.Extend('tata', TataRoute)
 TataResource.Init()
 
 Client = require './test/common/client'
-client = new Client Modulator.app
+client = new Client Nodulator.app
 
 async.series
   addPlayer: (done) ->

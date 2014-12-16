@@ -12,7 +12,7 @@ RedisStore = require('connect-redis')(expressSession)
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
 
-class Modulator
+class Nodulator
 
   app: null
   express: null
@@ -49,8 +49,8 @@ class Modulator
      host: 'localhost'
 
     @app.use expressSession
-      key: 'modulator'
-      secret: 'modulator'
+      key: 'Nodulator'
+      secret: 'Nodulator'
       store: @sessionStore
       resave: true
       saveUninitialized: true
@@ -76,7 +76,7 @@ class Modulator
       config = routes
       routes = null
 
-    @Config() if !(@config?) # config of Modulator instance
+    @Config() if !(@config?) # config of Nodulator instance
 
     if not routes? or routes.prototype not instanceof @Route
       routes = @Route
@@ -127,8 +127,8 @@ class Modulator
       done() if done?
       return
 
-    @server.close()
-    @socket.Close()
+    # @server.close()
+    # @socket.Close()
     @resources = {}
     @config = null
     @table = null
@@ -170,4 +170,4 @@ class Modulator
 
       res.render rend, u
 
-module.exports = new Modulator
+module.exports = new Nodulator

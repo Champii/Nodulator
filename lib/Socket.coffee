@@ -7,14 +7,14 @@ bus = require './Bus'
 io = null
 prefixes = ['new_', 'update_', 'delete_']
 
-module.exports = (Modulator) ->
+module.exports = (Nodulator) ->
   class Socket
 
     @rooms: []
 
     constructor: ->
 
-      @io = socket.listen Modulator.server
+      @io = socket.listen Nodulator.server
       io = @io
       onAuthorizeSuccess = (data, accept) ->
         accept null, true
@@ -25,11 +25,11 @@ module.exports = (Modulator) ->
         accept null, false
 
       @io.use passportSocketIO.authorize
-        passport:       Modulator.passport
+        passport:       Nodulator.passport
         cookieParser:   cookieParser
-        key:            'modulator'
-        secret:         'modulator'
-        store:          Modulator.sessionStore
+        key:            'Nodulator'
+        secret:         'Nodulator'
+        store:          Nodulator.sessionStore
         success:        onAuthorizeSuccess
         fail:           onAuthorizeFail
 
@@ -62,5 +62,5 @@ module.exports = (Modulator) ->
 
     @Init: ->
       res = @
-      Modulator.socket = res
+      Nodulator.socket = res
       new res

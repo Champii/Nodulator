@@ -5,13 +5,13 @@ cookieParser = require 'cookie-parser'
 
 LocalStrategy = require('passport-local').Strategy
 
-Modulator = require './Modulator'
+Nodulator = require './Nodulator'
 
 class Account
 
   constructor: (@app, @resName, Resource, @config) ->
 
-    @passport = Modulator.passport
+    @passport = Nodulator.passport
 
     @userField =
       usernameField: 'username'
@@ -29,7 +29,7 @@ class Account
   InitPassport: (Resource) ->
 
     # @app.use expressSession
-    #   secret: 'Modulator secret'
+    #   secret: 'Nodulator secret'
     #   saveUninitialized: true
     #   resave: true
 

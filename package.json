@@ -1,5 +1,5 @@
 {
-  "name": "Modulator",
+  "name": "Nodulator",
   "version": "0.0.1",
   "dependencies": {
     "assert": "*",
@@ -30,5 +30,33 @@
     "superagent": "*",
     "supertest": "*",
     "underscore": "*"
+  },
+  "description": "Nodulator ============",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "mocha": "~2.0.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Champii/Nodulator.git"
+  },
+  "keywords": [
+    "REST",
+    "API",
+    "coffee",
+    "easy",
+    "express",
+    "ORM"
+  ],
+  "author": "Champii <greine_f@epitech.eu>",
+  "license": "0",
+  "bugs": {
+    "url": "https://github.com/Champii/Nodulator/issues"
   }
 }

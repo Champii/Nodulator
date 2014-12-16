@@ -1,7 +1,7 @@
 #
-# Modulator Boostrap
+# Nodulator Boostrap
 #
-# Usage: Modulator init
+# Usage: Nodulator init
 #
 fs = require 'fs'
 path = require 'path'
@@ -10,12 +10,12 @@ async = require 'async'
 
 args = process.argv[2..]
 
-modulatorRoot = path.resolve __dirname, '..'
+NodulatorRoot = path.resolve __dirname, '..'
 appRoot = path.resolve '.'
-console.log modulatorRoot, appRoot
+console.log NodulatorRoot, appRoot
 
 usage = ->
-  console.error 'Usage: Modulator init'
+  console.error 'Usage: Nodulator init'
 
 if args.length != 1 or args[0] != 'init'
   return usage()
@@ -23,7 +23,7 @@ if args.length != 1 or args[0] != 'init'
 async.series [
   (done) ->
     console.log 'Init base folder tree'
-    exec 'cp -r ' + (path.resolve modulatorRoot, 'scripts/baseFiles/') + '/* ' + appRoot, done
+    exec 'cp -r ' + (path.resolve NodulatorRoot, 'scripts/baseFiles/') + '/* ' + appRoot, done
 
   (done) ->
     console.log 'Ok'
@@ -34,14 +34,14 @@ async.series [
   (done) ->
     console.log 'Ok'
     console.log ''
-    console.log 'Installing Modulator from LINK'
-    exec 'ln -fs ' + modulatorRoot + ' ' + (path.resolve appRoot, 'node_modules'), done
+    console.log 'Installing Nodulator from LINK'
+    exec 'ln -fs ' + NodulatorRoot + ' ' + (path.resolve appRoot, 'node_modules'), done
 
   (done) ->
     console.log 'Ok'
     console.log ''
-    console.log 'Installing Modulator angular from LINK'
-    exec 'ln -fs ' + modulatorRoot + '/lib/angular ' + appRoot + '/client/public/js/modulator-angular', done]
+    console.log 'Installing Nodulator angular from LINK'
+    exec 'ln -fs ' + NodulatorRoot + '/lib/angular ' + appRoot + '/client/public/js/Nodulator-angular', done]
 
   , (err, results) ->
     return console.error err if err?

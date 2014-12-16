@@ -3,7 +3,7 @@ async = require 'async'
 
 Socket = require './Socket'
 Account = require './Account'
-Modulator = require '../'
+Nodulator = require '../'
 
 module.exports = (table, config, app, routes, name) ->
 
@@ -22,16 +22,16 @@ module.exports = (table, config, app, routes, name) ->
 
         if !exists
           @id = id
-          Modulator.bus.emit 'new_' + name, @Serialize()
+          Nodulator.bus.emit 'new_' + name, @Serialize()
         else
-          Modulator.bus.emit 'update_' + name, @Serialize()
+          Nodulator.bus.emit 'update_' + name, @Serialize()
 
         done null, @
 
     Delete: (done) ->
       @table.Delete @id, (err) =>
         return done err if err?
-        Modulator.bus.emit 'delete_' + name, @Serialize()
+        Nodulator.bus.emit 'delete_' + name, @Serialize()
         done()
 
     # Send to the database
@@ -106,17 +106,17 @@ module.exports = (table, config, app, routes, name) ->
 
     @Init: ->
       @resource = @
-      Modulator.resources[@lname] = @
+      Nodulator.resources[@lname] = @
 
       if @config? and @config.account?
         @account = new Account @app, @lname, @, @config
-        Modulator.authApp = true
+        Nodulator.authApp = true
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>
-          Modulator.Resource name, routes, config, @
+          Nodulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
-      Modulator.socket.NewRoom @lname if Modulator.socket?
+      Nodulator.socket.NewRoom @lname if Nodulator.socket?
 
   Resource._PrepareResource(table, config, app, routes, name)

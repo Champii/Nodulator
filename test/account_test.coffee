@@ -4,7 +4,7 @@ assert = require 'assert'
 
 Client = require './common/client'
 
-Modulator = require '../'
+Nodulator = require '../'
 Authentication = require '../lib/Authentication'
 Permissions = require '../lib/Permissions'
 
@@ -13,23 +13,23 @@ client = null
 PlayerResource = null
 TestResource = null
 
-describe 'Modulator Account', ->
+describe 'Nodulator Account', ->
 
   before (done) ->
-    Modulator.Reset ->
+    Nodulator.Reset ->
 
-      PlayerResource = Modulator.Resource 'player', Modulator.Route.DefaultRoute,
+      PlayerResource = Nodulator.Resource 'player', Nodulator.Route.DefaultRoute,
         account: true
         authentication: Authentication.user
 
       PlayerResource.Init()
 
-      TestResource = Modulator.Resource 'test', Modulator.Route.DefaultRoute,
+      TestResource = Nodulator.Resource 'test', Nodulator.Route.DefaultRoute,
         authentication: Authentication.auth
 
       TestResource.Init()
 
-      RestrictedResource = Modulator.Resource 'restricted', Modulator.Route.DefaultRoute,
+      RestrictedResource = Nodulator.Resource 'restricted', Nodulator.Route.DefaultRoute,
         permissions: Permissions.objectBased
           group: 1
         authentication: Authentication.auth
@@ -39,7 +39,7 @@ describe 'Modulator Account', ->
       assert PlayerResource?
       assert TestResource?
 
-      client = new Client Modulator.app
+      client = new Client Nodulator.app
 
       async.auto
         user1: (done) -> client.Post '/api/1/players', {username: 'user1', password: 'pass', test: 'test', group: 1}, done

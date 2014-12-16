@@ -1,3 +1,3 @@
-Modulator = require './lib/Modulator'
+Nodulator = require './lib/Nodulator'
 
-module.exports = Modulator
+module.exports = Nodulator

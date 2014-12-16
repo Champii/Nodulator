@@ -1,4 +1,4 @@
-Modulator
+Nodulator
 ============
 
   Set of class for CoffeeScript to create tiny API easely
@@ -29,11 +29,11 @@ Modulator
 
   Requirement:
 
-    Modulator = require './lib/Modulator'
+    Nodulator = require './lib/Nodulator'
 
   Resource declaration is easy.
 
-    APlayer = Modulator.Resource 'player'
+    APlayer = Nodulator.Resource 'player'
 
   It create automaticaly a Document (for Mongo or SqlMem)
 
@@ -98,7 +98,7 @@ Modulator
 
   You have to call Config method only once, and before declaring any resources.
 
-    Modulator.Config
+    Nodulator.Config
       dbType: 'Mongo'         # You can select 'SqlMem' to use inRAM Document (no persistant data, used to test) or 'Mongo' or 'Mysql'
       dbAuth:
         host: 'localhost'
@@ -115,14 +115,14 @@ Modulator
 
   You can assign a Ressource as AccountResource :
 
-    APlayer = Modulator.Resource 'player',
+    APlayer = Nodulator.Resource 'player',
       account: true
 
   Defaults fields are 'username' and 'password'
 
   You can change them (optional) :
 
-    APlayer = Modulator.Resource 'player',
+    APlayer = Nodulator.Resource 'player',
       account:
         fields:
           usernameField: "login"
@@ -153,7 +153,7 @@ Modulator
 
   You can restrict access to a resource :
 
-    APlayer = Modulator.Resource 'player',
+    APlayer = Nodulator.Resource 'player',
       account: true
       restricted: 'user' #Can be 'user', 'auth', or an object
 
@@ -170,7 +170,7 @@ Modulator
 
   You can restrict access to a resource for authenticated users only :
 
-    ATest = Modulator.Resource 'test',
+    ATest = Nodulator.Resource 'test',
       restricted: 'auth'
 
   This code create a ATest resource that can only be accessed by auth users
@@ -180,7 +180,7 @@ Modulator
 
   You can restrict access to a resource for users that have particular property set :
 
-    ATest = Modulator.Resource 'test',
+    ATest = Nodulator.Resource 'test',
       restricted:
         group: 1
         x: 'test'
@@ -203,17 +203,17 @@ Modulator
 
 #DOC#
 
-  Modulator
+  Nodulator
 
-    Modulator.Resource(resourceName, [config])
+    Nodulator.Resource(resourceName, [config])
 
       Create the resource Class to be extended (if necessary)
 
-    Modulator.Config(config)
+    Nodulator.Config(config)
 
       Change config
 
-    Modulator.app
+    Nodulator.app
 
       The express main app object
 
