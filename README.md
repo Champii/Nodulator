@@ -34,7 +34,7 @@ ___
 - [TODO](#todo)
 
 ___
-### Installation 
+### Installation
 
 Just run :
     npm install nodulator
@@ -50,7 +50,9 @@ ___
 (BETA Feature)
 USE IT IN AN EMPTY FOLDER
 
-You can use `coffee ./node_modules/nodulator/scripts/index.coffee init`    
+You can get global nodulator : `$> npm install -g nodulator`
+And then: `$> Nodulator init`
+
 It creates the following structure :
 ```
 main.coffee
@@ -66,18 +68,19 @@ server/
     └── index.coffee
 ```
 
-You can immediatly start to write resources in server/resources
+You can immediately start to write resources in server/resources !
+
 ___
 ### Config
 
-First of all, the config process is absolutly optional.  
+First of all, the config process is absolutly optional.
 If you don't give Nodulator a config, it will assume you want to use SqlMem DB system, with no persistance at all. Usefull for heavy tests periods.
 
 If you prefere to use a persistant system, here is the procedure :
 
 ```coffeescript
     Nodulator = require 'nodulator'
-    
+
     Nodulator.Config
       dbType: 'Mongo'       # You can select 'SqlMem' to use inRAM Document (no persistant data, used    to test) or 'Mongo' or 'Mysql'
       dbAuth:
@@ -109,7 +112,7 @@ Here is an exemple of creating a `Resource`
     # /!\ Never forget to call Init() /!\ #
 ```
 
-You can pass several params to `Modulator.Resource` : 
+You can pass several params to `Modulator.Resource` :
 
 ```coffeescript
     Modulator.Resource name [, Route] [, config]
@@ -136,7 +139,7 @@ The `Fetch` method take an id and return a `PlayerResource` intance to `done` ca
       [...] # Do something with player
 ```
 
-You can also call `FetchBy` method to give a specific field to retrive.  
+You can also call `FetchBy` method to give a specific field to retrive.
 It can be unique, or the first occurence in DB will return.
 
 You can list every models from this `Resource` thanks to `List` :
@@ -150,8 +153,8 @@ You can list every models from this `Resource` thanks to `List` :
 
 Like `Fetch`, you can `ListBy` a specific field.
 
-The `Deserialize` method allow to get an instance of a given `Resource`.  
-Never use `new` operator directly on a `Resource`, else you might bypass the relationning system.  
+The `Deserialize` method allow to get an instance of a given `Resource`.
+Never use `new` operator directly on a `Resource`, else you might bypass the relationning system.
 `Deserialize` method used to make pre-processing work (like fetching related models) before instantiation.
 
 #### Instance methods
@@ -186,12 +189,12 @@ In CoffeeScript its pretty easy:
       # Never forget to call super(blob), or the instance will never be populated by DB fields
       constructor: (blob, @weapon) ->
         super blob
-      
+
       # We create a new instance method
       LevelUp: (done) ->
         @level++
         @Save done
-      
+
       # Here we override the Deserialize class method, to fetch the attached WeaponResource
       @Deserialize: (blob, done) ->
         if !(blob.id?)        # If the resource isnt deserialized from db, don't fetch attached resource
@@ -210,7 +213,7 @@ Given the last exemple, here is a class that inherits from `UnitResource`
 
 ```coffeescript
     class PlayerResource extends UnitResource.Extend 'player'
-      
+
       SpecialBehaviour: (args, done) ->
         [...]
 
@@ -221,7 +224,7 @@ You can also define abstract class, to avoid corresponding model to be created/i
 
 ```coffeescript
     class UnitResource extends Nodulator.Resource 'unit', {abstract: true}
-      
+
     UnitResource.Init();
 ```
 
@@ -238,8 +241,8 @@ Nodulator provides a `Route` object, to be attached to a `Resource` object in or
     class UnitResource extends Nodulator.Resource 'unit', Nodulator.Route
 ```
 
-There is no need of `Init()` here.   
-Default `Nodulator.Route` do nothing.   
+There is no need of `Init()` here.
+Default `Nodulator.Route` do nothing.
 You have to inherit from it to describe routes :
 
 ```coffeescript
@@ -258,21 +261,21 @@ You have to inherit from it to describe routes :
 ```
 
 This `Route`, attached to a `Resource`, add 2 endPoints :
-    
+
     GET  => /api/1/units/:id
     POST => /api/1/units
 
-Each `Route` have to implement a `Config()` method, calling `super()` and defining routes thanks to `@Add()` call.   
+Each `Route` have to implement a `Config()` method, calling `super()` and defining routes thanks to `@Add()` call.
 Here is the `@Add()` call definition :
 
-```coffeescript    
+```coffeescript
     Nodulator.Route.Add verb, [endPoint = '/'], [middleware, [middleware, ...]], callback
 ```
-   
+
 #### Default Route Object
 
-Nodulator provides also a standard route system for lazy : `Nodulator.Route.DefaultRoute`.    
-It setup 5 routes (exemple when attached to a PlayerResource) : 
+Nodulator provides also a standard route system for lazy : `Nodulator.Route.DefaultRoute`.
+It setup 5 routes (exemple when attached to a PlayerResource) :
 
     GET     /api/1/players       => List
     GET     /api/1/players/:id   => Get One
@@ -301,11 +304,11 @@ And you can override existing route by providing same association verb + url. Ex
 ___
 ##Auth
 
-Authentication is based on Passport    
-You can assign a Ressource as AccountResource :    
+Authentication is based on Passport
+You can assign a Ressource as AccountResource :
 
 ```coffeescript
-    config = 
+    config =
       account: true
 
     class PlayerResource extends Nodulator.Resource 'player', config
@@ -316,7 +319,7 @@ Defaults fields are 'username' and 'password'
 You can change them (optional) :
 
 ```coffeescript
-    config = 
+    config =
       account:
         fields:
           usernameField: "login"
@@ -341,7 +344,7 @@ It defines 2 routes :
     POST    /api/1/players/login
     POST    /api/1/players/logout
 
-It setup session system, and thanks to Passport,    
+It setup session system, and thanks to Passport,
 It fills req.user variable to handle public/authenticated routes
 
 You have to `extend` yourself the `post` default route (for exemple) of your resource to use it as a signup route.
@@ -360,8 +363,8 @@ You can restrict access to a resource :
     class PlayerResource extends Nodulator.Resource 'player', config
 ```
 
-This code create a APlayer resource that is an account,   
-and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)   
+This code create a APlayer resource that is an account,
+and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)
 
 POST and GET-without-id are still accessible for anyone (you can override them)
 /!\ 'user' keyword must only be used on account resource
