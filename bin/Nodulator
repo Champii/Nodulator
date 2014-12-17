@@ -1,3 +1,5 @@
+#!/usr/bin/env coffee
+
 #
 # Nodulator Boostrap
 #
@@ -23,13 +25,13 @@ if args.length != 1 or args[0] != 'init'
 async.series [
   (done) ->
     console.log 'Init base folder tree'
-    exec 'cp -r ' + (path.resolve NodulatorRoot, 'scripts/baseFiles/') + '/* ' + appRoot, done
+    exec 'cp -a ' + (path.resolve NodulatorRoot, 'bin/baseFiles/') + '/* ' + appRoot, done
 
   (done) ->
     console.log 'Ok'
     console.log ''
-    console.log 'Installing base packages'
-    exec 'cd ' + appRoot + '&& mkdir -p node_modules && npm install', done]
+    console.log 'Installation of Nodulator'
+    exec 'npm install nodulator --save', done]
 
   , (err, results) ->
     return console.error err if err?

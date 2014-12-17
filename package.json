@@ -33,6 +33,9 @@
   },
   "description": "Nodulator ============",
   "main": "index.js",
+  "bin": {
+    "Nodulator": "./bin/Nodulator"
+  },
   "directories": {
     "test": "test"
   },
