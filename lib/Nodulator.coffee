@@ -118,17 +118,12 @@ class Nodulator
 
   Route: require './Route'
 
-  Socket: ->
-    (require './Socket')(@)
-
   Reset: (done) ->
     if not @server?
       @Init()
       done() if done?
       return
 
-    # @server.close()
-    # @socket.Close()
     @resources = {}
     @config = null
     @table = null

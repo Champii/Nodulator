@@ -62,11 +62,11 @@ server/
 ├── index.coffee
 ├── processors/
 │   └── index.coffee
-├── resources/
-│   ├── index.coffee
-└── sockets/
-    └── index.coffee
+└── resources/
+    └── index.coffee
 ```
+
+And then find for every Nodulator submodules installed, and call their respective `init` method.
 
 You can immediately start to write resources in server/resources !
 
@@ -112,10 +112,10 @@ Here is an exemple of creating a `Resource`
     # /!\ Never forget to call Init() /!\ #
 ```
 
-You can pass several params to `Modulator.Resource` :
+You can pass several params to `Nodulator.Resource` :
 
 ```coffeescript
-    Modulator.Resource name [, Route] [, config]
+    Nodulator.Resource name [, Route] [, config]
 ```
 
 #### Class methods

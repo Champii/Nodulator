@@ -3,8 +3,10 @@
 #
 # Nodulator Boostrap
 #
-# Usage: Nodulator init
+# Usage: Nodulator (init) | ((install | remove) moduleName)
 #
+
+_ = require 'underscore'
 fs = require 'fs'
 path = require 'path'
 exec = require('child_process').exec
@@ -14,28 +16,64 @@ args = process.argv[2..]
 
 NodulatorRoot = path.resolve __dirname, '..'
 appRoot = path.resolve '.'
-console.log NodulatorRoot, appRoot
+
+moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular']
 
 usage = ->
-  console.error 'Usage: Nodulator init'
+  console.error 'Usage: Nodulator (init) | ((install | remove) moduleName)'
 
-if args.length != 1 or args[0] != 'init'
+generateMain = (modules) ->
+  capitalize = (str) ->
+    str[0].toUpperCase() + str[1..]
+
+  mainBefore = 'Nodulator = require \'nodulator\'\n'
+  mainBefore += 'Server = require \'./server\'\n'
+
+  mainAfter = ''
+  for module in (_(modules).sortBy (item) -> _(moduleOrder).indexOf item)
+    name = module.split('-')[1]
+    mainBefore += capitalize(name) + ' = require \'' + module + '\'\n'
+    mainAfter += 'Nodulator.Use ' + capitalize(name) + '\n'
+
+  mainAfter += 'Server.Init()\n'
+  mainAfter += 'Nodulator.Run()\n'
+
+  fs.writeFileSync appRoot + '/main.coffee', mainBefore + mainAfter
+
+if args.length < 1 or args.length > 2 or args[0] not in ['init', 'install', 'remove']
   return usage()
 
-async.series [
-  (done) ->
-    console.log 'Init base folder tree'
-    exec 'cp -ra ' + (path.resolve NodulatorRoot, 'bin/baseFiles/') + '/* ' + appRoot, done
+if args[0] is 'init'
+  async.series [
+    (done) ->
+      process.stdout.write 'Installing base folder tree.......'
+      exec 'cp -ran ' + (path.resolve NodulatorRoot, 'bin/baseFiles/') + '/* ' + appRoot, done
 
-  (done) ->
-    console.log 'Ok'
-    console.log ''
-    console.log 'Installation of Nodulator'
-    exec 'npm install nodulator --save', done]
+    (done) ->
+      process.stdout.write 'Ok\n'
+      process.stdout.write 'Processing submodules.............'
+      fs.readdir 'node_modules', (err, files) ->
+        return done err if err?
 
-  , (err, results) ->
-    return console.error err if err?
+        nodulatorFiles = _(files).filter (name) -> name.split('-').length > 1 and name.split('-')[0] is 'nodulator'
+        process.stdout.write 'Ok. Found ' + nodulatorFiles.length + ' submodules.\n'
 
-    console.log 'Ok'
-    console.log ''
-    console.log 'Done'
+        generateMain nodulatorFiles
+
+        i = 1
+        async.eachSeries nodulatorFiles, (file, done) ->
+          binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1..] + '.coffee'
+          binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
+          fs.open binPath, 'r', (err, fd) ->
+            return done() if err?
+
+            fs.closeSync fd
+
+            process.stdout.write '\n[' + i++ + ']Processing ' + binName.split('.')[0] + ': \n'
+            (require binPath)(done)
+        , done]
+
+    , (err, results) ->
+      return console.error err if err?
+
+# else if args[0] is 'install'
