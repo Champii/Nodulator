@@ -1,7 +1,6 @@
 _ = require 'underscore'
 async = require 'async'
 
-Socket = require './Socket'
 Account = require './Account'
 Nodulator = require '../'
 
@@ -117,6 +116,5 @@ module.exports = (table, config, app, routes, name) ->
           Nodulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
-      Nodulator.socket.NewRoom @lname if Nodulator.socket?
 
   Resource._PrepareResource(table, config, app, routes, name)
