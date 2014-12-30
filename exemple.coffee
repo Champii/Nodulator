@@ -81,24 +81,6 @@ class MonsterResource extends UnitResource.Extend('monster', MonsterRoute)
 
 MonsterResource.Init()
 
-class TestResource extends UnitResource.Extend('test', {abstract: true})
-
-TestResource.Init()
-
-class TataRoute extends UnitRoute
-  Config: ->
-    super()
-
-    @Add 'get', '/:id/test', (req, res) ->
-      req.tata.LevelUp (err) ->
-        res.status(200).send req.tata.ToJSON() if not err?
-
-class TataResource extends TestResource.Extend('tata', TataRoute)
-  Test: (done) ->
-    done()
-
-TataResource.Init()
-
 Client = require './test/common/client'
 client = new Client Nodulator.app
 
@@ -138,12 +120,6 @@ async.series
 
   monsterAttack: (done) ->
     client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-  test2: (done) ->
-    client.Post '/api/1/tatas', {level: 1, life: 30}, (err, res) -> done err, res.body
-
-  test3: (done) ->
-    client.Get '/api/1/tatas/1/test', (err, res) -> done err, res.body
 
 
 , (err, results) ->

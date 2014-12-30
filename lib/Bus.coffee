@@ -5,5 +5,5 @@ class Bus extends EventEmitter
   constructor: ->
 
 
-module.exports = new Bus
+module.exports = Bus
 

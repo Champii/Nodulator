@@ -114,7 +114,8 @@ class Nodulator
       process()
       oldRun.call @
 
-  bus: require './Bus'
+  Bus: require './Bus'
+  bus: new @::Bus()
 
   Route: require './Route'
 
