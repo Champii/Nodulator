@@ -23,13 +23,13 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
   Config: ->
     super()
 
-    @Add 'put', '/:id/levelUp', (req, res) =>
+    @Put '/:id/levelUp', (req, res) =>
       req[@resource.lname].LevelUp (err) =>
         return res.status(500).send err if err?
 
         res.status(200).send req[@resource.lname].ToJSON()
 
-    @Add 'put', '/:id/attack/:targetId', (req, res) =>
+    @Put '/:id/attack/:targetId', (req, res) =>
       TargetResource = MonsterResource if @name is 'players'
       TargetResource = PlayerResource if @name is 'monsters'
 

@@ -68,6 +68,7 @@ ___
 - [Contributors](#contributors)
 - [DOC](#doc)
 - [TODO](#todo)
+- [Changelog](#changelog)
 
 ___
 ## Installation
@@ -98,7 +99,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
 
     # We create: GET => /api/1/{resource_name}/usernames
     # Get a list of every players' usernames
-    @Add 'get', '/usernames', (req, res) =>
+    @Get '/usernames', (req, res) =>
 
       # There is a @resource property, containing attached Resource class
       @resource.ListUsernames (err, usernames) ->
@@ -112,7 +113,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
     super()
 
     # We create: PUT => /api/1/{resource_name}/:id/levelUp
-    @Add 'put', '/:id/levelUp', (req, res) =>
+    @Put, '/:id/levelUp', (req, res) =>
 
       # For DefaultRoute routes with '/:id/*',
       # Fetch the corresponding Resource and put the instance in req[@resource.lname]
@@ -418,7 +419,7 @@ class UnitRoute extends Nodulator.Route
     super()
 
     # Here we define: GET => /api/1/{resource_name}/:id
-    @Add 'get', '/:id', (req, res) =>
+    @Get '/:id', (req, res) =>
 
       # The @resource field points to attached Resource
       @resource.Fetch req.params.id, (err, unit) ->
@@ -427,7 +428,7 @@ class UnitRoute extends Nodulator.Route
         res.status(200).send unit.ToJSON()
 
     # Here we define: POST => /api/1/{resource_name}
-    @Add 'post', (req, res) ->
+    @Post (req, res) ->
       res.status(200).end()
 ```
 
@@ -438,18 +439,22 @@ GET  => /api/1/units/:id
 POST => /api/1/units
 ```
 
-Each `Route` have to implement a `Config()` method, calling `super()` and defining routes thanks to `@Add()` call.
+Each `Route` have to implement a `Config()` method, calling `super()` and defining routes thanks to 'verbs' route calls (@Get(), @Post(), @Put(), @Delete(), @All()).
 
-Here is the `@Add()` call definition :
+Here are all 'verb' route calls definition :
 
 ```coffeescript
-Nodulator.Route.Add verb, [endPoint = '/'], [middleware, [middleware, ...]], callback
+Nodulator.Route.All     [endPoint = '/'], [middleware, [middleware, ...]], callback
+Nodulator.Route.Get     [endPoint = '/'], [middleware, [middleware, ...]], callback
+Nodulator.Route.Post    [endPoint = '/'], [middleware, [middleware, ...]], callback
+Nodulator.Route.Put     [endPoint = '/'], [middleware, [middleware, ...]], callback
+Nodulator.Route.Delete  [endPoint = '/'], [middleware, [middleware, ...]], callback
 ```
 
 #### Default Route Object
 
 Nodulator provides also a standard route system for lazy : `Nodulator.Route.DefaultRoute`.
-It setup 5 routes (exemple when attached to a PlayerResource) :
+It setups 5 routes (exemple when attached to a PlayerResource) :
 
 ```
 GET     => /api/1/players       => List
@@ -474,7 +479,7 @@ class TestRoute extends Nodulator.Route.DefaultRoute
     super()
 
     # Here we override the default GET => /api/1/{resource_name}/:id
-    @Add 'get', '/:id', (req, res) =>
+    @Get '/:id', (req, res) =>
       [...]
 ```
 ___
@@ -585,7 +590,7 @@ It's not possible anymore to put a certain rule on a certain route. Theses rules
 ___
 ## Db Systems
 
-#### Abstractions
+#### Abstraction
 
 We defined a driver interface for some DB implementations.
 
@@ -659,7 +664,7 @@ NewBus = require './NewBus'
 Nodulator.Bus = NewBus
 ```
 
-Always set new `Bus` before any `Resource` call or any added `Module`
+Always set new `Bus` before any new `Resource` call or any added `Module`
 
 ___
 ## Project Generation
@@ -760,7 +765,6 @@ Nodulator
 
     Add a function to be executed at Nodulator's 'Run()' call
 
-
   Nodulator.ListEndpoints(done)
 
     DEBUG PURPOSE
@@ -818,11 +822,14 @@ Resource
 
 Route
 
-  route.Add(type, [url], [middleware, [middleware, [...]]], done)
+  route.Get     [url = ''], [middleware, [middleware, [...]]], done)
+  route.All     [url = ''], [middleware, [middleware, [...]]], done)
+  route.Post    [url = ''], [middleware, [middleware, [...]]], done)
+  route.Put     [url = ''], [middleware, [middleware, [...]]], done)
+  route.Delete  [url = ''], [middleware, [middleware, [...]]], done)
 
     Create a route.
 
-    'type' can be 'all', 'get', 'post', 'put' and 'delete'
     'url' will be concatenated with '/api/{VERSION}/{RESOURCE_NAME}'. Optional
     'middleware' are optionals
     'done' is the express app callback: (req, res, next) ->
@@ -848,3 +855,12 @@ ___
     New Permission system
     Better++ routing system (Auto add on custom method ?)
     Relational models
+
+___
+## ChangeLog
+
+30/12/14:
+  - Separated `Socket` into a new module [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket)
+  - Added new methods for `@Get()`, `@Post()`, `@Delete()`, `@Put()`, `@All()` in `Route`
+  - Replace old method `@All()` into `@_All()`. Is now a private call.
+  - Improved README
