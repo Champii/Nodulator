@@ -63,6 +63,9 @@ ___
   - [SqlMem](#sqlmem)
 - [Other Stuff](#other-stuff)
   - [Bus](#bus)
+- [Modules](#modules)
+  - [Usage](#usage)
+  - [Module Hacking](#module-hacking)
 - [Project Generation](#project-generation)
 - [Developers](#developers)
 - [Contributors](#contributors)
@@ -667,6 +670,37 @@ Nodulator.Bus = NewBus
 Always set new `Bus` before any new `Resource` call or any added `Module`
 
 ___
+## Modules
+
+#### Usage
+
+To inject a module into `Nodulator`, preceed this way :
+
+```coffeescript
+Nodulator = require 'nodulator'
+ModuleName = require 'nodulator-ModuleName'
+
+Nodulator.Use ModuleName
+```
+
+Replace `ModuleName` with the module's name you want to load
+
+#### Module Hacking
+
+If you want to create a new module for `Nodulator`, you have to export a single function, taking `Nodulator` as parameter :
+
+```coffeescript
+module.exports = (Nodulator) ->
+  [...] # Your module here
+```
+
+You can extend anything you want, as the whole `Nodulator` object is passed to your function.
+
+Be carefull to `server/loadOrder.json`.
+
+Watch how [other modules](#compatible-modules-and-dependencies) are made !
+
+___
 ## Project Generation
 You can get global `Nodulator` :
 
@@ -859,8 +893,8 @@ ___
 ___
 ## ChangeLog
 
-30/12/14:
+30/12/14: v0.0.7
   - Separated `Socket` into a new module [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket)
   - Added new methods for `@Get()`, `@Post()`, `@Delete()`, `@Put()`, `@All()` in `Route`
   - Replace old method `@All()` into `@_All()`. Is now a private call.
-  - Improved README
+  - Improved README (added [Modules](#modules) section)
