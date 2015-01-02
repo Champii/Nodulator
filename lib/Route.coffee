@@ -13,6 +13,10 @@ class Route
       done = url
       url = '/'
 
+    if not middle.length and typeof(url) is 'function'
+      middle.push url
+      url = '/'
+
     done = @_AddMiddleware type, url, done
     if not @[type + url]?
       @[type + url] = done
