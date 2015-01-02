@@ -893,6 +893,9 @@ ___
 ___
 ## ChangeLog
 
+02/01/15: v0.0.8
+  - Fixed Route middleware issue
+
 02/01/15: v0.0.7
   - Separated `Socket` into a new module [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket)
   - Added new methods for `@Get()`, `@Post()`, `@Delete()`, `@Put()`, `@All()` in `Route`
