@@ -108,12 +108,6 @@ class Nodulator
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
 
-  ExtendRunProcess: (process) ->
-    oldRun = @Run
-    @Run = =>
-      process()
-      oldRun.call @
-
   Bus: require './Bus'
   bus: new @::Bus()
 
@@ -142,28 +136,5 @@ class Nodulator
         res[endpoint.route.path] = key for key of endpoint.route.methods
         endpoints.push res
     done(endpoints) if done?
-
-  # Used when bootstrapped
-  Run: ->
-    if not @assets?
-      return
-
-    # FIXME: ugly fix for favicon
-    @app.get '/favicon.ico', (req, res) =>
-      res.status(200).end()
-
-    @app.get '*', (req, res) =>
-
-      u = user: {}
-
-      if @authApp
-        rend = 'auth'
-        if req.user?
-          u.user = req.user
-          rend = 'index'
-      else
-        rend = 'index'
-
-      res.render rend, u
 
 module.exports = new Nodulator

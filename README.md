@@ -710,14 +710,14 @@ $> Nodulator
 Usage: Nodulator (init) | (install (moduleName)| remove (moduleName))
 ```
 
-Nodulator provides a way of installing modules easely
+Nodulator provides a way of installing `Nodulator`, modules and dependencies easely
 ```
 # If no arguments, install or remove Nodulator
 $> Nodulator install
 $> Nodulator remove
 
-# Will install nodulator-assets
-$> Nodulator install assets
+# Will install nodulator-angular and every dependencies (if any)
+$> Nodulator install angular
 
 # Will remove nodulator-socket
 $> Nodulator remove socket
@@ -728,7 +728,7 @@ Then you can launch the `init` process :
 $> Nodulator init
 ```
 
-It creates the following structure :
+It creates the following structure if non-existant :
 ```
 main.coffee
 package.json
@@ -893,8 +893,9 @@ ___
 ___
 ## ChangeLog
 
-30/12/14: v0.0.7
+02/01/15: v0.0.7
   - Separated `Socket` into a new module [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket)
   - Added new methods for `@Get()`, `@Post()`, `@Delete()`, `@Put()`, `@All()` in `Route`
   - Replace old method `@All()` into `@_All()`. Is now a private call.
   - Improved README (added [Modules](#modules) section)
+  - Global `Nodulator` now manage dependencies installation
