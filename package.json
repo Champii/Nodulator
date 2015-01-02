@@ -1,6 +1,6 @@
 {
   "name": "nodulator",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "dependencies": {
     "assert": "*",
     "async": "*",
@@ -20,11 +20,6 @@
     "node-rest-client": "*",
     "passport": "*",
     "passport-local": "*",
-    "passport.socketio": "*",
-    "passport-facebook": "*",
-    "passport-google": "*",
-    "passport-linkedin": "*",
-    "passport-twitter": "*",
     "settings": "*",
     "socket.io": "*",
     "superagent": "*",

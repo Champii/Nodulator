@@ -8,7 +8,7 @@ class Route
 
     @Config()
 
-  Add: (type, url, middle..., done) ->
+  _Add: (type, url, middle..., done) ->
     if not done?
       done = url
       url = '/'
@@ -23,6 +23,26 @@ class Route
         @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
     else
       @[type + url] = done
+
+  All: (args...)->
+    args.unshift 'all'
+    @_Add.apply @, args
+
+  Get: (args...)->
+    args.unshift 'get'
+    @_Add.apply @, args
+
+  Post: (args...)->
+    args.unshift 'post'
+    @_Add.apply @, args
+
+  Put: (args...)->
+    args.unshift 'put'
+    @_Add.apply @, args
+
+  Delete: (args...)->
+    args.unshift 'delete'
+    @_Add.apply @, args
 
   _AddMiddleware: (type, url, done) ->
     if !@config?
@@ -49,7 +69,7 @@ class Route
 
 class DefaultRoute extends Route
   Config: ->
-    @Add 'all', '/:id*', (req, res, next) =>
+    @_Add 'all', '/:id*', (req, res, next) =>
       if not isFinite req.params.id
         return next()
 
@@ -59,16 +79,16 @@ class DefaultRoute extends Route
         req[@resource.lname] = result
         next()
 
-    @Add 'get', (req, res) =>
+    @_Add 'get', (req, res) =>
       @resource.List (err, results) ->
         return res.status(500).send(err) if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
-    @Add 'get', '/:id', (req, res) =>
+    @_Add 'get', '/:id', (req, res) =>
       res.status(200).send req[@resource.lname].ToJSON()
 
-    @Add 'post', (req, res) =>
+    @_Add 'post', (req, res) =>
       @resource.Deserialize req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
@@ -77,7 +97,7 @@ class DefaultRoute extends Route
 
           res.status(200).send result.ToJSON()
 
-    @Add 'put', '/:id', (req, res) =>
+    @_Add 'put', '/:id', (req, res) =>
       _(req[@resource.lname]).extend req.body
 
       req[@resource.lname].Save (err) =>
@@ -86,7 +106,7 @@ class DefaultRoute extends Route
         res.status(200).send req[@resource.lname].ToJSON()
 
 
-    @Add 'delete', '/:id', (req, res) =>
+    @_Add 'delete', '/:id', (req, res) =>
       req[@resource.lname].Delete (err) ->
         return res.status(500).send(err) if err?
 
