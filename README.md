@@ -17,8 +17,6 @@ ___
 - Integrated ORM
 - Integrated Routing system (with express, and highly linked with ORM)
 - Multiple DB Systems
-- Authentication with passport
-- Permissions management
 - Complex inheritance system
 - Modulable
 - Project generation
@@ -35,6 +33,11 @@ ___
   - Inheritance system
   - Integrated and linked SocketIO
   - Assets management
+- [Nodulator-Account](https://github.com/Champii/Nodulator-Account):
+  - Authentication with passport
+  - Permissions management
+  - Sessions
+  - Nodulator-Angular integration
 
 ___
 ## Jump To
@@ -54,8 +57,6 @@ ___
   - [Route Object](#route-object)
   - [DefaultRoute](#default-route-object)
   - [Route Inheritance](#route-inheritance)
-- [Auth](#auth)
-- [Restriction](#restriction)
 - [DB Systems](#db-systems)
   - [Abstraction](#abstraction)
   - [Mysql](#mysql)
@@ -485,110 +486,6 @@ class TestRoute extends Nodulator.Route.DefaultRoute
     @Get '/:id', (req, res) =>
       [...]
 ```
-___
-## Auth
-
-Authentication is based on Passport
-You can assign a `Ressource` as `AccountResource` :
-
-```coffeescript
-config =
-  account: true
-
-class PlayerResource extends Nodulator.Resource 'player', config
-```
-
-Defaults fields for authentication are `'username'` and `'password'`
-
-You can change them (optional) :
-
-```coffeescript
-config =
-  account:
-    fields:
-      usernameField: 'login'
-      passwordField: 'pass'
-
-class PlayerManager extends Nodulator.Resource 'player', config
-```
-
-It creates a custom method from `usernameField`
-
-```
-*FetchByUsername(username, done)
-
-  or if customized
-
-*FetchByLogin(login, done)
-
-* Class methods
-```
-
-It defines 2 routes (here when attached to a `PlayerResource`) :
-
-```
-POST   => /api/1/players/login
-POST   => /api/1/players/logout
-```
-
-It setup session system, and thanks to Passport,
-
-It fills `req.user` variable to handle public/authenticated routes
-
-You have to `extend` yourself the `post` default route (for exemple) of your `Resource` to use it as a signup route.
-
-___
-## Restriction
-
-USER:
-
-You can restrict access to a `Resource` :
-
-```coffeescript
-config =
-  account: true
-  restricted: 'user' #Can be 'user', 'auth', or an object
-
-class PlayerResource extends Nodulator.Resource 'player', config
-```
-
-This code create a `APlayer` resource that is an account,
-and only player itself can access to its resource (GET, PUT and DELETE on own /api/1/players/:id)
-
-`POST` and `GET-without-id` are still accessible for anyone (you can override them)
-
-/!\ 'user' keyword must only be used on account resource
-
-AUTH:
-
-You can restrict access to a `Resource` for authenticated users only :
-
-```coffeescript
-config =
-  restricted: 'auth'
-
-class HiddenResource extends Nodulator.Resource 'hidden', config
-```
-
-This code create a `HiddenResource` that can only be accessed by authenticated users
-
-
-OBJECT:
-
-You can restrict access to a `Resource` for users that have particular property set :
-
-```coffeescript
-config =
-  restricted:
-    group: 1
-    x: 'test'
-
-class HiddenResource extends Nodulator.Resource 'hidden', config
-```
-
-It will deny access to whole resource for any users that don't have theses properties set
-
-It's not possible anymore to put a certain rule on a certain route. Theses rules apply to the whole resource.
 
 ___
 ## Db Systems
@@ -878,17 +775,14 @@ Route
 ___
 ## ToDo
 
-  By order of priority
+By order of priority
 
-    Better tests
-    Field validation
-    Better error management
-    Log system
-    Advanced Auth (Social + custom)
-    Separate Auth process from Nodulator
-    New Permission system
-    Better++ routing system (Auto add on custom method ?)
-    Relational models
+- Better tests
+- Field validation
+- Better error management
+- Log system
+- Better++ routing system (Auto add on custom method ?)
+- Relational models
 
 ___
 ## ChangeLog
