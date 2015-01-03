@@ -787,6 +787,10 @@ By order of priority
 ___
 ## ChangeLog
 
+03/01/15: v0.0.9
+  - Separated `AccountResource` into a new module [Nodulator-Account](https://github.com/Champii/Nodulator-Account)
+  - Changed README
+
 02/01/15: v0.0.8
   - Fixed Route middleware issue
 
