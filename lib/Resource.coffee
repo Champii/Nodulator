@@ -1,7 +1,6 @@
 _ = require 'underscore'
 async = require 'async'
 
-Account = require './Account'
 Nodulator = require '../'
 
 module.exports = (table, config, app, routes, name) ->
@@ -106,10 +105,6 @@ module.exports = (table, config, app, routes, name) ->
     @Init: ->
       @resource = @
       Nodulator.resources[@lname] = @
-
-      if @config? and @config.account?
-        @account = new Account @app, @lname, @, @config
-        Nodulator.authApp = true
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>

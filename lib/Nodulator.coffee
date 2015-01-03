@@ -4,7 +4,6 @@ path = require 'path'
 http = require 'http'
 jade = require 'jade'
 express = require 'express'
-passport = require 'passport'
 bodyParser = require 'body-parser'
 expressSession = require 'express-session'
 RedisStore = require('connect-redis')(expressSession)
@@ -54,10 +53,6 @@ class Nodulator
       store: @sessionStore
       resave: true
       saveUninitialized: true
-
-    @passport = passport
-
-    @app.use @passport.initialize()
 
     @server.listen port++
 
@@ -128,7 +123,7 @@ class Nodulator
 
     done() if done?
 
-  ListEndpoints: (done) ->
+  _ListEndpoints: (done) ->
     endpoints = []
     for endpoint in @app._router.stack
       if endpoint.route?
