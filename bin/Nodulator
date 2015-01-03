@@ -17,7 +17,7 @@ args = process.argv[2..]
 NodulatorRoot = path.resolve __dirname, '..'
 appRoot = path.resolve '.'
 
-moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular']
+moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular', 'nodulator-account']
 
 dependencies =
   'nodulator-angular': ['nodulator-socket', 'nodulator-assets']
