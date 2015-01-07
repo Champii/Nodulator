@@ -2,46 +2,21 @@
 
 ##### Under heavy development
 
+___
 ## Concept
 
-Nodulator is designed to make it more easy to create highly modulable REST APIs, with integrated ORM in CoffeeScript.
+`Nodulator` is designed to make it more easy to create highly modulable applications, built with REST APIs and with integrated ORM in CoffeeScript.
+
+You must understand [express](https://github.com/strongloop/express) basics for routing
 
 Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee) to see a full working exemple
-
-You must understand how [express](https://github.com/strongloop/express) callback style works `(req, res, next) ->`
-
-
-___
-## Features
-
-- Integrated ORM
-- Integrated Routing system (with express, and highly linked with ORM)
-- Multiple DB Systems
-- Complex inheritance system
-- Modulable
-- Project generation
-
-___
-### Compatible modules and dependencies
-
-- [Nodulator-Assets](https://github.com/Champii/Nodulator-Assets):
-  - Automatic assets management
-- [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket):
-  - Socket.io implementation for Nodulator
-- [Nodulator-Angular](https://github.com/Champii/Nodulator-Angular):
-  - Angular implementation for Nodulator
-  - Inheritance system
-  - Integrated and linked SocketIO
-  - Assets management
-- [Nodulator-Account](https://github.com/Champii/Nodulator-Account):
-  - Authentication with passport
-  - Permissions management
-  - Sessions
-  - Nodulator-Angular integration
 
 ___
 ## Jump To
 
+- [Philosophy](#philosophy)
+- [Features](#features)
+- [Compatible modules](#compatible-modules)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -73,6 +48,63 @@ ___
 - [DOC](#doc)
 - [TODO](#todo)
 - [Changelog](#changelog)
+
+___
+## Philosophy
+
+`Nodulator` is a project that is trying to make a big overlay to every traditionnal packages used to make REST client/server applications in CoffeeScript.
+Its main goal is to give developers a complex REST routing system, an ORM and high-level modules, encapsulating every classic behaviour needed to create complex projects.
+
+Its core provides everything needed to build powerfull and highly modulable REST APIs, and allow the developer to reuse his code through every projects.
+
+With this framework, you will never loose 10 or 20 hours anymore boostraping a project from scratch or looking for the right technology to implement.
+You will never have headache anymore trying to combine `socket.io` and `passport` to keep track of your session with your sockets (for exemple),
+or you will never have to consider assets management,
+and with the integrated [Project Generation](#project-generation) you will never need to manage your `Nodulator` modules dependencies.
+
+You need to add authentication logic to your open/public API ? Look for [Nodulator-Account](https://github.com/Champii/Nodulator-Account) !
+
+You need to add socket.io support ? Look for [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket) !
+
+If you don't find your desired module, just [build it](#modules) !
+
+`Nodulator` is like a lego game, instead of learning how to use a given technology and how to combine it with thoses you often use,
+it allows you to manipulate simple concepts like adding a `Account` concept to your application(for exemple), and so adding authentication and permission logic to your app.
+
+Also, each brick or layer of a `Nodulator` application is highly linked to every others.
+For exemple, when you add `Nodulator-Account` module to your app, if you have already included `Nodulator-Angular` it will automaticaly add everything needed
+to handle angular authentication (it will add a separate view, some directives and a user service). Have you added `Nodulator-Socket` ?
+So `Nodulator-Angular` will also be highly linked to your server's models, by providing a socket interface to your server `Resource`.
+
+Check the [Jump To](#jump-to) section !
+
+___
+## Features
+
+- Integrated ORM
+- Integrated Routing system (with express, and highly linked with ORM)
+- Multiple DB Systems
+- Complex inheritance system
+- Modulable
+- Project generation
+
+___
+### Compatible modules
+
+- [Nodulator-Assets](https://github.com/Champii/Nodulator-Assets):
+  - Automatic assets management
+- [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket):
+  - Socket.io implementation for Nodulator
+- [Nodulator-Angular](https://github.com/Champii/Nodulator-Angular):
+  - Angular implementation for Nodulator
+  - Inheritance system
+  - Integrated and linked SocketIO
+  - Assets management
+- [Nodulator-Account](https://github.com/Champii/Nodulator-Account):
+  - Authentication with passport
+  - Permissions management
+  - Sessions
+  - Nodulator-Angular integration
 
 ___
 ## Installation
@@ -128,9 +160,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
         res.status(200).send resource.ToJSON()
 
 # We create a resource, and we attach the PlayerRoute
-# The {account: true} config object tell us that it's an Account Resource
-# It will hold all the authentication logic of the app
-class PlayerResource extends Nodulator.Resource 'player', PlayerRoute, {account: true}
+class PlayerResource extends Nodulator.Resource 'player', PlayerRoute
 
   # We create a LevelUp method
   LevelUp: (done) ->
@@ -153,22 +183,20 @@ Go inside your project folder, copy this POC in a `test.coffee` file and type in
 
 `$> coffee test.coffee`
 
+It will run your project on port `3000` by default
+
 Then open your favorite REST API Client ([Postman for Chrome](https://www.google.fr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0CCMQFjAA&url=https%3A%2F%2Fchrome.google.com%2Fwebstore%2Fdetail%2Fpostman-rest-client%2Ffdmmgilgnpjigdojojpjoooidkmcomcm%3Fhl%3Den&ei=Tu6iVMqpJZDaatmGgOAL&usg=AFQjCNHaecLwAKk91gpdCY_y1x_ViIrHwQ&sig2=3FcPD7i2Id8La26xJt4PJA&bvm=bv.82001339,d.d2s) is my favorite)
 
 and try the following routes :
 
 ```
+(Assuming full url is always of the following form : "http://localhost:3000/api/1/[...]")
 Each route is of the following form :
 
 {VERB}  {URL}                       ({PARAMS})                                          => (code) {ANSWER}
 
-# Signup process
 POST    '/api/1/players'            {username: 'test1', password: 'test1', level: 1}    => (200) {id: 1, username: 'test1', password: 'test1', level: 1}
 POST    '/api/1/players'            {username: 'test2', password: 'test2', level: 1}    => (200) {id: 2, username: 'test2', password: 'test2', level: 1}
-
-# Login process
-POST    '/api/1/players/login'      {username: 'test1', password: 'test1'}              => (200) {}
-POST    '/api/1/players/login'      {username: 'test1', password: 'badpassword'}        => (403) {}
 
 GET     '/api/1/players'                                                                => (200) [{id: 1, username: 'test1', password: 'test1', level: 1},
                                                                                                   {id: 2, username: 'test2', password: 'test2', level: 1}]
@@ -251,7 +279,7 @@ If you forget it :
 - It will NOT be linked to a corresponding table in DB
 - Nothing will work or happend. Ever.
 
-##### /!\ Please read this section again /!\
+##### /!\ Please read this section again /!\ (beware of infinite loops :p)
 
 You can pass several params to `Nodulator.Resource` :
 
@@ -261,7 +289,7 @@ Nodulator.Resource name [, Route] [, config]
 
 You must provide a name, that is different of `'user'` (reserved)
 
-You can attach a [Route](#route) and/or a config object (see [Auth](#auth)) to a `Resource`.
+You can attach a [Route](#route) and/or a config object to a `Resource`.
 
 
 #### Class methods
@@ -604,17 +632,25 @@ You can get global `Nodulator` :
 ```
 $> npm install -g nodulator
 $> Nodulator
-Usage: Nodulator (init) | (install (moduleName)| remove (moduleName))
+Usage: Nodulator (init) | ((install |  install-dev | remove) moduleName1 [, moduleName2 [, ...]])
 ```
 
 Nodulator provides a way of installing `Nodulator`, modules and dependencies easely
 ```
 # If no arguments, install or remove Nodulator
 $> Nodulator install
+$> Nodulator install-dev
 $> Nodulator remove
 
 # Will install nodulator-angular and every dependencies (if any)
 $> Nodulator install angular
+
+# Will install nodulator-angular, nodulator-account, and all their dependencies (if any)
+$> Nodulator install angular account
+
+# Will create local link instead of a full install of nodulator-angular and every dependencies (if any)
+# It's used to avoid reinstalling locally a Nodulator package under development
+$> Nodulator install-dev angular
 
 # Will remove nodulator-socket
 $> Nodulator remove socket
@@ -786,6 +822,11 @@ By order of priority
 
 ___
 ## ChangeLog
+
+07/01/15: v0.0.10
+  - Added Philosophy section
+  - Added multiple package name support in package generation
+  - Fixed some bugs with modules
 
 03/01/15: v0.0.9
   - Separated `AccountResource` into a new module [Nodulator-Account](https://github.com/Champii/Nodulator-Account)
