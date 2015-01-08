@@ -77,7 +77,7 @@ describe 'Nodulator Route', ->
         throw new Error 'Has not deleted resource'
 
   it 'should override default get route (GET)', (done) ->
-    TestResource.routes.Add 'get', (req, res) ->
+    TestResource.routes.Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 
     client.Get '/api/1/tests', (err, res) ->

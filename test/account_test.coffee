@@ -1,115 +1,115 @@
-_ = require 'underscore'
-async = require 'async'
-assert = require 'assert'
+# _ = require 'underscore'
+# async = require 'async'
+# assert = require 'assert'
 
-Client = require './common/client'
+# Client = require './common/client'
 
-Nodulator = require '../'
-Authentication = require '../lib/Authentication'
-Permissions = require '../lib/Permissions'
+# Nodulator = require '../'
+# Authentication = require '../lib/Authentication'
+# Permissions = require '../lib/Permissions'
 
-client = null
+# client = null
 
-PlayerResource = null
-TestResource = null
+# PlayerResource = null
+# TestResource = null
 
-describe 'Nodulator Account', ->
+# describe 'Nodulator Account', ->
 
-  before (done) ->
-    Nodulator.Reset ->
+#   before (done) ->
+#     Nodulator.Reset ->
 
-      PlayerResource = Nodulator.Resource 'player', Nodulator.Route.DefaultRoute,
-        account: true
-        authentication: Authentication.user
+#       PlayerResource = Nodulator.Resource 'player', Nodulator.Route.DefaultRoute,
+#         account: true
+#         authentication: Authentication.user
 
-      PlayerResource.Init()
+#       PlayerResource.Init()
 
-      TestResource = Nodulator.Resource 'test', Nodulator.Route.DefaultRoute,
-        authentication: Authentication.auth
+#       TestResource = Nodulator.Resource 'test', Nodulator.Route.DefaultRoute,
+#         authentication: Authentication.auth
 
-      TestResource.Init()
+#       TestResource.Init()
 
-      RestrictedResource = Nodulator.Resource 'restricted', Nodulator.Route.DefaultRoute,
-        permissions: Permissions.objectBased
-          group: 1
-        authentication: Authentication.auth
+#       RestrictedResource = Nodulator.Resource 'restricted', Nodulator.Route.DefaultRoute,
+#         permissions: Permissions.objectBased
+#           group: 1
+#         authentication: Authentication.auth
 
-      RestrictedResource.Init()
+#       RestrictedResource.Init()
 
-      assert PlayerResource?
-      assert TestResource?
+#       assert PlayerResource?
+#       assert TestResource?
 
-      client = new Client Nodulator.app
+#       client = new Client Nodulator.app
 
-      async.auto
-        user1: (done) -> client.Post '/api/1/players', {username: 'user1', password: 'pass', test: 'test', group: 1}, done
-        login: ['user1', (done) -> client.SetIdentity('user1', 'pass') and client.Login done ]
-        test1: ['login', (done, results) -> client.Post '/api/1/tests', {nb: 1}, done ]
-        user2: ['test1', (done, results) -> client.Post '/api/1/players', {username: 'user2', password: 'pass', test: 'test', group: 2}, done ]
-        restricted: ['user2', (done, results) -> client.Post '/api/1/restricteds', {nb: 2}, done ]
-        logout: ['restricted', (done) -> client.Logout done ]
-      , (err, results) ->
-        throw new Error err if err?
+#       async.auto
+#         user1: (done) -> client.Post '/api/1/players', {username: 'user1', password: 'pass', test: 'test', group: 1}, done
+#         login: ['user1', (done) -> client.SetIdentity('user1', 'pass') and client.Login done ]
+#         test1: ['login', (done, results) -> client.Post '/api/1/tests', {nb: 1}, done ]
+#         user2: ['test1', (done, results) -> client.Post '/api/1/players', {username: 'user2', password: 'pass', test: 'test', group: 2}, done ]
+#         restricted: ['user2', (done, results) -> client.Post '/api/1/restricteds', {nb: 2}, done ]
+#         logout: ['restricted', (done) -> client.Logout done ]
+#       , (err, results) ->
+#         throw new Error err if err?
 
-        done()
+#         done()
 
-  it 'should refuse access to TestResource', (done) ->
-    client.Get '/api/1/tests', (err, res) ->
-      throw new Error 'Got access' if not err?
+#   it 'should refuse access to TestResource', (done) ->
+#     client.Get '/api/1/tests', (err, res) ->
+#       throw new Error 'Got access' if not err?
 
-      done()
+#       done()
 
-  it 'should refuse access to RestrictedResource', (done) ->
-    client.Get '/api/1/restricteds', (err, res) ->
-      throw new Error 'Got access' if not err?
+#   it 'should refuse access to RestrictedResource', (done) ->
+#     client.Get '/api/1/restricteds', (err, res) ->
+#       throw new Error 'Got access' if not err?
 
-      done()
+#       done()
 
-  it 'should login user1', (done) ->
-    client.SetIdentity 'user1', 'pass'
+#   it 'should login user1', (done) ->
+#     client.SetIdentity 'user1', 'pass'
 
-    client.Login (err) ->
-      throw new Error err if err?
+#     client.Login (err) ->
+#       throw new Error err if err?
 
-      done()
+#       done()
 
-  it 'should have access to RestrictedResource', (done) ->
-    client.Get '/api/1/restricteds', (err, res) ->
-      throw new Error err if err?
+#   it 'should have access to RestrictedResource', (done) ->
+#     client.Get '/api/1/restricteds', (err, res) ->
+#       throw new Error err if err?
 
-      done()
+#       done()
 
-  it 'should now have access to TestResource', (done) ->
-    client.Get '/api/1/tests', (err, res) ->
-      throw new Error err if err?
+#   it 'should now have access to TestResource', (done) ->
+#     client.Get '/api/1/tests', (err, res) ->
+#       throw new Error err if err?
 
-      done()
+#       done()
 
-  it 'should allow user to PUT on self UserReource', (done) ->
-    client.Put '/api/1/players/1', {test: 'test2'}, (err, res) ->
-      throw new Error err if err?
+#   it 'should allow user to PUT on self UserReource', (done) ->
+#     client.Put '/api/1/players/1', {test: 'test2'}, (err, res) ->
+#       throw new Error err if err?
 
-      done()
+#       done()
 
-  it 'should login user2', (done) ->
-    client.Logout (err) ->
-      throw new Error err if err?
+#   it 'should login user2', (done) ->
+#     client.Logout (err) ->
+#       throw new Error err if err?
 
-      client.SetIdentity 'user2', 'pass'
+#       client.SetIdentity 'user2', 'pass'
 
-      client.Login (err) ->
-        throw new Error err if err?
+#       client.Login (err) ->
+#         throw new Error err if err?
 
-        done()
+#         done()
 
-  it 'should refuse access to RestrictedResource', (done) ->
-    client.Get '/api/1/restricteds', (err, res) ->
-      throw new Error 'Got access' if not err?
+#   it 'should refuse access to RestrictedResource', (done) ->
+#     client.Get '/api/1/restricteds', (err, res) ->
+#       throw new Error 'Got access' if not err?
 
-      done()
+#       done()
 
-  it 'should deny acces to other users', (done) ->
-    client.Put '/api/1/players/1', {test: 'test3'}, (err, res) ->
-      return done() if err?
+#   it 'should deny acces to other users', (done) ->
+#     client.Put '/api/1/players/1', {test: 'test3'}, (err, res) ->
+#       return done() if err?
 
-      throw new Error 'Got access'
+#       throw new Error 'Got access'

@@ -12,7 +12,7 @@ TestResource = null
 class TestRoute extends Nodulator.Route
   Config: ->
     super()
-    @Add 'get', '', (req, res) ->
+    @Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 
 describe 'Nodulator Route', ->

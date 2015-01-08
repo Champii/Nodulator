@@ -7,6 +7,7 @@
     "body-parser": "*",
     "cookie-parser": "*",
     "coffee-middleware": "*",
+    "coffee-script": "*",
     "connect-redis": "*",
     "express": "*",
     "express-session": "*",
@@ -32,7 +33,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --compilers coffee:coffee-script/register test"
   },
   "repository": {
     "type": "git",

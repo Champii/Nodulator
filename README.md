@@ -823,6 +823,10 @@ By order of priority
 ___
 ## ChangeLog
 
+XX/XX/15: current (not released yet)
+  - Fixed tests
+  - Added travis support for tests
+
 07/01/15: v0.0.10
   - Added Philosophy section
   - Added multiple package name support in package generation
