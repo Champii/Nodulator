@@ -195,29 +195,29 @@ and try the following routes :
 (Assuming full url is always of the following form : "http://localhost:3000/api/1/[...]")
 Each route is of the following form :
 
-{VERB}  {URL}                       ({PARAMS})                                          => {ANSWER}
+{VERB}  {URL}                       ({PARAMS})                                          => (code) {ANSWER}
 
-POST    '/api/1/players'            {username: 'test1', level: 1}    => (200) {id: 1, username: 'test1', level: 1}
-POST    '/api/1/players'            {username: 'test2', level: 1}    => (200) {id: 2, username: 'test2', level: 1}
+POST    '/api/1/players'            {username: 'test1', password: 'test1', level: 1}    => (200) {id: 1, username: 'test1', password: 'test1', level: 1}
+POST    '/api/1/players'            {username: 'test2', password: 'test2', level: 1}    => (200) {id: 2, username: 'test2', password: 'test2', level: 1}
 
-GET     '/api/1/players'                                             => [{id: 1, username: 'test1', level: 1},
-                                                                         {id: 2, username: 'test2', level: 1}]
+GET     '/api/1/players'                                                                => (200) [{id: 1, username: 'test1', password: 'test1', level: 1},
+                                                                                                  {id: 2, username: 'test2', password: 'test2', level: 1}]
 
-GET     '/api/1/players/1'                                           => {id: 1, username: 'test1', level: 1}
-GET     '/api/1/players/2'                                           => {id: 2, username: 'test2', level: 1}
+GET     '/api/1/players/1'                                                              => (200) {id: 1, username: 'test1', password: 'test1', level: 1}
+GET     '/api/1/players/2'                                                              => (200) {id: 2, username: 'test2', password: 'test2', level: 1}
 
-PUT     '/api/1/players/2/levelUp'  {}                               => {id: 2, username: 'test2', level: 2}
-PUT     '/api/1/players/2/levelUp'  {}                               => {id: 2, username: 'test2', level: 3}
+PUT     '/api/1/players/2/levelUp'  {}                                                  => (200) {id: 2, username: 'test2', password: 'test2', level: 2}
+PUT     '/api/1/players/2/levelUp'  {}                                                  => (200) {id: 2, username: 'test2', password: 'test2', level: 3}
 
-GET     '/api/1/players/usernames'                                   => ['test1', 'test2']
+GET     '/api/1/players/usernames'                                                      => (200) ['test1', 'test2']
 
-PUT     '/api/1/players/2'          {username: 'notAUsername'}       => {id: 2, username: 'notAUsername', level: 3}
+PUT     '/api/1/players/2'          {username: 'notAUsername'}                          => (200) {id: 2, username: 'notAUsername', level: 3}
 
-GET     '/api/1/players/usernames'                                   => ['test1', 'notAUsername']
+GET     '/api/1/players/usernames'                                                      => (200) ['test1', 'notAUsername']
 
-DELETE  '/api/1/players/1'          {}                               => {id: 1, username: 'test1', level: 1}
+DELETE  '/api/1/players/1'          {}                                                  => (200) {id: 1, username: 'test1', password: 'test1', level: 1}
 
-GET     '/api/1/players/usernames'                                   => ['notAUsername']
+GET     '/api/1/players/usernames'                                                      => (200) ['notAUser,ame']
 ```
 
 ___
@@ -439,7 +439,7 @@ ___
 class UnitResource extends Nodulator.Resource 'unit', Nodulator.Route
 ```
 
-There is no need of `Init()` here. Every `Route` is initiated and configured when its attached `Resource` is.
+There is no need of `Init()` here. Ever.
 
 Default `Nodulator.Route` do nothing. You have to inherit from it to describe routes :
 
