@@ -2,22 +2,29 @@ Nodulator = require './'
 request = require 'superagent'
 async = require 'async'
 
-class WeaponRoute extends Nodulator.Route.DefaultRoute
+weaponConfig =
+  schema:
+    hitPoints:
+      type: 'int'
 
-class WeaponResource extends Nodulator.Resource('weapon', WeaponRoute)
-  @FetchByUserId: (userId, done) ->
-    @table.FindWhere '*', {userId: userId}, (err, blob) =>
-      return done err if err?
-
-      @Deserialize blob, done
-
-  @FetchByMonsterId: (monsterId, done) ->
-    @table.FindWhere '*', {monsterId: monsterId}, (err, blob) =>
-      return done err if err?
-
-      @Deserialize blob, done
+class WeaponResource extends Nodulator.Resource 'weapon', Nodulator.Route.DefaultRoute, weaponConfig
 
 WeaponResource.Init()
+
+unitConfig =
+  abstract: true
+  schema:
+    level:
+      type: 'int'
+    life:
+      type: 'int'
+    weapon:
+      type: WeaponResource
+      localKey: 'weaponId'
+      optional: true
+    weaponId:
+      type: 'int'
+      optional: true
 
 class UnitRoute extends Nodulator.Route.DefaultRoute
   Config: ->
@@ -30,6 +37,7 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
         res.status(200).send req[@resource.lname].ToJSON()
 
     @Put '/:id/attack/:targetId', (req, res) =>
+      # Hack to stay generic between children
       TargetResource = MonsterResource if @name is 'players'
       TargetResource = PlayerResource if @name is 'monsters'
 
@@ -41,12 +49,9 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
 
           res.status(200).send target.ToJSON()
 
-class UnitResource extends Nodulator.Resource('unit', {abstract: true})
-  constructor: (blob, @weapon) ->
-    super blob
-
+class UnitResource extends Nodulator.Resource 'unit', unitConfig
   Attack: (target, done) ->
-    target.life -= @weapon.hitpoints if @weapon?
+    target.life -= @weapon.hitPoints
     target.Save done
 
   LevelUp: (done) ->
@@ -55,38 +60,28 @@ class UnitResource extends Nodulator.Resource('unit', {abstract: true})
 
 UnitResource.Init()
 
-class PlayerRoute extends UnitRoute
-
-class PlayerResource extends UnitResource.Extend('player', PlayerRoute)
-  @Deserialize: (blob, done) ->
-    if !(blob.id?)
-      return super blob, done
-
-    WeaponResource.FetchByUserId blob.id, (err, weapon) =>
-      res = @
-      done null, new res blob, weapon
+class PlayerResource extends UnitResource.Extend 'player', UnitRoute
 
 PlayerResource.Init()
 
-class MonsterRoute extends UnitRoute
-
-class MonsterResource extends UnitResource.Extend('monster', MonsterRoute)
-  @Deserialize: (blob, done) ->
-    if !(blob.id?)
-      return super blob, done
-
-    WeaponResource.FetchByMonsterId blob.id, (err, weapon) =>
-      res = @
-      done null, new res blob, weapon
+class MonsterResource extends UnitResource.Extend 'monster', UnitRoute
 
 MonsterResource.Init()
 
 Client = require './test/common/client'
 client = new Client Nodulator.app
 
+# Hack for keep track of weapon
+weaponId = 0
+
 async.series
+  addWeapon: (done) ->
+    client.Post '/api/1/weapons', {hitPoints: 1}, (err, res) ->
+      weaponId = res.body.id
+      done err, res.body
+
   addPlayer: (done) ->
-    client.Post '/api/1/players', {level: 1, life: 10}, (err, res) -> done err, res.body
+    client.Post '/api/1/players', {level: 1, life: 20, weaponId: weaponId}, (err, res) -> done err, res.body
 
   testGet: (done) ->
     client.Get '/api/1/players', (err, res) -> done err, res.body
@@ -98,7 +93,7 @@ async.series
     client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
 
   addMonster: (done) ->
-    client.Post '/api/1/monsters', {level: 1, life: 20}, (err, res) -> done err, res.body
+    client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId}, (err, res) -> done err, res.body
 
   testGetMonster: (done) ->
     client.Get '/api/1/monsters', (err, res) -> done err, res.body
@@ -109,18 +104,23 @@ async.series
   levelUpMonster2: (done) ->
     client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
 
-  addPlayerWeapon: (done) ->
-    client.Post '/api/1/weapons', {hitpoints: 1, userId: 1}, (err, res) -> done err, res.body
-
-  addMonsterWeapon: (done) ->
-    client.Post '/api/1/weapons', {hitpoints: 3, monsterId: 1}, (err, res) -> done err, res.body
-
   playerAttack: (done) ->
     client.Put '/api/1/players/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack: (done) ->
     client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
+  monsterAttack1: (done) ->
+    client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+
+  monsterAttack2: (done) ->
+    client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+
+  monsterAttack3: (done) ->
+    client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+
+  monsterAttack4: (done) ->
+    client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
 , (err, results) ->
   console.log err, results
