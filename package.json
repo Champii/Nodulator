@@ -19,7 +19,8 @@
     "settings": "*",
     "superagent": "*",
     "supertest": "*",
-    "underscore": "*"
+    "underscore": "*",
+    "validator": "~3.27.0"
   },
   "description": "Nodulator ============",
   "main": "index.js",
