@@ -15,6 +15,8 @@ You must understand [express](https://github.com/strongloop/express) basics for 
 
 Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee) to see a full working exemple
 
+Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
+
 ___
 ## Jump To
 
@@ -311,6 +313,7 @@ PlayerResource.FetchBy(constraints, done)
 PlayerResource.List(id, done)
 PlayerResource.ListBy(constraints, done)
 PlayerResource.Deserialize(blob, done)
+PlayerResource.Create(blob, done)
 ```
 
 The `Fetch` method take an id and return a `PlayerResource` intance to `done` callback :
@@ -341,6 +344,8 @@ The `Deserialize` method allow to get an instance of a given `Resource`.
 Never use `new` operator directly on a `Resource`, else you might bypass the relationning system.
 
 `Deserialize` method is used to make pre-processing work (like fetching related models) before instantiation.
+
+`Create` method is an alias to `Deserialize` followed by a `Save`.
 
 #### Instance methods
 
@@ -864,6 +869,8 @@ By order of priority
 - Tests for model association
 - Better error management
 - Log system
+- Abstract class can retrieve every child `Resource`
+
 
 ___
 ## ChangeLog
@@ -874,6 +881,7 @@ XX/XX/15: current (not released yet)
   - Added model associations
   - Added schema and model validation
   - Changed `FetchBy` and `ListBy` prototype. Now take an object instead of a key/value pair.
+  - Added `Create()` method into `Resource`
 
 07/01/15: v0.0.10
   - Added Philosophy section
