@@ -18,6 +18,7 @@ class Route
       url = '/'
 
     done = @_AddMiddleware type, url, done
+
     if not @[type + url]?
       @[type + url] = done
       if middle.length
@@ -28,23 +29,41 @@ class Route
     else
       @[type + url] = done
 
-  All: (args...)->
+  All: (args...) ->
     args.unshift 'all'
     @_Add.apply @, args
 
-  Get: (args...)->
+  Get: (args...) ->
     args.unshift 'get'
     @_Add.apply @, args
 
-  Post: (args...)->
+  Post: (args...) ->
+    oldDone = args.pop()
+    done = (req, res, next) =>
+      @resource._Validate req.body, true, (err) =>
+        return res.status(500).send err if err?
+
+        oldDone req, res, next
+
+    args.push done
+
     args.unshift 'post'
     @_Add.apply @, args
 
-  Put: (args...)->
+  Put: (args...) ->
+    oldDone = args.pop()
+    done = (req, res, next) =>
+      @resource._Validate req.body, (err) =>
+        return res.status(500).send err if err?
+
+        oldDone req, res, next
+
+    args.push done
+
     args.unshift 'put'
     @_Add.apply @, args
 
-  Delete: (args...)->
+  Delete: (args...) ->
     args.unshift 'delete'
     @_Add.apply @, args
 
@@ -73,7 +92,7 @@ class Route
 
 class DefaultRoute extends Route
   Config: ->
-    @_Add 'all', '/:id*', (req, res, next) =>
+    @All '/:id*', (req, res, next) =>
       if not isFinite req.params.id
         return next()
 
@@ -83,16 +102,16 @@ class DefaultRoute extends Route
         req[@resource.lname] = result
         next()
 
-    @_Add 'get', (req, res) =>
+    @Get (req, res) =>
       @resource.List (err, results) ->
         return res.status(500).send(err) if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
-    @_Add 'get', '/:id', (req, res) =>
+    @Get '/:id', (req, res) =>
       res.status(200).send req[@resource.lname].ToJSON()
 
-    @_Add 'post', (req, res) =>
+    @Post (req, res) =>
       @resource.Deserialize req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
@@ -101,7 +120,7 @@ class DefaultRoute extends Route
 
           res.status(200).send result.ToJSON()
 
-    @_Add 'put', '/:id', (req, res) =>
+    @Put '/:id', (req, res) =>
       _(req[@resource.lname]).extend req.body
 
       req[@resource.lname].Save (err) =>
@@ -110,7 +129,7 @@ class DefaultRoute extends Route
         res.status(200).send req[@resource.lname].ToJSON()
 
 
-    @_Add 'delete', '/:id', (req, res) =>
+    @Delete '/:id', (req, res) =>
       req[@resource.lname].Delete (err) ->
         return res.status(500).send(err) if err?
 

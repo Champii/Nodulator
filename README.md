@@ -28,6 +28,8 @@ ___
   - [Basics](#basics)
   - [Class methods](#class-methods)
   - [Instance methods](#instance-methods)
+  - [Schema and Validation](#schema-and-validation)
+  - [Model association](#model-association)
 - [Overriding and Inheritance](#overriding-and-inheritance)
   - [Override default behaviour](#override-default-behaviour)
   - [Abstract Class](#abstract-class)
@@ -91,6 +93,9 @@ ___
 - Complex inheritance system
 - Modulable
 - Project generation
+- Schema-less/Schema-full models
+- Model validation
+- Model association and automatic retrieval
 
 ___
 ### Compatible modules
@@ -302,9 +307,9 @@ Each `Resource` provides some 'Class methods' to manage the specific model in db
 
 ```coffeescript
 PlayerResource.Fetch(id, done)
-PlayerResource.FetchBy(field, value, done)
+PlayerResource.FetchBy(constraints, done)
 PlayerResource.List(id, done)
-PlayerResource.ListBy(field, value, done)
+PlayerResource.ListBy(constraints, done)
 PlayerResource.Deserialize(blob, done)
 ```
 
@@ -357,6 +362,64 @@ player.ToJSON()
     Generaly used to get what to send to client.
 ```
 
+#### Schema and Validation
+
+By default, every `Resource` is schema less. It means that you can put almost anything into your `Resource`.
+
+It can obviously be schema less only for DB systems that allows it. When using MySQL for exemple, you'll have
+to define a schema and validation rules if you don't want your server to answer raw SQL errors for non existant fields
+
+To make a `Resource` to respect a given schema, you just have to define a `schema` field into `Resource` configuration
+
+```coffeescript
+config =
+  schema:
+    foo:
+      type: 'int'
+    bar:
+      type: 'string'
+      optional: true
+```
+
+Differents types are
+- bool
+- int
+- string
+- date
+- email
+
+By default, each fields is required, but you can make one field optional with the `optional` field. It will never complain if this field is not present, but if it is,
+it will check for its validity:
+- For every `post` routes (if any) it will check for every schema fields validity (each one in the model definition, and returns an error if any is missing or invalid)
+- For every `put`  routes (if any) it will check for each request fields validity (each one in the client request, and returns an error if any is invalid)
+
+
+
+#### Model association
+
+You can make associations between `Resource`. For making a `Resource` to be automaticaly fetched when querying another, you can add it to its schema :
+
+```coffeescript
+config =
+  schema:
+    foo:
+      type: 'int'
+    barId:
+      type: 'int'
+    bar:
+      type: BarResource
+      localKey: 'barId'
+
+class TestResource extends Nodulator.Resource 'test', config
+
+TestResource.Init()
+
+# Fetch TestResource with id == 1
+TestResource.Fetch 1, (err, test) ->
+  # Will print for exemple : {id: 1, foo: 12, barId: 1, bar: {id:1, barProperty: 'test'}}
+  console.log test
+```
+
 ____
 ## Overriding and Inheritance
 
@@ -368,26 +431,17 @@ In CoffeeScript its pretty easy:
 ```coffeescript
 class UnitResource extends Nodulator.Resource 'unit'
 
-  # Here we override the constructor to attach a weapon resource
-  # Never forget to call super(blob), or the instance will never be populated by DB fields
-  constructor: (blob, @weapon) ->
-    super blob
-
   # We create a new instance method
   LevelUp: (done) ->
     @level++
     @Save done
 
-  # Here we override the Deserialize class method, to fetch the attached WeaponResource
-  @Deserialize: (blob, done) ->
+  # We override default 'List' method
+  @List: (done) ->
+    @ListBy {life: 10}, (err, units) ->
+      return done err if err?
 
-    # If the resource isnt deserialized from db, don't fetch attached resource
-    if !(blob.id?)
-      return super blob, done
-
-      WeaponResource.FetchByUserId blob.id, (err, weapon) =>
-        res = @
-        done(null, new res(blob, weapon))
+      done null, units
 
   UnitResource.Init()
 ```
@@ -403,7 +457,7 @@ class UnitResource extends Nodulator.Resource 'unit', {abstract: true}
 UnitResource.Init();
 ```
 
-Of course, abstract classes are only designed to be inherited. (Please note that they can't have a `Route` attached, and other config is ignored)
+Of course, abstract classes are only designed to be inherited. (Please note that they can't have a `Route` attached)
 
 #### Complex inheritance system
 
@@ -728,23 +782,10 @@ Nodulator
 
     Inject a module inside Nodulator
 
-  Nodulator.ExtendDefaultConfig(config)
-
-    Add some fields to default configuration
-
-  Nodulator.ExtendRunProcess(process)
-
-    Add a function to be executed at Nodulator's 'Run()' call
-
-  Nodulator.ListEndpoints(done)
+  Nodulator._ListEndpoints(done)
 
     DEBUG PURPOSE
     List every api endpoint added by application
-
-  Nodulator.Run()
-
-    Launch Nodulator MainLoop and set last parameters after every Resource have Init()
-    Process every Module functions
 
 Resource
 
@@ -754,17 +795,17 @@ Resource
 
     Take an id and return it from the DB in done callback: (err, resource) ->
 
-  Resource.FetchBy(field, value, done)
+  Resource.FetchBy(constraints, done)
 
-    Take a field and a value, and return first row from the DB in done callback: (err, resource) ->
+    Take an object representing contraints, and return first row from the DB in done callback: (err, resource) ->
 
   Resource.List(done)
 
     Return every records in DB for this resource and give them to done: (err, resources) ->
 
-  Resource.ListBy(field, value, done)
+  Resource.ListBy(constraints, done)
 
-    Take a field and a value, and return every row from the DB in done callback: (err, resources) ->
+    Take an object representing constraints, and return every row from the DB in done callback: (err, resources) ->
 
   Resource.Deserialize(blob, done)
 
@@ -783,7 +824,8 @@ Resource
 
   resource.Serialize()
 
-    Return every properties that aren't functions or objects or are undefined
+    Return every properties defined in the schema,
+    else if no schema is defined it will take every properties not stating with '_' (the private ones)
     This method is used to get what must be saved in DB
 
   resource.ToJSON()
@@ -818,11 +860,10 @@ ___
 By order of priority
 
 - Better tests
-- Field validation
+- Tests for validation
+- Tests for model association
 - Better error management
 - Log system
-- Better++ routing system (Auto add on custom method ?)
-- Relational models
 
 ___
 ## ChangeLog
@@ -830,6 +871,9 @@ ___
 XX/XX/15: current (not released yet)
   - Fixed tests
   - Added travis support for tests
+  - Added model associations
+  - Added schema and model validation
+  - Changed `FetchBy` and `ListBy` prototype. Now take an object instead of a key/value pair.
 
 07/01/15: v0.0.10
   - Added Philosophy section
