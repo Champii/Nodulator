@@ -877,7 +877,7 @@ ___
 
 XX/XX/15: current (not released yet)
 
-20/01/15: current (not released yet)
+20/01/15: v0.0.12
   - Fixed bug on FetchBy
 
 20/01/15: v0.0.11
