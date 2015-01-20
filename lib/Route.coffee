@@ -38,28 +38,10 @@ class Route
     @_Add.apply @, args
 
   Post: (args...) ->
-    oldDone = args.pop()
-    done = (req, res, next) =>
-      @resource._Validate req.body, true, (err) =>
-        return res.status(500).send err if err?
-
-        oldDone req, res, next
-
-    args.push done
-
     args.unshift 'post'
     @_Add.apply @, args
 
   Put: (args...) ->
-    oldDone = args.pop()
-    done = (req, res, next) =>
-      @resource._Validate req.body, (err) =>
-        return res.status(500).send err if err?
-
-        oldDone req, res, next
-
-    args.push done
-
     args.unshift 'put'
     @_Add.apply @, args
 

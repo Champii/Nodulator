@@ -5,7 +5,7 @@ module.exports = (config) ->
 
   connection = mysql.createConnection
     host     : config.dbAuth.host || 'localhost'
-    port     : condif.dbAuth.port || 3306
+    port     : config.dbAuth.port || 3306
     user     : config.dbAuth.user || ''
     password : config.dbAuth.pass || ''
     database : config.dbAuth.database || ''
@@ -42,7 +42,13 @@ module.exports = (config) ->
             query += ' desc'
 
         if options.limit?
-          query += ' limit ' + options.limit
+          limit = ''
+          if options.offset?
+            limit += options.offset + ', '
+            limit += options.limit - options.offset
+          else
+            limit += options.limit
+          query += ' limit ' + limit
 
       connection.query query, where, (err, rows) ->
         return done err if err?

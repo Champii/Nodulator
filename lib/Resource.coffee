@@ -10,7 +10,7 @@ validationError = (field, value, message) ->
   message: "The '#{field}' field with value '#{value}' #{message}"
 
 typeCheck =
-  bool: (value) -> !!value
+  bool: (value) -> value is true or value is false
   int: Validator.isInt
   string: (value) -> true # FIXME: call add subCheckers
   date: Validator.isDate
@@ -34,18 +34,21 @@ module.exports = (table, config, app, routes, name) ->
           @[field] = blob[field]
 
     Save: (done) ->
-      exists = @id?
-
-      @_table.Save @Serialize(), (err, id) =>
+      Resource._Validate @Serialize(), true, (err) =>
         return done err if err?
 
-        if !exists
-          @id = id
-          Nodulator.bus.emit 'new_' + name, @Serialize()
-        else
-          Nodulator.bus.emit 'update_' + name, @Serialize()
+        exists = @id?
 
-        done null, @
+        @_table.Save @Serialize(), (err, id) =>
+          return done err if err?
+
+          if !exists
+            @id = id
+            Nodulator.bus.emit 'new_' + name, @Serialize()
+          else
+            Nodulator.bus.emit 'update_' + name, @Serialize()
+
+          done null, @
 
     Delete: (done) ->
       @_table.Delete @id, (err) =>
@@ -131,22 +134,25 @@ module.exports = (table, config, app, routes, name) ->
 
     # Pre-Instanciation
     @Deserialize: (blob, done) ->
-      res = @
-      if @_schema?
-        assocs = {}
-        async.each @_schema._assoc, (resource, done) =>
-          resource.fetch blob, (err, instance) =>
-            return done() if err? and config? and config.schema[resource.name].optional
+      @_Validate blob, true, (err) =>
+        return done err if err?
+
+        res = @
+        if @_schema?
+          assocs = {}
+          async.each @_schema._assoc, (resource, done) =>
+            resource.fetch blob, (err, instance) =>
+              return done() if err? and config? and config.schema[resource.name].optional
+              return done err if err?
+
+              assocs[resource.name] = instance
+              done()
+          , (err) ->
             return done err if err?
 
-            assocs[resource.name] = instance
-            done()
-        , (err) ->
-          return done err if err?
-
-          done null, new res _.extend(blob, assocs)
-      else
-        done null, new res blob
+            done null, new res _.extend(blob, assocs)
+        else
+          done null, new res blob
 
     @_PrepareResource: (_table, _config, _app, _routes, _name) ->
       @_table = _table

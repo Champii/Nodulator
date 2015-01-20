@@ -12,6 +12,10 @@ class SqlMem
 
     res = _(tables[table]).where(where)
 
+    if options.limit?
+      offset = options.offset || 0
+      res = res[offset...options.limit]
+
     done null, res
 
   Insert: (table, fields, done) ->

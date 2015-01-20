@@ -882,6 +882,7 @@ XX/XX/15: current (not released yet)
   - Added schema and model validation
   - Changed `FetchBy` and `ListBy` prototype. Now take an object instead of a key/value pair.
   - Added `Create()` method into `Resource`
+  - Added `limit` and `offset` to both Mysql and SqlMem
 
 07/01/15: v0.0.10
   - Added Philosophy section
