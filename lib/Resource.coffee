@@ -102,7 +102,7 @@ module.exports = (table, config, app, routes, name) ->
 
     # Get every records satisfying given constraints
     @FetchBy: (constraints, done) ->
-      @_table.FindWhere '*', contraints, (err, blob) =>
+      @_table.FindWhere '*', constraints, (err, blob) =>
         return done err if err?
 
         @resource.Deserialize blob, done

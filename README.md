@@ -877,6 +877,9 @@ ___
 
 XX/XX/15: current (not released yet)
 
+20/01/15: current (not released yet)
+  - Fixed bug on FetchBy
+
 20/01/15: v0.0.11
   - Fixed tests
   - Added travis support for tests
