@@ -76,15 +76,15 @@ describe 'Nodulator Validation', ->
 
       done new Error 'No error on bool fields'
 
-  it 'should not validate Resource string', (done) ->
-    blob =
-      field1: true
-      field2: 1
-      field3: false
-      field4: new Date()
-      field5: 'test@test.fr'
+#  it 'should not validate Resource string', (done) ->
+#    blob =
+#      field1: true
+#      field2: 1
+#      field3: false
+#      field4: new Date()
+#      field5: 'test@test.fr'
 
-    TestResource.Create blob, (err, test) ->
-      return done() if err?
+#    TestResource.Create blob, (err, test) ->
+#      return done() if err?
 
-      done new Error 'No error on bool fields'
+#      done new Error 'No error on bool fields'
