@@ -564,7 +564,10 @@ DELETE  => /api/1/players/:id   => Delete
 You can inherit from any route object :
 
 ```coffeescript
-class TestRoute extends Nodulator.Route.DefaultRoute
+class Test1Route extends Nodulator.Route
+class Test2Route extends Nodulator.Route.DefaultRoute
+class Test3Route extends Test2Route
+class Test4Route extends Test3Route
 ```
 And you can override existing route by providing same association verb + url. Exemple :
 
@@ -876,6 +879,8 @@ ___
 ## ChangeLog
 
 XX/XX/15: current (not released yet)
+  - Updated README
+  - updated Mongo driver
 
 20/01/15: v0.0.12
   - Fixed bug on FetchBy
