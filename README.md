@@ -4,6 +4,8 @@ Master : [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=mas
 
 Develop: [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator)
 
+NPM: [![npm version](https://badge.fury.io/js/nodulator.svg)](http://badge.fury.io/js/nodulator)
+
 ##### Under heavy development
 
 ___
