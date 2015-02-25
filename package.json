@@ -22,7 +22,7 @@
     "underscore": "*",
     "validator": "~3.27.0"
   },
-  "description": "Nodulator ============",
+  "description": "Nodulator",
   "main": "index.js",
   "bin": {
     "Nodulator": "./bin/Nodulator"
@@ -49,7 +49,7 @@
     "ORM"
   ],
   "author": "Champii <greine_f@epitech.eu>",
-  "license": "0",
+  "license": "GPLv2",
   "bugs": {
     "url": "https://github.com/Champii/Nodulator/issues"
   }

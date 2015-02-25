@@ -206,10 +206,10 @@ and try the following routes :
 (Assuming full url is always of the following form : "http://localhost:3000/api/1/[...]")
 Each route is of the following form :
 
-{VERB}  {URL}                       ({PARAMS})                                          => {ANSWER}
+{VERB}  {URL}                       ({PARAMS})                       => {ANSWER}
 
-POST    '/api/1/players'            {username: 'test1', level: 1}    => (200) {id: 1, username: 'test1', level: 1}
-POST    '/api/1/players'            {username: 'test2', level: 1}    => (200) {id: 2, username: 'test2', level: 1}
+POST    '/api/1/players'            {username: 'test1', level: 1}    => {id: 1, username: 'test1', level: 1}
+POST    '/api/1/players'            {username: 'test2', level: 1}    => {id: 2, username: 'test2', level: 1}
 
 GET     '/api/1/players'                                             => [{id: 1, username: 'test1', level: 1},
                                                                          {id: 2, username: 'test2', level: 1}]
@@ -880,9 +880,13 @@ By order of priority
 ___
 ## ChangeLog
 
-XX/XX/15: current (not released yet)
+XX/XX/XX: current (not released yet)
+  - Nothing
+
+12/02/15: v0.0.13
+  - Pre-fetched resources in `Route.All()` are now put in `req.resources[@resource.lname]` instead of `req.resources[@resource.lname]`
   - Updated README
-  - updated Mongo driver
+  - Updated Mongo driver
 
 20/01/15: v0.0.12
   - Fixed bug on FetchBy

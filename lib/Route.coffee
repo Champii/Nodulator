@@ -81,7 +81,10 @@ class DefaultRoute extends Route
       @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
-        req[@resource.lname] = result
+        if not req.resources?
+          req.resources = {}
+
+        req.resources[@resource.lname] = result
         next()
 
     @Get (req, res) =>
@@ -91,7 +94,7 @@ class DefaultRoute extends Route
         res.status(200).send _(results).invoke 'ToJSON'
 
     @Get '/:id', (req, res) =>
-      res.status(200).send req[@resource.lname].ToJSON()
+      res.status(200).send req.resources?[@resource.lname]?.ToJSON()
 
     @Post (req, res) =>
       @resource.Deserialize req.body, (err, result) ->
@@ -103,20 +106,19 @@ class DefaultRoute extends Route
           res.status(200).send result.ToJSON()
 
     @Put '/:id', (req, res) =>
-      _(req[@resource.lname]).extend req.body
+      _(req.resources[@resource.lname]).extend req.body
 
-      req[@resource.lname].Save (err) =>
+      req.resources[@resource.lname].Save (err) =>
         return res.status(500).send(err) if err?
 
-        res.status(200).send req[@resource.lname].ToJSON()
+        res.status(200).send req.resources[@resource.lname].ToJSON()
 
 
     @Delete '/:id', (req, res) =>
-      req[@resource.lname].Delete (err) ->
+      req.resources[@resource.lname].Delete (err) ->
         return res.status(500).send(err) if err?
 
         res.status(200).end()
-
 
 Route.DefaultRoute = DefaultRoute
 module.exports = Route

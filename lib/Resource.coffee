@@ -62,7 +62,8 @@ module.exports = (table, config, app, routes, name) ->
       res = if @id? then {id: @id} else {}
       if @_schema?
         for field, description of @_schema when field isnt '_assoc'
-          if typeof(config.schema[field].type) is 'function'
+          console.log 'dafuk', field, @[field]
+          if typeof(config.schema[field].type) is 'function' and @[field]?
             res[field] = @[field].Serialize()
           else
             res[field] = @[field]
@@ -134,6 +135,7 @@ module.exports = (table, config, app, routes, name) ->
 
     # Pre-Instanciation
     @Deserialize: (blob, done) ->
+      # console.log blob
       @_Validate blob, true, (err) =>
         return done err if err?
 
@@ -185,8 +187,15 @@ module.exports = (table, config, app, routes, name) ->
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>
+          if config and not config.abstract
+            deleteAbstract = true
+
           config = _(config).extend @config
-          delete config.abstract if config? and not config.abstract
+
+          if deleteAbstract
+            delete config.abstract
+
+          # console.log config
           Nodulator.Resource name, routes, config, @
       else if @_routes?
         @routes = new @_routes(@, @app, @config)

@@ -32,10 +32,10 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
     super()
 
     @Put '/:id/levelUp', (req, res) =>
-      req[@resource.lname].LevelUp (err) =>
+      req.resources[@resource.lname].LevelUp (err) =>
         return res.status(500).send err if err?
 
-        res.status(200).send req[@resource.lname].ToJSON()
+        res.status(200).send req.resources[@resource.lname].ToJSON()
 
     @Put '/:id/attack/:targetId', (req, res) =>
       # Hack to stay generic between children
@@ -45,11 +45,10 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
       TargetResource.Fetch req.params.targetId, (err, target) =>
         return res.status(500) if err?
 
-        req[@resource.lname].Attack target, (err) ->
+        req.resources[@resource.lname].Attack target, (err) ->
           return res.status(500) if err?
 
           res.status(200).send target.ToJSON()
-
 
 class UnitResource extends Nodulator.Resource 'unit', unitConfig
   Attack: (target, done) ->
@@ -125,4 +124,6 @@ async.series
     client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
 , (err, results) ->
-  console.log err, results
+  util = require 'util'
+  util.debug util.inspect err, {depth: null}
+  util.debug util.inspect results, {depth: null}

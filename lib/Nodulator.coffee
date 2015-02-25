@@ -53,7 +53,6 @@ class Nodulator
       resave: true
       saveUninitialized: true
 
-    @server.listen port++
 
     @db = require('./connectors/sql')
 
@@ -88,13 +87,19 @@ class Nodulator
 
     resource
 
-  Config: (@config) ->
-    @config = @defaultConfig if !(@config?)
+  Config: (config) ->
+    if @config?
+      return
+
+    @config = config
+    @config = @defaultConfig if !(config?)
 
     for k, v of @defaultConfig
       @config[k] = v if not @config[k]?
 
     @table = @db(@config).table
+
+    @server.listen @config.port || 3000
 
   Use: (module) ->
     module @
