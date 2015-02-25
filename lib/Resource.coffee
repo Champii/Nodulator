@@ -62,7 +62,7 @@ module.exports = (table, config, app, routes, name) ->
       res = if @id? then {id: @id} else {}
       if @_schema?
         for field, description of @_schema when field isnt '_assoc'
-          console.log 'dafuk', field, @[field]
+          # console.log 'dafuk', field, @[field]
           if typeof(config.schema[field].type) is 'function' and @[field]?
             res[field] = @[field].Serialize()
           else
