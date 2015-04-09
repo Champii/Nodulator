@@ -162,7 +162,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
     super()
 
     # We create: PUT => /api/1/{resource_name}/:id/levelUp
-    @Put, '/:id/levelUp', (req, res) =>
+    @Put '/:id/levelUp', (req, res) =>
 
       # For DefaultRoute routes with '/:id/*',
       # Fetch the corresponding Resource and put the instance in req[@resource.lname]
