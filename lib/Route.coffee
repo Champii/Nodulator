@@ -5,6 +5,7 @@ class Route
 
   constructor: (@resource, @app, @config) ->
     @name = @resource.lname + 's'
+    @rname = @resource.lname
 
     @Config()
 
@@ -21,11 +22,14 @@ class Route
 
     if not @[type + url]?
       @[type + url] = done
+
+      #FIXME: code clarity
       if middle.length
         middle.push (req, res, next) => @[type + url](req, res, next)
         @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
       else
         @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
+
     else
       @[type + url] = done
 
@@ -53,6 +57,7 @@ class Route
     if !@config?
       return done
 
+    #FIXME: code clarity
     for element, content of @config
       if typeof content is 'function'
         done = content done
@@ -81,10 +86,14 @@ class DefaultRoute extends Route
       @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
-        if not req.resources?
-          req.resources = {}
+        if not req.instances?
+          req.instances = {}
 
-        req.resources[@resource.lname] = result
+        @instance = result
+
+        #FIXME: deprecated, for retro compatibility only
+        req.instances[@rname] = result
+
         next()
 
     @Get (req, res) =>
@@ -94,7 +103,7 @@ class DefaultRoute extends Route
         res.status(200).send _(results).invoke 'ToJSON'
 
     @Get '/:id', (req, res) =>
-      res.status(200).send req.resources?[@resource.lname]?.ToJSON()
+      res.status(200).send req.instances?[@rname]?.ToJSON()
 
     @Post (req, res) =>
       @resource.Deserialize req.body, (err, result) ->
@@ -106,16 +115,15 @@ class DefaultRoute extends Route
           res.status(200).send result.ToJSON()
 
     @Put '/:id', (req, res) =>
-      _(req.resources[@resource.lname]).extend req.body
+      _(@instance).extend req.body
 
-      req.resources[@resource.lname].Save (err) =>
+      @instance.Save (err) =>
         return res.status(500).send(err) if err?
 
-        res.status(200).send req.resources[@resource.lname].ToJSON()
-
+        res.status(200).send @instance.ToJSON()
 
     @Delete '/:id', (req, res) =>
-      req.resources[@resource.lname].Delete (err) ->
+      @instance.Delete (err) ->
         return res.status(500).send(err) if err?
 
         res.status(200).end()

@@ -178,6 +178,7 @@ module.exports = (table, config, app, routes, name) ->
 
       @
 
+    #FIXME: split code
     @Init: ->
       @resource = @
       Nodulator.resources[@lname] = @

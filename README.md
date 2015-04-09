@@ -165,9 +165,9 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
     @Put '/:id/levelUp', (req, res) =>
 
       # For DefaultRoute routes with '/:id/*',
-      # Fetch the corresponding Resource and put the instance in req[@resource.lname]
+      # Fetch the corresponding Resource and put the instance in @instance
       # (here it can be called 'req.player' but we want to stay generic)
-      req[@resource.lname].LevelUp (err, resource) ->
+      @instance.LevelUp (err, resource) ->
         return res.status(500).send err if err?
 
         res.status(200).send resource.ToJSON()
@@ -275,7 +275,7 @@ PlayerResource = Nodulator.Resource 'player'
 PlayerResource.Init()
 ```
 
-Here, it creates a `PlayerResource`, linked with a `players` table in DB (if any), and with `/api/1/players` routes (if any)
+Here, it creates a `PlayerResource`, linked with a `players` table in DB (if any)
 
 Note the 's' concatenated with the `Resource` name. Its the real `Resource.name` of a resource
 
@@ -821,12 +821,17 @@ Resource
 
     Method that take the blob returned from DB to make a new instance
 
+  Resource.Create(blob, done)
+
+    Alias for Deserialize and Save
+
   resource.Save(done)
 
     Save the instance in DB
 
     If the resource doesn't exists, it create and give it an id
     It return to done the current instance
+
 
   resource.Delete(done)
 
@@ -883,8 +888,9 @@ ___
 XX/XX/XX: current (not released yet)
   - Nothing
 
-12/02/15: v0.0.13
-  - Pre-fetched resources in `Route.All()` are now put in `req.resources[@resource.lname]` instead of `req.resources[@resource.lname]`
+09/04/15: current
+  - Better model association and validation
+  - Pre-fetched resources in `Route.All()` are now put in `@instance` instead of `req[@resource.lname]`
   - Updated README
   - Updated Mongo driver
 

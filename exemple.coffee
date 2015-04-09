@@ -32,10 +32,10 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
     super()
 
     @Put '/:id/levelUp', (req, res) =>
-      req.resources[@resource.lname].LevelUp (err) =>
+      @instance.LevelUp (err) =>
         return res.status(500).send err if err?
 
-        res.status(200).send req.resources[@resource.lname].ToJSON()
+        res.status(200).send @instance.ToJSON()
 
     @Put '/:id/attack/:targetId', (req, res) =>
       # Hack to stay generic between children
@@ -45,7 +45,7 @@ class UnitRoute extends Nodulator.Route.DefaultRoute
       TargetResource.Fetch req.params.targetId, (err, target) =>
         return res.status(500) if err?
 
-        req.resources[@resource.lname].Attack target, (err) ->
+        @instance.Attack target, (err) ->
           return res.status(500) if err?
 
           res.status(200).send target.ToJSON()
@@ -73,16 +73,21 @@ Client = require './test/common/client'
 client = new Client Nodulator.app
 
 # Hack for keep track of weapon
-weaponId = 0
+weaponId = []
 
 async.series
   addWeapon: (done) ->
+    client.Post '/api/1/weapons', {hitPoints: 2}, (err, res) ->
+      weaponId.push res.body.id
+      done err, res.body
+
+  addWeapon2: (done) ->
     client.Post '/api/1/weapons', {hitPoints: 1}, (err, res) ->
-      weaponId = res.body.id
+      weaponId.push res.body.id
       done err, res.body
 
   addPlayer: (done) ->
-    client.Post '/api/1/players', {level: 1, life: 20, weaponId: weaponId}, (err, res) -> done err, res.body
+    client.Post '/api/1/players', {level: 1, life: 100, weaponId: weaponId[0]}, (err, res) -> done err, res.body
 
   testGet: (done) ->
     client.Get '/api/1/players', (err, res) -> done err, res.body
@@ -94,7 +99,7 @@ async.series
     client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
 
   addMonster: (done) ->
-    client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId}, (err, res) -> done err, res.body
+    client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId[1]}, (err, res) -> done err, res.body
 
   testGetMonster: (done) ->
     client.Get '/api/1/monsters', (err, res) -> done err, res.body
