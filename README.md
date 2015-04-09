@@ -888,7 +888,7 @@ ___
 XX/XX/XX: current (not released yet)
   - Nothing
 
-09/04/15: current
+09/04/15: v0.0.13
   - Better model association and validation
   - Pre-fetched resources in `Route.All()` are now put in `@instance` instead of `req[@resource.lname]`
   - Updated README
