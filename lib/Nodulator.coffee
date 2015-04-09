@@ -99,7 +99,7 @@ class Nodulator
 
     @table = @db(@config).table
 
-    @server.listen @config.port || 3000
+    @server.listen @config.port || port++
 
   Use: (module) ->
     module @
