@@ -29,6 +29,11 @@ module.exports = (table, config, app, routes, name) ->
       if @_schema?
         for field, description of @_schema when blob[field]?
           @[field] = blob[field]
+
+        for assoc in @_schema._assoc
+          @[assoc.name] = blob[assoc.name]
+
+        @id = blob.id
       else
         for field, value of blob
           @[field] = blob[field]
@@ -62,11 +67,11 @@ module.exports = (table, config, app, routes, name) ->
       res = if @id? then {id: @id} else {}
       if @_schema?
         for field, description of @_schema when field isnt '_assoc'
-          console.log 'dafuk', field, @[field]
-          if typeof(config.schema[field].type) is 'function' and @[field]?
-            res[field] = @[field].Serialize()
-          else
-            res[field] = @[field]
+          res[field] = @[field]
+
+        for assoc in @_schema._assoc
+          res[assoc.name] = @[assoc.name].Serialize()
+        
       else
         for field, description of @ when field[0] isnt '_'
           res[field] = @[field]
@@ -83,13 +88,16 @@ module.exports = (table, config, app, routes, name) ->
         full = false
 
       errors = []
-      for field, validator of @_schema when field isnt '_assoc'
+
+      for field, validator of @_schema when validator? and field isnt '_assoc'
+
         if full and not blob[field]? and not config.schema[field].optional
           errors.push validationError field, blob[field], ' was not present.'
+
         else if blob[field]? and not validator(blob[field])
           errors.push validationError field, blob[field], ' was not a valid ' + config.schema[field].type
 
-        for field, value of blob when not @_schema[field]?
+        for field, value of blob when not @_schema[field]? and field isnt 'id' and field not in _(@_schema._assoc).pluck 'name'
           errors.push validationError field, blob[field], ' is not in schema'
 
       done(if errors.length then {errors} else null)
@@ -133,28 +141,32 @@ module.exports = (table, config, app, routes, name) ->
 
         resource.Save done
 
-    # Pre-Instanciation
+    # Pre-Instanciation and associated model retrival
     @Deserialize: (blob, done) ->
-      # console.log blob
       @_Validate blob, true, (err) =>
         return done err if err?
 
         res = @
         if @_schema?
-          assocs = {}
-          async.each @_schema._assoc, (resource, done) =>
-            resource.fetch blob, (err, instance) =>
-              return done() if err? and config? and config.schema[resource.name].optional
-              return done err if err?
-
-              assocs[resource.name] = instance
-              done()
-          , (err) ->
-            return done err if err?
-
-            done null, new res _.extend(blob, assocs)
+          @_FetchAssoc blob, (err, blob) ->
+            done null, new res blob
         else
           done null, new res blob
+
+    @_FetchAssoc: (blob, done) ->
+      assocs = {}
+      async.each @_schema._assoc, (resource, done) =>
+        resource.Get blob, (err, instance) =>
+          return done() if err? and config? and config.schema[resource.name].optional
+          return done err if err?
+
+          assocs[resource.name] = instance
+          done()
+
+      , (err) ->
+        return done err if err?
+
+        done null, _.extend blob, assocs
 
     @_PrepareResource: (_table, _config, _app, _routes, _name) ->
       @_table = _table
@@ -176,12 +188,13 @@ module.exports = (table, config, app, routes, name) ->
         for field, description of @config.schema
 
           do (description) =>
+
             if description.type? and typeof description.type is 'function'
               @_schema._assoc.push
                 name: field
-                fetch: (blob, done) ->
+                Get: (blob, done) ->
                   description.type.Fetch blob[description.localKey], done
-              @_schema[field] = null
+
             else if description.type?
               @_schema[field] = typeCheck[description.type]
 
@@ -195,8 +208,8 @@ module.exports = (table, config, app, routes, name) ->
           if deleteAbstract
             delete config.abstract
 
-          # console.log config
           Nodulator.Resource name, routes, config, @
+
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
 
