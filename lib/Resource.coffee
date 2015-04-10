@@ -71,7 +71,7 @@ module.exports = (table, config, app, routes, name) ->
 
         for assoc in @_schema._assoc
           res[assoc.name] = @[assoc.name].Serialize()
-        
+
       else
         for field, description of @ when field[0] isnt '_'
           res[field] = @[field]
@@ -83,6 +83,8 @@ module.exports = (table, config, app, routes, name) ->
       @Serialize()
 
     @_Validate: (blob, full, done) ->
+      return done() if not config? or not config.schema?
+
       if not done?
         done = full
         full = false
@@ -91,7 +93,7 @@ module.exports = (table, config, app, routes, name) ->
 
       for field, validator of @_schema when validator? and field isnt '_assoc'
 
-        if full and not blob[field]? and not config.schema[field].optional
+        if full and not blob[field]? and not config?.schema?[field]?.optional
           errors.push validationError field, blob[field], ' was not present.'
 
         else if blob[field]? and not validator(blob[field])

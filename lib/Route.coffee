@@ -4,8 +4,11 @@ class Route
   apiVersion: '/api/1/'
 
   constructor: (@resource, @app, @config) ->
-    @name = @resource.lname + 's'
     @rname = @resource.lname
+    @name = @rname + 's'
+
+    if @rname[@rname.length - 1] is 'y'
+      @name = @rname[...-1] + 'ies'
 
     @Config()
 

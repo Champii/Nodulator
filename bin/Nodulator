@@ -99,7 +99,8 @@ if args[0] is 'init'
     (done) ->
       process.stdout.write 'Installing base folder tree.......'
       exec 'mkdir -p node_modules', (err, stdout, stderr) ->
-        exec 'cp -ran ' + (path.resolve NodulatorRoot, 'bin/baseFiles/') + '/* ' + appRoot, done
+        exec 'cp -r ' + (path.resolve NodulatorRoot, 'bin/baseFiles/') + '/* ' + appRoot, ->
+          done()
 
     (done) ->
       process.stdout.write 'Ok\n'

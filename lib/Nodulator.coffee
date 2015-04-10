@@ -59,9 +59,6 @@ class Nodulator
   Resource: (name, routes, config, _parent) ->
 
     name = name.toLowerCase()
-    if name is 'user'
-      throw new Error 'Resource name \'user\' is reserved'
-
     if @resources[name]?
       return @resources[name]
 

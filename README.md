@@ -300,8 +300,6 @@ You can pass several params to `Nodulator.Resource` :
 Nodulator.Resource name [, Route] [, config]
 ```
 
-You must provide a name, that is different of `'user'` (reserved)
-
 You can attach a [Route](#route) and/or a config object to a `Resource`.
 
 
@@ -880,13 +878,16 @@ By order of priority
 - Better error management
 - Log system
 - Abstract class can retrieve every child `Resource`
+- Remove an existing route
 
 
 ___
 ## ChangeLog
 
 XX/XX/XX: current (not released yet)
-  - Nothing
+  - Resource 'user' is no longer a reserved word
+  - Resources with name finishing with 'y' are now correctly put in plurial form in route name
+
 
 09/04/15: v0.0.13
   - Better model association and validation
