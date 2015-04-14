@@ -887,6 +887,9 @@ ___
 XX/XX/XX: current (not released yet)
   - Nothing
 
+14/04/15: v0.0.15
+  - Minor changes in `Route` to fit [Nodulator-Account](https://github.com/Champii/Nodulator-Account) new release
+
 10/04/15: v0.0.14
   - Resource 'user' is no longer a reserved word
   - Resources with name finishing with 'y' are now correctly put in plurial form in route name
