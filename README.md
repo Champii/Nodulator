@@ -1,10 +1,14 @@
 # Nodulator
 
-Master : [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
-Develop: [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
 
-NPM: [![npm version](https://badge.fury.io/js/nodulator.svg)](http://badge.fury.io/js/nodulator)
+[![Coverage Status](https://coveralls.io/repos/Champii/Nodulator/badge.svg)](https://coveralls.io/r/Champii/Nodulator)
+
+[![NPM](https://nodei.co/npm/nodulator.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/nodulator/)
+
+[![NPM](https://nodei.co/npm-dl/nodulator.png?months=1)](https://nodei.co/npm/nodulator/)
 
 ##### Under heavy development
 

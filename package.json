@@ -22,7 +22,7 @@
     "underscore": "*",
     "validator": "~3.27.0"
   },
-  "description": "Nodulator",
+  "description": "Coffeescript REST client/server framework",
   "main": "index.js",
   "bin": {
     "Nodulator": "./bin/Nodulator"
