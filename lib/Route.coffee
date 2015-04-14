@@ -21,7 +21,7 @@ class Route
       middle.push url
       url = '/'
 
-    done = @_AddMiddleware type, url, done
+    # done = @_AddMiddleware type, url, done
 
     if not @[type + url]?
       @[type + url] = done
@@ -55,28 +55,6 @@ class Route
   Delete: (args...) ->
     args.unshift 'delete'
     @_Add.apply @, args
-
-  _AddMiddleware: (type, url, done) ->
-    if !@config?
-      return done
-
-    #FIXME: code clarity
-    for element, content of @config
-      if typeof content is 'function'
-        done = content done
-      else if typeof content is 'object' and not content.prototype
-        for method, wrapper of content
-          if method == type
-            done = wrapper done
-          else
-            method = method.split('-')
-            if method.length > 1
-              if method[0] == type and method[1] == url
-                done = wrapper done
-            else if method[0] == type
-              done = wrapper done
-
-    done
 
   Config: ->
 
