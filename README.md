@@ -1,10 +1,12 @@
 # Nodulator
 
-Master : [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
-Develop: [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
 
-NPM: [![npm version](https://badge.fury.io/js/nodulator.svg)](http://badge.fury.io/js/nodulator)
+[![NPM](https://nodei.co/npm/nodulator.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/nodulator/)
+
+[![NPM](https://nodei.co/npm-dl/nodulator.png?months=1)](https://nodei.co/npm/nodulator/)
 
 ##### Under heavy development
 
@@ -885,7 +887,9 @@ ___
 ## ChangeLog
 
 XX/XX/XX: current (not released yet)
-  - Nothing
+
+15/04/15: v0.0.16
+  - Removed redis references for sessions
 
 14/04/15: v0.0.15
   - Minor changes in `Route` to fit [Nodulator-Account](https://github.com/Champii/Nodulator-Account) new release
