@@ -893,8 +893,9 @@ By order of priority
 
 ___
 ## ChangeLog
-
 XX/XX/XX: current (not released yet)
+
+03/05/15: v0.0.17
   - You can now specify a property type in schema without wrapping it in a object like {type: "string"}
 
 15/04/15: v0.0.16
