@@ -400,6 +400,14 @@ it will check for its validity:
 - For every `post` routes (if any) it will check for every schema fields validity (each one in the model definition, and returns an error if any is missing or invalid)
 - For every `put`  routes (if any) it will check for each request fields validity (each one in the client request, and returns an error if any is invalid)
 
+You can specify a type directly with a string, assuming that the given property will be required.
+
+```coffeescript
+config =
+  schema:
+    foo: 'int'
+    bar: 'string'
+```
 
 
 #### Model association
@@ -887,6 +895,7 @@ ___
 ## ChangeLog
 
 XX/XX/XX: current (not released yet)
+  - You can now specify a property type in schema without wrapping it in a object like {type: "string"}
 
 15/04/15: v0.0.16
   - Removed redis references for sessions
