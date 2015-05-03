@@ -7,11 +7,12 @@ class Client
     @identity =
       username: ''
       password: ''
+    @userModel = 'player'
     @request = require('supertest')(@app)
 
   Login: (done) ->
     @request
-      .post('/api/1/players/login')
+      .post("/api/1/#{@userModel}s/login")
       .send(@identity)
       .expect(200)
       .end (err, res) ->
@@ -21,7 +22,7 @@ class Client
         done()
 
   Logout: (done) ->
-    req = @request.post('/api/1/players/logout')
+    req = @request.post("/api/1/#{@userModel}s/logout")
 
     @AttachCookie req
     req

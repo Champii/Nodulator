@@ -2,6 +2,7 @@ _ = require 'underscore'
 fs = require 'fs'
 path = require 'path'
 http = require 'http'
+Client =  require '../test/common/client'
 express = require 'express'
 bodyParser = require 'body-parser'
 expressSession = require 'express-session'
@@ -53,8 +54,9 @@ class Nodulator
       resave: true
       saveUninitialized: true
 
-
     @db = require('./connectors/sql')
+
+    @client = new Client @app
 
   Resource: (name, routes, config, _parent) ->
 

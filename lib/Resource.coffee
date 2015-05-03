@@ -15,6 +15,9 @@ typeCheck =
   string: (value) -> true # FIXME: call add subCheckers
   date: Validator.isDate
   email: Validator.isEmail
+  array: (value) -> Array.isArray value
+
+Nodulator.Validator = Validator
 
 module.exports = (table, config, app, routes, name) ->
 
@@ -37,6 +40,7 @@ module.exports = (table, config, app, routes, name) ->
       else
         for field, value of blob
           @[field] = blob[field]
+
 
     Save: (done) ->
       Resource._Validate @Serialize(), true, (err) =>
@@ -200,6 +204,10 @@ module.exports = (table, config, app, routes, name) ->
 
             else if description.type?
               @_schema[field] = typeCheck[description.type]
+
+            else if typeof(description) is 'string'
+              @_schema[field] = typeCheck[description]
+
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>
