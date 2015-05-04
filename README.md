@@ -908,6 +908,9 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  - Nothing
+
+04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions
 
 03/05/15: v0.0.17
