@@ -6,7 +6,6 @@ Client =  require '../test/common/client'
 express = require 'express'
 bodyParser = require 'body-parser'
 expressSession = require 'express-session'
-# RedisStore = require('connect-redis')(expressSession)
 
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
@@ -43,16 +42,6 @@ class Nodulator
       extended: true
 
     @server = http.createServer @app
-
-    # @sessionStore = new RedisStore
-    #  host: 'localhost'
-
-    @app.use expressSession
-      key: 'Nodulator'
-      secret: 'Nodulator'
-      # store: @sessionStore
-      resave: true
-      saveUninitialized: true
 
     @db = require('./connectors/sql')
 
@@ -95,6 +84,21 @@ class Nodulator
 
     for k, v of @defaultConfig
       @config[k] = v if not @config[k]?
+
+    sessions =
+      key: 'Nodulator'
+      secret: 'Nodulator'
+      resave: true
+      saveUninitialized: true
+    if @config?.store?.type is 'redis'
+      RedisStore = require('connect-redis')(expressSession)
+
+      @sessionStore = new RedisStore
+       host: @config.store.host || 'localhost'
+
+      sessions.store = @sessionStore
+
+    @app.use expressSession sessions
 
     @table = @db(@config).table
 

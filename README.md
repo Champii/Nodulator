@@ -255,6 +255,20 @@ Nodulator.Config
     pass: 'test'      # |_
 ```
 
+You can also provide a 'store' property in order to use `Redis` to manage sessions:
+
+```coffeescript
+Nodulator = require 'nodulator'
+
+Nodulator.Config
+  store:
+    type: 'redis'
+    host: 'localhost'     # <- default value, can be ignored
+```
+
+If ommited, sessions will be memory based (not recommended)
+
+
 `Nodulator` provides 2 main Objects :
 
 ```coffeescript
@@ -894,6 +908,10 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  - Nothing
+
+04/05/15: v0.0.18
+  - You can specify a 'store' general config property in order to switch to redis-based sessions
 
 03/05/15: v0.0.17
   - You can now specify a property type in schema without wrapping it in a object like {type: "string"}
