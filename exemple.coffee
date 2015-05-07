@@ -8,7 +8,7 @@ weaponConfig =
     hitPoints:
       type: 'int'
 
-class WeaponResource extends Nodulator.Resource 'weapon', Nodulator.Route.DefaultRoute, weaponConfig
+class WeaponResource extends Nodulator.Resource 'weapon', Nodulator.Route.MultiRoute, weaponConfig
 
 WeaponResource.Init()
 
@@ -27,7 +27,7 @@ unitConfig =
       type: 'int'
       optional: true
 
-class UnitRoute extends Nodulator.Route.DefaultRoute
+class UnitRoute extends Nodulator.Route.MultiRoute
   Config: ->
     super()
 

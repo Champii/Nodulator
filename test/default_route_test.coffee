@@ -9,9 +9,9 @@ Nodulator = require '../'
 client = null
 TestResource = null
 
-class TestRoute extends Nodulator.Route.DefaultRoute
+class TestRoute extends Nodulator.Route.MultiRoute
 
-describe 'Nodulator Route', ->
+describe 'Nodulator Multi Route', ->
 
   before (done) ->
     Nodulator.Reset ->

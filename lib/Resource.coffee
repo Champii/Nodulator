@@ -97,7 +97,7 @@ module.exports = (table, config, app, routes, name) ->
 
       for field, validator of @_schema when validator? and field isnt '_assoc'
 
-        if full and not blob[field]? and not config?.schema?[field]?.optional
+        if full and not blob[field]? and not config?.schema?[field]?.optional and not config?.schema?[field]?.default
           errors.push validationError field, blob[field], ' was not present.'
 
         else if blob[field]? and not validator(blob[field])
@@ -197,16 +197,19 @@ module.exports = (table, config, app, routes, name) ->
           do (description) =>
 
             if description.type? and typeof description.type is 'function'
-              @_schema._assoc.push
+              return @_schema._assoc.push
                 name: field
                 Get: (blob, done) ->
                   description.type.Fetch blob[description.localKey], done
 
             else if description.type?
+              if description.default?
+                @::[field] = description.default
               @_schema[field] = typeCheck[description.type]
 
             else if typeof(description) is 'string'
               @_schema[field] = typeCheck[description]
+
 
 
       if @config? and @config.abstract

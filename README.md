@@ -42,7 +42,8 @@ ___
   - [Complex inheritance system](#complex-inheritance-system)
 - [Route](#route)
   - [Route Object](#route-object)
-  - [DefaultRoute](#default-route-object)
+  - [SingleRoute](#single-route-object)
+  - [MultiRoute](#multi-route-object)
   - [Route Inheritance](#route-inheritance)
 - [DB Systems](#db-systems)
   - [Abstraction](#abstraction)
@@ -145,7 +146,7 @@ Here is the quickiest way to play around `Nodulator`
 _ = require 'underscore'
 Nodulator = require 'nodulator'
 
-class PlayerRoute extends Nodulator.Route.DefaultRoute
+class PlayerRoute extends Nodulator.Route.MultiRoute
   Config: ->
 
     # We create: GET => /api/1/{resource_name}/usernames
@@ -158,7 +159,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
 
         res.status(200).send usernames
 
-    # We call super() to apply Nodulator.Route.DefaultRoute behaviour
+    # We call super() to apply Nodulator.Route.MultiRoute behaviour
     # We called '/usernames' route before, so it won't be override by
     # default route GET => /api/1/{resource_name}/:id
     super()
@@ -166,7 +167,7 @@ class PlayerRoute extends Nodulator.Route.DefaultRoute
     # We create: PUT => /api/1/{resource_name}/:id/levelUp
     @Put '/:id/levelUp', (req, res) =>
 
-      # For DefaultRoute routes with '/:id/*',
+      # For MultiRoute routes with '/:id/*',
       # Fetch the corresponding Resource and put the instance in @instance
       # (here it can be called 'req.player' but we want to stay generic)
       @instance.LevelUp (err, resource) ->
@@ -400,6 +401,9 @@ config =
     bar:
       type: 'string'
       optional: true
+    foobar:
+      type: 'string'
+      default: 'foobar'
 ```
 
 Differents types are
@@ -409,10 +413,12 @@ Differents types are
 - date
 - email
 
-By default, each fields is required, but you can make one field optional with the `optional` field. It will never complain if this field is not present, but if it is,
+By default, each fields is required, but you can make one field optional with the `optional` field to `true` or presence of `default` field. It will never complain if this field is not present, but if it is,
 it will check for its validity:
 - For every `post` routes (if any) it will check for every schema fields validity (each one in the model definition, and returns an error if any is missing or invalid)
 - For every `put`  routes (if any) it will check for each request fields validity (each one in the client request, and returns an error if any is invalid)
+
+If you specify a `default` field, the `Resource` will auto-set its property if not given.
 
 You can specify a type directly with a string, assuming that the given property will be required.
 
@@ -570,15 +576,35 @@ Nodulator.Route.Put     [endPoint = '/'], [middleware, [middleware, ...]], callb
 Nodulator.Route.Delete  [endPoint = '/'], [middleware, [middleware, ...]], callback
 ```
 
-#### Default Route Object
+#### Single Route Object
 
-Nodulator provides also a standard route system for lazy : `Nodulator.Route.DefaultRoute`.
-It setups 5 routes (exemple when attached to a PlayerResource) :
+Nodulator provides a predefined route system for lazy, adapted for Singleton `Resource`: `Nodulator.Route.SingleRoute`.
+It setups 2 routes (exemple when attached to a `PlayerResource`) :
+
+```
+GET     => /api/1/player   => Fetch
+PUT     => /api/1/player   => Update
+```
+
+This route system needs to have a resource with `id == 1` in your actual DB before startup time to work.
+
+If you don't have a `config.schema` property set in your `Resource`, it will create one for you at startup time.
+
+Else, `Nodulator` will throw an error and shutdown.
+
+If you use `SqlMem` DB system, you must add a 'default' value to each resource fields in order to add it at startup.
+
+
+#### Multi Route Object
+
+Nodulator provides also a standard route system for lazy : `Nodulator.Route.MultiRoute`.
+It allows you to handle your resources like its a big collection.
+ It setups 5 routes (exemple when attached to a `PlayerResource`) :
 
 ```
 GET     => /api/1/players       => List
-GET     => /api/1/players/:id   => Get One
 POST    => /api/1/players       => Create
+GET     => /api/1/players/:id   => Get One
 PUT     => /api/1/players/:id   => Update
 DELETE  => /api/1/players/:id   => Delete
 ```
@@ -903,12 +929,18 @@ By order of priority
 - Log system
 - Abstract class can retrieve every child `Resource`
 - Remove an existing route
+- Type inference in schema for default field
 
 
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
-  - Nothing
+  - Added `SingleRoute` object, for manipulating Singleton `Resource`
+  - Removed `req.instances` from every `Route`
+  - Added tests for `SingleRoute`
+  - Route proxy methods for `@_All()` are now generated at runtime
+  - Renamed `DefaultRoute` to `MultiRoute`
+  - Added a `default` field to config schema
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

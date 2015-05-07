@@ -1,6 +1,7 @@
 _ = require 'underscore'
 
 class Route
+
   apiVersion: '/api/1/'
 
   constructor: (@resource, @app, @config) ->
@@ -21,8 +22,6 @@ class Route
       middle.push url
       url = '/'
 
-    # done = @_AddMiddleware type, url, done
-
     if not @[type + url]?
       @[type + url] = done
 
@@ -36,29 +35,53 @@ class Route
     else
       @[type + url] = done
 
-  All: (args...) ->
-    args.unshift 'all'
-    @_Add.apply @, args
-
-  Get: (args...) ->
-    args.unshift 'get'
-    @_Add.apply @, args
-
-  Post: (args...) ->
-    args.unshift 'post'
-    @_Add.apply @, args
-
-  Put: (args...) ->
-    args.unshift 'put'
-    @_Add.apply @, args
-
-  Delete: (args...) ->
-    args.unshift 'delete'
-    @_Add.apply @, args
+  for verb in ['All', 'Get', 'Post', 'Put', 'Delete']
+    do (verb) =>
+      @::[verb] = (args...) ->
+        args.unshift (verb[0].toLowerCase() + verb[1..])
+        @_Add.apply @, args
 
   Config: ->
 
-class DefaultRoute extends Route
+class SingleRoute extends Route
+
+  constructor: (@resource, @app, @config) ->
+    @rname = @resource.lname
+    @name = @rname
+
+    #Resource creation if non-existant
+    @resource.Fetch 1, (err, result) =>
+      if err? and @resource.config?.schema? and _(@resource.config.schema).filter((item) -> not item.default? and not item.optional?).length
+        throw new Error 'SingleRoute used with schema Resource and non existant row at id = 1. Please add it manualy to your DB system before continuing.'
+
+      if err?
+        @resource.Create {}, (err, res) ->
+          return res.status(500).send(err) if err?
+
+    @Config()
+
+  Config: ->
+    @All (req, res, next) =>
+      @resource.Fetch 1, (err, result) =>
+        return res.status(500).send(err) if err?
+
+        @instance = result
+
+        next()
+
+    @Get (req, res, next) =>
+      res.status(200).send @instance.ToJSON()
+
+    @Put (req, res) =>
+      _(@instance).extend req.body
+
+      @instance.Save (err) =>
+        return res.status(500).send(err) if err?
+
+        res.status(200).send @instance.ToJSON()
+
+class MultiRoute extends Route
+
   Config: ->
     @All '/:id*', (req, res, next) =>
       if not isFinite req.params.id
@@ -67,13 +90,7 @@ class DefaultRoute extends Route
       @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
-        if not req.instances?
-          req.instances = {}
-
         @instance = result
-
-        #FIXME: deprecated, for retro compatibility only
-        req.instances[@rname] = result
 
         next()
 
@@ -84,7 +101,7 @@ class DefaultRoute extends Route
         res.status(200).send _(results).invoke 'ToJSON'
 
     @Get '/:id', (req, res) =>
-      res.status(200).send req.instances?[@rname]?.ToJSON()
+      res.status(200).send @instance.ToJSON()
 
     @Post (req, res) =>
       @resource.Deserialize req.body, (err, result) ->
@@ -109,5 +126,11 @@ class DefaultRoute extends Route
 
         res.status(200).end()
 
+class DefaultRoute extends Route
+  constructor: ->
+    throw new Error 'Deprecated: Route.DefaultRoute. Use Route.MultiRoute instead.'
+
+Route.SingleRoute = SingleRoute
+Route.MultiRoute = MultiRoute
 Route.DefaultRoute = DefaultRoute
 module.exports = Route
