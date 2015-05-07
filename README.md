@@ -396,6 +396,10 @@ To make a `Resource` to respect a given schema, you just have to define a `schem
 ```coffeescript
 config =
   schema:
+    toto:
+      type: 'array' #This can be an array of everything
+    test:
+      type: ['int'] #This MUST be an array of integer
     foo:
       type: 'int'
     bar:
@@ -412,15 +416,14 @@ Differents types are
 - string
 - date
 - email
+- array
 
 By default, each fields is required, but you can make one field optional with the `optional` field to `true` or presence of `default` field. It will never complain if this field is not present, but if it is,
-it will check for its validity:
-- For every `post` routes (if any) it will check for every schema fields validity (each one in the model definition, and returns an error if any is missing or invalid)
-- For every `put`  routes (if any) it will check for each request fields validity (each one in the client request, and returns an error if any is invalid)
+it will check for its validity.
 
 If you specify a `default` field, the `Resource` will auto-set its property if not given.
 
-You can specify a type directly with a string, assuming that the given property will be required.
+You can specify a type directly with a string, assuming that the given property will be required:
 
 ```coffeescript
 config =
@@ -455,6 +458,26 @@ TestResource.Fetch 1, (err, test) ->
   console.log test
 ```
 
+If you want to retrive a collection of resource, you can wrap types in arrays instead:
+
+```coffeescript
+config =
+  schema:
+    barIds:
+      type: ['int']
+    bar:
+      type: [BarResource]
+      localKey: 'barIds'
+
+class TestResource extends Nodulator.Resource 'test', config
+
+TestResource.Init()
+
+# Fetch TestResource with id == 1
+TestResource.Fetch 1, (err, test) ->
+  # Will print for exemple : {id: 1, foo: 12, barIds: [1, 2], bar: [{id: 2, barProperty: 'test'}, {id: 2, barProperty: 'test2'}]}
+  console.log test
+```
 ____
 ## Overriding and Inheritance
 
@@ -941,6 +964,10 @@ XX/XX/XX: current (not released yet)
   - Route proxy methods for `@_All()` are now generated at runtime
   - Renamed `DefaultRoute` to `MultiRoute`
   - Added a `default` field to config schema
+  - `Resource.Init()` now returns the `Resource` itself, for chaining purpose.
+  - Added tests for resource association
+  - Tests are now executed in specific order
+  - You can now give an array as schema type for a field, in order to retrive multiple resources based on id
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

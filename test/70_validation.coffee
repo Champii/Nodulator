@@ -74,7 +74,7 @@ describe 'Nodulator Validation', ->
     TestResource.Create blob, (err, test) ->
       return done() if err?
 
-      done new Error 'No error on bool fields'
+      done new Error 'No error on int fields'
 
 #  it 'should not validate Resource string', (done) ->
 #    blob =
