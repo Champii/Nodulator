@@ -10,12 +10,13 @@ validationError = (field, value, message) ->
   message: "The '#{field}' field with value '#{value}' #{message}"
 
 typeCheck =
-  bool: (value) -> value is true or value is false
+  bool: (value) -> typeof(value) isnt 'string' and '' + value is 'true' or '' + value is 'false'
   int: Validator.isInt
   string: (value) -> true # FIXME: call add subCheckers
   date: Validator.isDate
   email: Validator.isEmail
   array: (value) -> Array.isArray value
+  arrayOf: (type) -> (value) => @[type] v for v in value
 
 Nodulator.Validator = Validator
 
@@ -73,9 +74,6 @@ module.exports = (table, config, app, routes, name) ->
         for field, description of @_schema when field isnt '_assoc'
           res[field] = @[field]
 
-        for assoc in @_schema._assoc
-          res[assoc.name] = @[assoc.name].Serialize()
-
       else
         for field, description of @ when field[0] isnt '_'
           res[field] = @[field]
@@ -84,7 +82,14 @@ module.exports = (table, config, app, routes, name) ->
 
     # Get what to send to client
     ToJSON: ->
-      @Serialize()
+      res = @Serialize()
+      if @_schema?
+        for assoc in @_schema._assoc
+          if Array.isArray @[assoc.name]
+            res[assoc.name] = _(@[assoc.name]).invoke 'Serialize'
+          else
+            res[assoc.name] = @[assoc.name].Serialize()
+      res
 
     @_Validate: (blob, full, done) ->
       return done() if not config? or not config.schema?
@@ -155,6 +160,7 @@ module.exports = (table, config, app, routes, name) ->
         res = @
         if @_schema?
           @_FetchAssoc blob, (err, blob) ->
+            # console.log '@_schema?', @_schema, blob
             done null, new res blob
         else
           done null, new res blob
@@ -196,21 +202,31 @@ module.exports = (table, config, app, routes, name) ->
 
           do (description) =>
 
+            isArray = false
+            if Array.isArray description.type
+              isArray = true
+              description.type = description.type[0]
+
             if description.type? and typeof description.type is 'function'
-              return @_schema._assoc.push
+              @_schema._assoc.push
                 name: field
                 Get: (blob, done) ->
-                  description.type.Fetch blob[description.localKey], done
+                  if !isArray
+                    description.type.Fetch blob[description.localKey], done
+                  else
+                    async.map blob[description.localKey], (item, done) =>
+                      description.type.Fetch.call description.type, item, done
+                    , done
 
             else if description.type?
               if description.default?
                 @::[field] = description.default
               @_schema[field] = typeCheck[description.type]
+              if isArray
+                @_schema[field] = typeCheck.arrayOf description.type
 
             else if typeof(description) is 'string'
               @_schema[field] = typeCheck[description]
-
-
 
       if @config? and @config.abstract
         @Extend = (name, routes, config) =>
@@ -227,4 +243,5 @@ module.exports = (table, config, app, routes, name) ->
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
 
+      @
   Resource._PrepareResource(table, config, app, routes, name)

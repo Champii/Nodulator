@@ -941,6 +941,9 @@ XX/XX/XX: current (not released yet)
   - Route proxy methods for `@_All()` are now generated at runtime
   - Renamed `DefaultRoute` to `MultiRoute`
   - Added a `default` field to config schema
+  - `Resource.Init()` now returns the `Resource` itself, for chaining purpose.
+  - Added tests for resource association
+  - Tests are now executed in specific order
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions
