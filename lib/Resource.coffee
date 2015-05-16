@@ -37,6 +37,9 @@ module.exports = (table, config, app, routes, name) ->
         for assoc in @_schema._assoc
           @[assoc.name] = blob[assoc.name]
 
+        for field, description of @_schema when not blob[field]? and description.default?
+          @[field] = description.default
+
         @id = blob.id
       else
         for field, value of blob
@@ -160,6 +163,7 @@ module.exports = (table, config, app, routes, name) ->
         res = @
         if @_schema?
           @_FetchAssoc blob, (err, blob) ->
+            return done err if err?
             # console.log '@_schema?', @_schema, blob
             done null, new res blob
         else
@@ -169,8 +173,8 @@ module.exports = (table, config, app, routes, name) ->
       assocs = {}
       async.each @_schema._assoc, (resource, done) =>
         resource.Get blob, (err, instance) =>
-          return done() if err? and config? and config.schema[resource.name].optional
-          return done err if err?
+          return done err if err? and not config?.schema?
+          return done() if err? and config? and config.schema?[resource.name]?.optional
 
           assocs[resource.name] = instance
           done()
@@ -212,8 +216,13 @@ module.exports = (table, config, app, routes, name) ->
                 name: field
                 Get: (blob, done) ->
                   if !isArray
+                    if not typeCheck.int blob[description.localKey]
+                      return done new Error 'Model association needs integer as id and key'
                     description.type.Fetch blob[description.localKey], done
                   else
+                    if not typeCheck.array blob[description.localKey]
+                      return done new Error 'Model association needs array of integer as ids and keys'
+
                     async.map blob[description.localKey], (item, done) =>
                       description.type.Fetch.call description.type, item, done
                     , done
@@ -243,5 +252,6 @@ module.exports = (table, config, app, routes, name) ->
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
 
+      # console.log @
       @
   Resource._PrepareResource(table, config, app, routes, name)
