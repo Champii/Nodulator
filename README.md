@@ -58,7 +58,7 @@ ___
 - [Project Generation](#project-generation)
 - [Developers](#developers)
 - [Contributors](#contributors)
-- [DOC](#doc)
+<!-- - [DOC](#doc) -->
 - [TODO](#todo)
 - [Changelog](#changelog)
 
@@ -827,7 +827,7 @@ You can immediately start to write `Resource` in `server/resources` !
 ___
 ## Developers
 
-Never forget that I'm always available at champii.akronym@gmail.com for any questions
+Never forget that I'm always available at contact@champii.io for any questions (Job related or not ;-)
 
 ___
 ## Contributors
@@ -835,7 +835,7 @@ ___
 - [Champii](https://github.com/champii)
 - [SkinyMonkey](https://github.com/skinymonkey)
 
-___
+<!-- ___
 ## DOC
 
 ```
@@ -938,7 +938,7 @@ Route
     Called when a Route is associated with a Resource.
     This call prepare every routes, and must be inherited.
 
-```
+``` -->
 
 ___
 ## ToDo
@@ -953,6 +953,7 @@ By order of priority
 - Abstract class can retrieve every child `Resource`
 - Remove an existing route
 - Type inference in schema for default field
+- Route instanciation without resources
 
 
 ___
@@ -968,6 +969,17 @@ XX/XX/XX: current (not released yet)
   - Added tests for resource association
   - Tests are now executed in specific order
   - You can now give an array as schema type for a field, in order to retrive multiple resources based on id
+  - Added Javascript support
+  - Added an output line to tell the user when the framework is listening and to which port
+  - Fetch and Create can now take one argument or an array of arguments
+  - Fixed bugs on resource association:
+    - ToJSON() now call child ToJSON() instead of Serialize()
+    - ToJSON() call check if given association exists
+  - Added 'distantKey' in relational schema to fetch relation that have that resource id as given key
+  - Added maxDepth field to resource config in order to limit the relationnal fetch. There is also a Resource.DEFAULT_DEPTH constant that is used when nothing is precised.
+  - Added argument to Resource.Init(): You can give the config object in order to avoid recursive require when two way model association
+  - Removed Doc section. It will be on the website documentation.
+  - Code in Init() has been splited for code clarity
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

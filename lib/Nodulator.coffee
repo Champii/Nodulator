@@ -47,7 +47,7 @@ class Nodulator
 
     @client = new Client @app
 
-  Resource: (name, routes, config, _parent) ->
+  Resource: (name, routes, config, _parent) =>
 
     name = name.toLowerCase()
     if @resources[name]?
@@ -102,7 +102,9 @@ class Nodulator
 
     @table = @db(@config).table
 
-    @server.listen @config.port || port++
+    @server.listen @config.port || port
+
+    console.log '=> Listening to 0.0.0.0:' + (@config.port || port++)
 
   Use: (module) ->
     module @

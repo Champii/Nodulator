@@ -28,9 +28,10 @@ class Route
       #FIXME: code clarity
       if middle.length
         middle.push (req, res, next) => @[type + url](req, res, next)
-        @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
+        @app.route(@apiVersion + @name + url)[type].apply @app, middle
       else
-        @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
+        @app.route(@apiVersion + @name + url)[type] (req, res, next) =>
+          @[type + url](req, res, next)
 
     else
       @[type + url] = done
@@ -51,9 +52,13 @@ class SingleRoute extends Route
 
     #Resource creation if non-existant
     @resource.Fetch 1, (err, result) =>
-      if err? and @resource.config?.schema? and _(@resource.config.schema).filter((item) -> not item.default? and not item.optional?).length
-        throw new Error 'SingleRoute used with schema Resource and non existant row at id = 1. Please add it manualy to your DB system before continuing.'
-
+      if err? and @resource.config?.schema? and
+         _(@resource.config.schema).filter((item) ->
+           not item.default? and not item.optional?).length
+        throw new Error """
+        SingleRoute used with schema Resource and non existant row at id = 1.
+        Please add it manualy to your DB system before continuing.'
+        """
       if err?
         @resource.Create {}, (err, res) ->
           return res.status(500).send(err) if err?

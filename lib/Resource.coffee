@@ -24,6 +24,8 @@ module.exports = (table, config, app, routes, name) ->
 
   class Resource
 
+    @DEFAULT_DEPTH: 1
+
     constructor: (blob) ->
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
@@ -88,10 +90,10 @@ module.exports = (table, config, app, routes, name) ->
       res = @Serialize()
       if @_schema?
         for assoc in @_schema._assoc
-          if Array.isArray @[assoc.name]
-            res[assoc.name] = _(@[assoc.name]).invoke 'Serialize'
-          else
-            res[assoc.name] = @[assoc.name].Serialize()
+          if @[assoc.name]? and Array.isArray @[assoc.name]
+            res[assoc.name] = _(@[assoc.name]).invoke 'ToJSON'
+          else if @[assoc.name]?
+            res[assoc.name] = @[assoc.name].ToJSON()
       res
 
     @_Validate: (blob, full, done) ->
@@ -105,58 +107,72 @@ module.exports = (table, config, app, routes, name) ->
 
       for field, validator of @_schema when validator? and field isnt '_assoc'
 
-        if full and not blob[field]? and not config?.schema?[field]?.optional and not config?.schema?[field]?.default
+        if full and not blob[field]? and not config?.schema?[field]?.optional and
+           not config?.schema?[field]?.default
           errors.push validationError field, blob[field], ' was not present.'
 
         else if blob[field]? and not validator(blob[field])
-          errors.push validationError field, blob[field], ' was not a valid ' + config.schema[field].type
+          errors.push validationError field,
+                                      blob[field],
+                                      ' was not a valid ' + config.schema[field].type
 
-        for field, value of blob when not @_schema[field]? and field isnt 'id' and field not in _(@_schema._assoc).pluck 'name'
+        for field, value of blob when not @_schema[field]? and
+                                      field isnt 'id' and
+                                      field not in _(@_schema._assoc).pluck 'name'
+
           errors.push validationError field, blob[field], ' is not in schema'
 
       done(if errors.length then {errors} else null)
 
-    # Fetch from id
-    @Fetch: (id, done) ->
-      @_table.Find id, (err, blob) =>
-        return done err if err?
+    # Wrapper to allow simple variable or array as first argument
+    @_MultiArgsWrap: (arg, callback, done) ->
+      if Array.isArray arg
+        async.map arg, callback, done
+      else
+        callback arg, done
 
-        @resource.Deserialize blob, done
+    # Fetch from id or id array
+    @Fetch: (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      @_MultiArgsWrap arg, (id, done) =>
+        @_table.Find id, (err, blob) =>
+          return done err if err?
+
+          @resource.Deserialize blob, done, _depth
+      , done
 
     # Get every records satisfying given constraints
-    @FetchBy: (constraints, done) ->
+    @FetchBy: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
       @_table.FindWhere '*', constraints, (err, blob) =>
         return done err if err?
 
-        @resource.Deserialize blob, done
+        @resource.Deserialize blob, done, _depth
 
     # Get every records from db
-    @List: (done) ->
+    @List: (done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
       @_table.Select 'id', {}, {}, (err, ids) =>
         return done err if err?
 
-        async.map _(ids).pluck('id'), (item, done) =>
-          @resource.Fetch item, done
-        , done
+        @resource.Fetch _(ids).pluck('id'), done, _depth
 
     # Get every records satisfying given constraints
-    @ListBy: (constraints, done) ->
+    @ListBy: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
       @_table.Select 'id', constraints, {}, (err, ids) =>
         return done err if err?
 
-        async.map _(ids).pluck('id'), (item, done) =>
-          @resource.Fetch item, done
-        , done
+        @resource.Fetch _(ids).pluck('id'), done, _depth
 
-    # Deserialize and Save
-    @Create: (blob, done) ->
-      @Deserialize blob, (err, resource) ->
-        return done err if err?
+    # Deserialize and Save from a blob or an array of blob
+    @Create: (args, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      @_MultiArgsWrap args, (blob, done) =>
+        @Deserialize blob, (err, resource) ->
+          return done err if err?
 
-        resource.Save done
+          resource.Save done
+        , _depth
+      , done
 
     # Pre-Instanciation and associated model retrival
-    @Deserialize: (blob, done) ->
+    @Deserialize: (blob, done, _depth) ->
       @_Validate blob, true, (err) =>
         return done err if err?
 
@@ -164,12 +180,13 @@ module.exports = (table, config, app, routes, name) ->
         if @_schema?
           @_FetchAssoc blob, (err, blob) ->
             return done err if err?
-            # console.log '@_schema?', @_schema, blob
+
             done null, new res blob
+          , _depth
         else
           done null, new res blob
 
-    @_FetchAssoc: (blob, done) ->
+    @_FetchAssoc: (blob, done, _depth) ->
       assocs = {}
       async.each @_schema._assoc, (resource, done) =>
         resource.Get blob, (err, instance) =>
@@ -178,7 +195,7 @@ module.exports = (table, config, app, routes, name) ->
 
           assocs[resource.name] = instance
           done()
-
+        , _depth
       , (err) ->
         return done err if err?
 
@@ -194,64 +211,87 @@ module.exports = (table, config, app, routes, name) ->
 
       @
 
-    #FIXME: split code
-    @Init: ->
+    @_PrepareRelationship: (isArray, field, description) ->
+      get = (blob, done) ->
+        done new Error 'No local or distant key given'
+
+      if description.localKey?
+        get = (blob, done, _depth) ->
+          if not _depth
+            return done()
+
+          if !isArray
+            if not typeCheck.int blob[description.localKey]
+              return done new Error 'Model association needs integer as id and key'
+          else
+            if not typeCheck.array blob[description.localKey]
+              return done new Error 'Model association needs array of integer as ids and keys'
+
+          description.type.Fetch blob[description.localKey], done, _depth - 1
+
+      else if description.distantKey?
+        get = (blob, done, _depth) ->
+          if not _depth
+            return done()
+
+          if !isArray
+            description.type.FetchBy blob[description.distantKey], done, _depth - 1
+          else
+            constaints = {}
+            constaints[description.distantKey] = blob.id
+            description.type.ListBy constaints, done, _depth - 1
+
+      @_schema._assoc.push
+        name: field
+        Get: get
+
+    @_PrepareSchema: ->
+      @_schema = {_assoc: []}
+
+      for field, description of @config.schema
+
+        isArray = false
+        if Array.isArray description.type
+          isArray = true
+          description.type = description.type[0]
+
+        if description.type? and typeof description.type is 'function'
+          @_PrepareRelationship isArray, field, description
+
+        else if description.type?
+          if description.default?
+            @::[field] = description.default
+          @_schema[field] = typeCheck[description.type]
+          if isArray
+            @_schema[field] = typeCheck.arrayOf description.type
+
+        else if typeof(description) is 'string'
+          @_schema[field] = typeCheck[description]
+
+    @_PrepareAbstract: ->
+      @Extend = (name, routes, config) =>
+        if config and not config.abstract
+          deleteAbstract = true
+
+        config = _(config).extend @config
+
+        if deleteAbstract
+          delete config.abstract
+
+        Nodulator.Resource name, routes, config, @
+
+    @Init: (@config = @config) ->
       @resource = @
       Nodulator.resources[@lname] = @
 
       if @config? and @config.schema
-        @_schema = {_assoc: []}
-
-        for field, description of @config.schema
-
-          do (description) =>
-
-            isArray = false
-            if Array.isArray description.type
-              isArray = true
-              description.type = description.type[0]
-
-            if description.type? and typeof description.type is 'function'
-              @_schema._assoc.push
-                name: field
-                Get: (blob, done) ->
-                  if !isArray
-                    if not typeCheck.int blob[description.localKey]
-                      return done new Error 'Model association needs integer as id and key'
-                    description.type.Fetch blob[description.localKey], done
-                  else
-                    if not typeCheck.array blob[description.localKey]
-                      return done new Error 'Model association needs array of integer as ids and keys'
-
-                    async.map blob[description.localKey], (item, done) =>
-                      description.type.Fetch.call description.type, item, done
-                    , done
-
-            else if description.type?
-              if description.default?
-                @::[field] = description.default
-              @_schema[field] = typeCheck[description.type]
-              if isArray
-                @_schema[field] = typeCheck.arrayOf description.type
-
-            else if typeof(description) is 'string'
-              @_schema[field] = typeCheck[description]
+        @_PrepareSchema()
 
       if @config? and @config.abstract
-        @Extend = (name, routes, config) =>
-          if config and not config.abstract
-            deleteAbstract = true
-
-          config = _(config).extend @config
-
-          if deleteAbstract
-            delete config.abstract
-
-          Nodulator.Resource name, routes, config, @
+        @_PrepareAbstract()
 
       else if @_routes?
         @routes = new @_routes(@, @app, @config)
 
-      # console.log @
       @
   Resource._PrepareResource(table, config, app, routes, name)

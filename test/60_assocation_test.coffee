@@ -71,5 +71,3 @@ describe 'Nodulator Associations', ->
       assert.equal instance.children[1].field, 'child2'
 
       done()
-
-
