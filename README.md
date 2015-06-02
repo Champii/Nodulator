@@ -1,5 +1,9 @@
-# Nodulator
-
+     _   _           _       _       _             
+    | \ | | ___   __| |_   _| | __ _| |_ ___  _ __ 
+    |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
+    | |\  | (_) | (_| | |_| | | (_| | || (_) | |   
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   
+                                                
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
