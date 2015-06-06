@@ -924,7 +924,7 @@ XX/XX/XX: current (not released yet)
 
 10/04/15: v0.0.14
   - Resource 'user' is no longer a reserved word
-  - Resources with name finishing with 'y' are now correctly put in plurial form in route name
+  - Resources with name finishing with 'y' are now correctly put in plural form in route name
 
 09/04/15: v0.0.13
   - Better model association and validation
