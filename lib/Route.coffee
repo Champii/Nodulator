@@ -28,7 +28,7 @@ class Route
       #FIXME: code clarity
       if middle.length
         middle.push (req, res, next) => @[type + url](req, res, next)
-        @app.route(@apiVersion + @name + url)[type].apply @app, middle
+        @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
       else
         @app.route(@apiVersion + @name + url)[type] (req, res, next) =>
           @[type + url](req, res, next)
@@ -100,8 +100,9 @@ class MultiRoute extends Route
         next()
 
     @Get (req, res) =>
-      @resource.List (err, results) ->
-        return res.status(500).send(err) if err?
+      @resource.List (err, results) =>
+        # console.log 'Resource', @resource.name, 'List', err, results
+        return res.status(500).send {err: err} if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
@@ -109,13 +110,10 @@ class MultiRoute extends Route
       res.status(200).send @instance.ToJSON()
 
     @Post (req, res) =>
-      @resource.Deserialize req.body, (err, result) ->
+      @resource.Create req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
-        result.Save (err) ->
-          return res.status(500).send(err) if err?
-
-          res.status(200).send result.ToJSON()
+        res.status(200).send result.ToJSON()
 
     @Put '/:id', (req, res) =>
       _(@instance).extend req.body

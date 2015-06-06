@@ -42,7 +42,9 @@ class Client
     req
       .send(data)
       .expect(200)
-      .end done
+      .end (args...) ->
+        console.log args
+        done args...
 
   Put: (url, data, done) ->
     req = @request.put url

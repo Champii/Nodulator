@@ -16,7 +16,7 @@ typeCheck =
   date: Validator.isDate
   email: Validator.isEmail
   array: (value) -> Array.isArray value
-  arrayOf: (type) -> (value) => @[type] v for v in value
+  arrayOf: (type) -> (value) => !_(@[type] v for v in value).contains (item) -> item is false
 
 Nodulator.Validator = Validator
 
@@ -29,6 +29,7 @@ module.exports = (table, config, app, routes, name) ->
     constructor: (blob) ->
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
+      @_type = @.__proto__.constructor.lname
 
       @id = blob.id || null
 
@@ -47,7 +48,6 @@ module.exports = (table, config, app, routes, name) ->
         for field, value of blob
           @[field] = blob[field]
 
-
     Save: (done) ->
       Resource._Validate @Serialize(), true, (err) =>
         return done err if err?
@@ -59,9 +59,9 @@ module.exports = (table, config, app, routes, name) ->
 
           if !exists
             @id = id
-            Nodulator.bus.emit 'new_' + name, @Serialize()
+            Nodulator.bus.emit 'new_' + name, @ToJSON()
           else
-            Nodulator.bus.emit 'update_' + name, @Serialize()
+            Nodulator.bus.emit 'update_' + name, @ToJSON()
 
           done null, @
 
@@ -69,12 +69,12 @@ module.exports = (table, config, app, routes, name) ->
       @_table.Delete @id, (err) =>
         return done err if err?
 
-        Nodulator.bus.emit 'delete_' + name, @Serialize()
+        Nodulator.bus.emit 'delete_' + name, @ToJSON()
         done()
 
     # Get what to send to the database
     Serialize: ->
-      res = if @id? then {id: @id} else {}
+      res = if @id? then id: @id else {}
       if @_schema?
         for field, description of @_schema when field isnt '_assoc'
           res[field] = @[field]
@@ -137,6 +137,7 @@ module.exports = (table, config, app, routes, name) ->
         @_table.Find id, (err, blob) =>
           return done err if err?
 
+          # console.log 'fetch blob', blob
           @resource.Deserialize blob, done, _depth
       , done
 
@@ -190,7 +191,8 @@ module.exports = (table, config, app, routes, name) ->
       assocs = {}
       async.each @_schema._assoc, (resource, done) =>
         resource.Get blob, (err, instance) =>
-          return done err if err? and not config?.schema?
+          assocs[resource.name] = resource.default if resource.default?
+          return done err if err? and config?.schema?
           return done() if err? and config? and config.schema?[resource.name]?.optional
 
           assocs[resource.name] = instance
@@ -225,7 +227,7 @@ module.exports = (table, config, app, routes, name) ->
               return done new Error 'Model association needs integer as id and key'
           else
             if not typeCheck.array blob[description.localKey]
-              return done new Error 'Model association needs array of integer as ids and keys'
+              return done new Error 'Model association needs array of integer as ids and localKeys'
 
           description.type.Fetch blob[description.localKey], done, _depth - 1
 
@@ -241,9 +243,11 @@ module.exports = (table, config, app, routes, name) ->
             constaints[description.distantKey] = blob.id
             description.type.ListBy constaints, done, _depth - 1
 
-      @_schema._assoc.push
+      toPush  =
         name: field
         Get: get
+      toPush.default = description.default if description.default?
+      @_schema._assoc.push toPush
 
     @_PrepareSchema: ->
       @_schema = {_assoc: []}
@@ -251,22 +255,31 @@ module.exports = (table, config, app, routes, name) ->
       for field, description of @config.schema
 
         isArray = false
-        if Array.isArray description.type
+        if description.type? and Array.isArray description.type
           isArray = true
           description.type = description.type[0]
+        else if Array.isArray description
+          isArray = true
+          description = description[0]
 
         if description.type? and typeof description.type is 'function'
           @_PrepareRelationship isArray, field, description
 
         else if description.type?
           if description.default?
-            @::[field] = description.default
+            if typeof(description.default) is 'function'
+              @::[field] = description.default()
+            else
+              @::[field] = description.default
           @_schema[field] = typeCheck[description.type]
           if isArray
             @_schema[field] = typeCheck.arrayOf description.type
 
         else if typeof(description) is 'string'
-          @_schema[field] = typeCheck[description]
+          if isArray
+            @_schema[field] = typeCheck.arrayOf description
+          else
+            @_schema[field] = typeCheck[description]
 
     @_PrepareAbstract: ->
       @Extend = (name, routes, config) =>
@@ -294,4 +307,5 @@ module.exports = (table, config, app, routes, name) ->
         @routes = new @_routes(@, @app, @config)
 
       @
+
   Resource._PrepareResource(table, config, app, routes, name)

@@ -1,9 +1,9 @@
-     _   _           _       _       _             
-    | \ | | ___   __| |_   _| | __ _| |_ ___  _ __ 
+     _   _           _       _       _
+    | \ | | ___   __| |_   _| | __ _| |_ ___  _ __
     |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
-    | |\  | (_) | (_| | |_| | | (_| | || (_) | |   
-    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   
-                                                
+    | |\  | (_) | (_| | |_| | | (_| | || (_) | |
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|
+
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
@@ -984,6 +984,11 @@ XX/XX/XX: current (not released yet)
   - Added argument to Resource.Init(): You can give the config object in order to avoid recursive require when two way model association
   - Removed Doc section. It will be on the website documentation.
   - Code in Init() has been splited for code clarity
+  - Load order has changed between resources and socket
+  - Added a @_type variable defining the typename of an instance
+  - Fixed a bug in model association: no field in schema if array with no 'type'
+  - Improved 'arrayOf' type check
+  - Added function to default schema value (is that a possible virtual field ?)
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions
