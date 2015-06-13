@@ -989,6 +989,7 @@ XX/XX/XX: current (not released yet)
   - Fixed a bug in model association: no field in schema if array with no 'type'
   - Improved 'arrayOf' type check
   - Added function to default schema value (is that a possible virtual field ?)
+  - MultiRoute::Get() now can take query arguments
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

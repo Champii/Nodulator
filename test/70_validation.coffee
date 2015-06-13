@@ -3,7 +3,7 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '../'
+Nodulator = require '../lib/Nodulator'
 
 TestResource = null
 

@@ -100,7 +100,7 @@ class MultiRoute extends Route
         next()
 
     @Get (req, res) =>
-      @resource.List (err, results) =>
+      @resource.ListBy req.query, (err, results) =>
         # console.log 'Resource', @resource.name, 'List', err, results
         return res.status(500).send {err: err} if err?
 

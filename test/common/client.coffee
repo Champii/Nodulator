@@ -43,7 +43,6 @@ class Client
       .send(data)
       .expect(200)
       .end (args...) ->
-        console.log args
         done args...
 
   Put: (url, data, done) ->
