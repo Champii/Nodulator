@@ -22,6 +22,8 @@ Nodulator.Validator = Validator
 
 module.exports = (table, config, app, routes, name) ->
 
+
+
   class Resource
 
     @DEFAULT_DEPTH: 1
@@ -289,7 +291,8 @@ module.exports = (table, config, app, routes, name) ->
       @app = _app
       @lname = _name.toLowerCase()
       @resource = @
-      @_routes = _routes
+      if _routes?
+        @routes = new _routes(@, @config)
 
       @
 
@@ -382,9 +385,6 @@ module.exports = (table, config, app, routes, name) ->
 
       if @config? and @config.abstract
         @_PrepareAbstract()
-
-      else if @_routes?
-        @routes = new @_routes(@, @config)
 
       @INITED = true
 

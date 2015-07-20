@@ -25,8 +25,6 @@ describe 'Nodulator Validation', ->
             type: 'email'
 
       TestResource = Nodulator.Resource 'test', config
-      assert TestResource?
-      TestResource.Init()
 
       done()
 

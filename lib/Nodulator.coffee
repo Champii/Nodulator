@@ -104,6 +104,8 @@ class Nodulator
 
     @server.listen @config.port || port
 
+    @bus.emit 'listening'
+
     console.log '=> Listening to 0.0.0.0:' + (@config.port || port++)
 
   Use: (module) ->

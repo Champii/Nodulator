@@ -20,7 +20,7 @@ describe 'Nodulator Inheritance', ->
           @table.FindWhere '*', {name: name}, (err, blob) =>
             throw new Error err if err?
 
-            @resource.Deserialize blob, done
+            @resource._Deserialize blob, done
 
       assert ATestResource?
       ATestResource.Init()

@@ -370,7 +370,7 @@ You can list every models from this `Resource` thanks to `List` call :
 Players.List (err, players) ->
   return console.error err if err?
 
-  [...] # players is an array of Players instance
+  [...] # players is an array of every Players instance
 
 Players.List {login: 'toto'}, (err, players) -> [...]
 ```
@@ -1022,116 +1022,15 @@ ___
 - [SkinyMonkey](https://github.com/skinymonkey)
 
 ___
-## DOC
-
-```
-Nodulator
-
-  Properties :
-    Nodulator.app       => the express app
-    Nodulator.express   => the express module
-    Nodulator.passport  => the passport module
-    Nodulator.server    => the http server
-    Nodulator.authApp   => if this app handle passport authentication
-    Nodulator.appRoot   => the app root path
-    Nodulator.bus       => official bus (EventEmitter)
-    Nodulator.Route     => Route object
-
-  Nodulator.Resource(resourceName, [Route], [config])
-
-    Create the resource Class
-
-  Nodulator.Config(config)
-
-    Change config
-
-  Nodulator.Use(module)
-
-    Inject a module inside Nodulator
-
-  Nodulator._ListEndpoints(done)
-
-    DEBUG PURPOSE
-    List every api endpoint added by application
-
-Resource
-
-(Uppercase for Class, lowercase for instance)
-
-  Resource.Fetch(id, done)
-
-    Take an id and return it from the DB in done callback: (err, resource) ->
-
-  Resource.FetchBy(constraints, done)
-
-    Take an object representing contraints, and return first row from the DB in done callback: (err, resource) ->
-
-  Resource.List(done)
-
-    Return every records in DB for this resource and give them to done: (err, resources) ->
-
-  Resource.ListBy(constraints, done)
-
-    Take an object representing constraints, and return every row from the DB in done callback: (err, resources) ->
-
-  Resource.Deserialize(blob, done)
-
-    Method that take the blob returned from DB to make a new instance
-
-  Resource.Create(blob, done)
-
-    Alias for Deserialize and Save
-
-  resource.Save(done)
-
-    Save the instance in DB
-
-    If the resource doesn't exists, it create and give it an id
-    It return to done the current instance
-
-
-  resource.Delete(done)
-
-    Delete the record in DB, and return affected rows in done
-
-  resource.Serialize()
-
-    Return every properties defined in the schema,
-    else if no schema is defined it will take every properties not stating with '_' (the private ones)
-    This method is used to get what must be saved in DB
-
-  resource.ToJSON()
-
-    This method is used to get what must be send to client
-    Call @Serialize() by default, but can be overrided
-
-Route
-
-  route.Get     [url = ''], [middleware, [middleware, [...]]], done)
-  route.All     [url = ''], [middleware, [middleware, [...]]], done)
-  route.Post    [url = ''], [middleware, [middleware, [...]]], done)
-  route.Put     [url = ''], [middleware, [middleware, [...]]], done)
-  route.Delete  [url = ''], [middleware, [middleware, [...]]], done)
-
-    Create a route.
-
-    'url' will be concatenated with '/api/{VERSION}/{RESOURCE_NAME}'. Optional
-    'middleware' are optionals
-    'done' is the express app callback: (req, res, next) ->
-
-  route.Config()
-
-    Called when a Route is associated with a Resource.
-    This call prepare every routes, and must be inherited.
-
-``` -->
-
-___
 ## ToDo
 
 By order of priority
 
 - Better tests
+  - Validation
+  - Promises
+  - Every args type for Resource calls
+  -
 - Tests for validation
 - Tests for model association
 - Better error management
@@ -1185,6 +1084,7 @@ XX/XX/XX: current (not released yet)
   - Resource::Deserialize() is now a private call : Resource::_Deserialize()
   - Removed the mandatory Init function call !
   - Added Promises if no callback given.
+  - Routes are now instantiated when attached, not when Init. This helps the new lazy Init system
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

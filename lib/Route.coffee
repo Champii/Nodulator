@@ -61,11 +61,16 @@ class Route
 class SingleRoute extends Route
 
   constructor: (@resource, @config) ->
-    throw new Error 'SingleRoute constructor needs a Resource as first parameter' if not @resource? or typeof(@resource) isnt 'object'
+    throw new Error 'SingleRoute constructor needs a Resource as first parameter' if not @resource? or typeof(@resource) isnt 'function'
 
     @rname = @resource.lname
 
     @name = @rname
+
+    if @rname[@rname.length - 1] is 'y'
+      @name = @rname[...-1] + 'ies'
+
+    @app = Nodulator.app
 
     #Resource creation if non-existant
     @resource.Fetch 1, (err, result) =>

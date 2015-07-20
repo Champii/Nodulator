@@ -13,7 +13,7 @@ describe 'Nodulator Associations', ->
 
   before (done) ->
     Nodulator.Reset ->
-      ChildResource = Nodulator.Resource('child').Init()
+      ChildResource = Nodulator.Resource 'child'
       ChildResource.Create {field: 'child'}, (err, child) -> return console.error err if err?
 
       testConfig =
@@ -24,8 +24,6 @@ describe 'Nodulator Associations', ->
             localKey: 'childId'
 
       TestResource = Nodulator.Resource 'test', testConfig
-      assert TestResource?
-      TestResource.Init()
 
       done()
 
@@ -54,8 +52,6 @@ describe 'Nodulator Associations', ->
           localKey: 'childIds'
 
     NewResource = Nodulator.Resource 'new', newConfig
-    assert NewResource?
-    NewResource.Init()
 
     done()
 
