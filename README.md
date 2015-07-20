@@ -376,9 +376,11 @@ Players.Fetch 1, (err, player) ->
   [...] # Do something with player instance
 
 Players.Fetch [1, 5],                             (err, players) -> [...]
-Players.Fetch {login: 'value'},                   (err, players) -> [...]
-Players.Fetch [7, {age: 25}, 9. {login: 'test'}], (err, players) -> [...]
+Players.Fetch {login: 'value'},                   (err, player)  -> [...]
+Players.Fetch [7, {age: 25}, 9, {login: 'test'}], (err, players) -> [...]
 ```
+
+The `Fetch` will return the first found row that pass the given object equality
 
 You can list every models from this `Resource` thanks to `List` call :
 
@@ -390,8 +392,12 @@ Players.List (err, players) ->
 
 Players.List {age: 26},               (err, players) -> [...]
 Players.List [{age: 26}, {age: 52}],  (err, players) -> [...]
+# Be carefull, as List(obj) returns an array, List(array) returns an Array of Array
 ```
+
 You can delete the same way, except that Delete callback only have one error parameter.
+
+Be carefull, The `Delete` will erase the first found row that pass the given object equality
 
 ```coffeescript
 Players.Delete 1, (err) ->
@@ -399,13 +405,11 @@ Players.Delete 1, (err) ->
 
 
 Players.Delete {login: 'toto'},                    (err) -> [...]
-Players.Delete [9, {login: 'toto'}, 4. {age: 22}], (err) -> [...]
+Players.Delete [9, {login: 'toto'}, 4, {age: 22}], (err) -> [...]
 ```
 
 Never use `new` operator directly on a `Resource`, else you might bypass the
 relationning system.
-
-`Create` method is an alias to `Deserialize` followed by a `Save`.
 
 #### Instance methods
 
