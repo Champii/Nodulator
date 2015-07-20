@@ -70,7 +70,6 @@ ___
 - [Project Generation](#project-generation)
 - [Developers](#developers)
 - [Contributors](#contributors)
-<!-- - [DOC](#doc) -->
 - [TODO](#todo)
 - [Changelog](#changelog)
 
