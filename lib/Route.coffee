@@ -1,16 +1,30 @@
 _ = require 'underscore'
+Nodulator = null
 
 class Route
 
-  apiVersion: '/api/1/'
+  basePath: '/api/'
+  apiVersion: 1
+  rname: ''
 
-  constructor: (@resource, @app, @config) ->
-    @rname = @resource.lname
+  constructor: (@resource, @config) ->
+    Nodulator = require '../' if not Nodulator?
+
+    if typeof(@resource) is 'function'
+      @rname = @resource.lname
+    else if typeof(@resource) is 'string'
+      @rname = @resource
+      @resource = undefined
+      Nodulator.Config() if not Nodulator.config?
+    else
+      throw new Error 'Route constructor needs a Resource or a Name as first parameter'
+
     @name = @rname + 's'
 
     if @rname[@rname.length - 1] is 'y'
       @name = @rname[...-1] + 'ies'
 
+    @app = Nodulator.app
     @Config()
 
   _Add: (type, url, middle..., done) ->
@@ -28,9 +42,9 @@ class Route
       #FIXME: code clarity
       if middle.length
         middle.push (req, res, next) => @[type + url](req, res, next)
-        @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
+        @app.route(@basePath + @apiVersion + '/' + @name + url)[type].apply @app.route(@basePath + @apiVersion + '/' + @name + url), middle
       else
-        @app.route(@apiVersion + @name + url)[type] (req, res, next) =>
+        @app.route(@basePath + @apiVersion + '/' + @name + url)[type] (req, res, next) =>
           @[type + url](req, res, next)
 
     else
@@ -46,8 +60,11 @@ class Route
 
 class SingleRoute extends Route
 
-  constructor: (@resource, @app, @config) ->
+  constructor: (@resource, @config) ->
+    throw new Error 'SingleRoute constructor needs a Resource as first parameter' if not @resource? or typeof(@resource) isnt 'object'
+
     @rname = @resource.lname
+
     @name = @rname
 
     #Resource creation if non-existant
@@ -78,7 +95,7 @@ class SingleRoute extends Route
       res.status(200).send @instance.ToJSON()
 
     @Put (req, res) =>
-      _(@instance).extend req.body
+      @instance.ExtendSafe req.body
 
       @instance.Save (err) =>
         return res.status(500).send(err) if err?
@@ -100,7 +117,7 @@ class MultiRoute extends Route
         next()
 
     @Get (req, res) =>
-      @resource.ListBy req.query, (err, results) =>
+      @resource.List req.query, (err, results) =>
         # console.log 'Resource', @resource.name, 'List', err, results
         return res.status(500).send {err: err} if err?
 
@@ -116,7 +133,7 @@ class MultiRoute extends Route
         res.status(200).send result.ToJSON()
 
     @Put '/:id', (req, res) =>
-      _(@instance).extend req.body
+      @instance.ExtendSafe req.body
 
       @instance.Save (err) =>
         return res.status(500).send(err) if err?

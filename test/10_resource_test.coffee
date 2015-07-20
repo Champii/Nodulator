@@ -13,12 +13,11 @@ describe 'Nodulator Resource', ->
     Nodulator.Reset ->
       TestResource = Nodulator.Resource 'test'
       assert TestResource?
-      TestResource.Init()
       done()
 
   it 'should add first resource', (done) ->
-    TestResource.Deserialize {test: 'test'}, (err, test) ->
-      throw new Error 'Cannot Deserialize test' if err?
+    TestResource._Deserialize {test: 'test'}, (err, test) ->
+      throw new Error 'Cannot _Deserialize test' if err?
 
       test.Save (err) ->
         throw new Error 'Cannot Save test' if err?

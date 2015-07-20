@@ -1,6 +1,6 @@
 _ = require 'underscore'
 async = require 'async'
-
+Q = require 'q'
 Nodulator = require '../'
 Validator = require 'validator'
 
@@ -25,6 +25,7 @@ module.exports = (table, config, app, routes, name) ->
   class Resource
 
     @DEFAULT_DEPTH: 1
+    @INITED: false
 
     constructor: (blob) ->
       @_table = @.__proto__.constructor._table
@@ -49,6 +50,11 @@ module.exports = (table, config, app, routes, name) ->
           @[field] = blob[field]
 
     Save: (done) ->
+      d = null
+      if not done?
+        d = Q.defer()
+        done = @_WrapPromise d
+
       Resource._Validate @Serialize(), true, (err) =>
         return done err if err?
 
@@ -65,12 +71,21 @@ module.exports = (table, config, app, routes, name) ->
 
           done null, @
 
+      d?.promise || @
+
     Delete: (done) ->
+      d = null
+      if not done?
+        d = Q.defer()
+        done = @_WrapPromise d
+
       @_table.Delete @id, (err) =>
         return done err if err?
 
         Nodulator.bus.emit 'delete_' + name, @ToJSON()
         done()
+
+      d?.promise
 
     # Get what to send to the database
     Serialize: ->
@@ -95,6 +110,16 @@ module.exports = (table, config, app, routes, name) ->
           else if @[assoc.name]?
             res[assoc.name] = @[assoc.name].ToJSON()
       res
+
+    ExtendSafe: (blob) ->
+      return _(@).extend blob if not @_schema?
+
+      newBlob = _({}).extend blob
+
+      for assoc in @_schema._assoc
+        delete newBlob[assoc.name]
+
+      _(@).extend newBlob
 
     @_Validate: (blob, full, done) ->
       return done() if not config? or not config.schema?
@@ -131,49 +156,103 @@ module.exports = (table, config, app, routes, name) ->
       else
         callback arg, done
 
+    @_WrapPromise: (d) ->
+      (err, data) ->
+        return d.reject err if err?
+        d.resolve data
+
+    #Fixme
+    _WrapPromise: (d) ->
+      (err, data) ->
+        return d.reject err if err?
+        d.resolve data
+
+    @Delete: (arg, done) ->
+      @Init() if not @INITED
+
+      d = null
+      if not done?
+        d = Q.defer()
+        done = @_WrapPromise d
+
+      @Fetch constraints, (err, instance) =>
+        return done err if err?
+
+        instance.Delete done
+
+      d?.promise || @
+
     # Fetch from id or id array
     @Fetch: (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
-      @_MultiArgsWrap arg, (id, done) =>
-        @_table.Find id, (err, blob) =>
+      @Init() if not @INITED
+
+      d = null
+      if not done?
+        d = Q.defer()
+        done = @_WrapPromise d
+
+      cb = (done) =>
+        (err, blob) =>
           return done err if err?
 
-          # console.log 'fetch blob', blob
-          @resource.Deserialize blob, done, _depth
+          @resource._Deserialize blob, done, _depth
+
+      @_MultiArgsWrap arg, (constraints, done) =>
+        if typeof(constraints) is 'object'
+          @_table.FindWhere '*', constraints, cb done
+        else
+          @_table.Find constraints, cb done
       , done
 
-    # Get every records satisfying given constraints
-    @FetchBy: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
-      @_table.FindWhere '*', constraints, (err, blob) =>
-        return done err if err?
-
-        @resource.Deserialize blob, done, _depth
+      d?.promise || @
 
     # Get every records from db
-    @List: (done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
-      @_table.Select 'id', {}, {}, (err, ids) =>
-        return done err if err?
+    @List: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      @Init() if not @INITED
 
-        @resource.Fetch _(ids).pluck('id'), done, _depth
+      d = null
+      if typeof(constraints) is 'function'
+        done = constraints
+        constraints = {}
 
-    # Get every records satisfying given constraints
-    @ListBy: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      if (typeof(constraints) in ['object', 'undefined']) and not done?
+        if typeof(constraints) is 'undefined'
+          constraints = {}
+        d = Q.defer()
+        done = @_WrapPromise d
+
+
       @_table.Select 'id', constraints, {}, (err, ids) =>
         return done err if err?
 
         @resource.Fetch _(ids).pluck('id'), done, _depth
 
-    # Deserialize and Save from a blob or an array of blob
+      d?.promise || @
+
+    # _Deserialize and Save from a blob or an array of blob
     @Create: (args, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      @Init() if not @INITED
+
+      d = null
+      if not done?
+        d = Q.defer()
+        done = @_WrapPromise d
+
       @_MultiArgsWrap args, (blob, done) =>
-        @Deserialize blob, (err, resource) ->
+        @_Deserialize blob, (err, resource) ->
           return done err if err?
 
           resource.Save done
         , _depth
       , done
 
+      d?.promise || @
+
     # Pre-Instanciation and associated model retrival
-    @Deserialize: (blob, done, _depth) ->
+    @_Deserialize: (blob, done, _depth) ->
+      # if @_schema?
+      #   for assoc in @_schema._assoc
+      #     blob[assoc.name] = null
       @_Validate blob, true, (err) =>
         return done err if err?
 
@@ -189,6 +268,7 @@ module.exports = (table, config, app, routes, name) ->
 
     @_FetchAssoc: (blob, done, _depth) ->
       assocs = {}
+
       async.each @_schema._assoc, (resource, done) =>
         resource.Get blob, (err, instance) =>
           assocs[resource.name] = resource.default if resource.default?
@@ -304,7 +384,9 @@ module.exports = (table, config, app, routes, name) ->
         @_PrepareAbstract()
 
       else if @_routes?
-        @routes = new @_routes(@, @app, @config)
+        @routes = new @_routes(@, @config)
+
+      @INITED = true
 
       @
 

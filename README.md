@@ -17,11 +17,13 @@
 ___
 ## Concept
 
-`Nodulator` is designed to make it more easy to create highly modulable applications, built with REST APIs and with integrated ORM in CoffeeScript.
+`Nodulator` is designed to make it more easy to create highly modulable
+applications, built with REST APIs and with integrated ORM in CoffeeScript.
 
 You must understand [express](https://github.com/strongloop/express) basics for routing
 
-Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee) to see a full working exemple
+Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee)
+to see a full working exemple
 
 Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
 
@@ -36,19 +38,25 @@ ___
 - [Configuration](#configuration)
 - [Resource](#resource)
   - [Basics](#basics)
+  - [Init](#init)
   - [Class methods](#class-methods)
   - [Instance methods](#instance-methods)
-  - [Schema and Validation](#schema-and-validation)
-  - [Model association](#model-association)
-- [Overriding and Inheritance](#overriding-and-inheritance)
-  - [Override default behaviour](#override-default-behaviour)
-  - [Abstract Class](#abstract-class)
-  - [Complex inheritance system](#complex-inheritance-system)
+  - [Promises or Callbacks](#promises-or-callbacks)
+  - [Schema](#schema)
+    - [Schema and Validation](#schema-and-validation)
+    - [Model association](#model-association)
+    - [LocalKey or DistantKey](#localkey-vs-distant-key)
+    - [Depth](#depth)
+  - [Overriding and Inheritance](#overriding-and-inheritance)
+    - [Override default behaviour](#override-default-behaviour)
+    - [Abstract Class](#abstract-class)
+    - [Complex inheritance system](#complex-inheritance-system)
 - [Route](#route)
   - [Route Object](#route-object)
   - [SingleRoute](#single-route-object)
   - [MultiRoute](#multi-route-object)
   - [Route Inheritance](#route-inheritance)
+  - [Standalone Routes](#standalone-routes)
 - [DB Systems](#db-systems)
   - [Abstraction](#abstraction)
   - [Mysql](#mysql)
@@ -69,29 +77,45 @@ ___
 ___
 ## Philosophy
 
-`Nodulator` is a project that is trying to make a big overlay to every traditionnal packages used to make REST client/server applications in CoffeeScript.
-Its main goal is to give developers a complex REST routing system, an ORM and high-level modules, encapsulating every classic behaviour needed to create complex projects.
+`Nodulator` is a project that is trying to make a big overlay to every
+traditional packages used to make REST client/server applications in CoffeeScript.
 
-Its core provides everything needed to build powerfull and highly modulable REST APIs, and allow the developer to reuse his code through every projects.
+Its main goal is to give developers a complex REST routing system, an ORM and
+high-level modules, encapsulating every classic behaviour needed to create
+complex projects.
 
-With this framework, you will never loose 10 or 20 hours anymore boostraping a project from scratch or looking for the right technology to implement.
-You will never have headache anymore trying to combine `socket.io` and `passport` to keep track of your session with your sockets (for exemple),
+Its core provides everything needed to build powerfull and highly modulable
+REST APIs, and allow the developer to reuse his code through every projects.
+
+With this framework, you will never loose 10 or 20 hours anymore boostraping a
+project from scratch or looking for the right technology to implement.
+
+You will never have headache anymore trying to combine `socket.io` and `passport`
+ to keep track of your session with your sockets (for exemple),
 or you will never have to consider assets management,
-and with the integrated [Project Generation](#project-generation) you will never need to manage your `Nodulator` modules dependencies.
+and with the integrated [Project Generation](#project-generation) you will never
+need to manage your `Nodulator` modules dependencies.
 
-You need to add authentication logic to your open/public API ? Look for [Nodulator-Account](https://github.com/Champii/Nodulator-Account) !
+You need to add authentication logic to your open/public API ? Look for
+[Nodulator-Account](https://github.com/Champii/Nodulator-Account) !
 
-You need to add socket.io support ? Look for [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket) !
+You need to add socket.io support ? Look for
+[Nodulator-Socket](https://github.com/Champii/Nodulator-Socket) !
 
 If you don't find your desired module, just [build it](#modules) !
 
-`Nodulator` is like a lego game, instead of learning how to use a given technology and how to combine it with thoses you often use,
-it allows you to manipulate simple concepts like adding a `Account` concept to your application(for exemple), and so adding authentication and permission logic to your app.
+`Nodulator` is like a lego game, instead of learning how to use a given
+technology and how to combine it with thoses you often use,
+it allows you to manipulate simple concepts like adding a `Account` concept to
+your application(for exemple), and so adding authentication and permission logic to your app.
 
 Also, each brick or layer of a `Nodulator` application is highly linked to every others.
-For exemple, when you add `Nodulator-Account` module to your app, if you have already included `Nodulator-Angular` it will automaticaly add everything needed
-to handle angular authentication (it will add a separate view, some directives and a user service). Have you added `Nodulator-Socket` ?
-So `Nodulator-Angular` will also be highly linked to your server's models, by providing a socket interface to your server `Resource`.
+For exemple, when you add `Nodulator-Account` module to your app, if you have
+already included `Nodulator-Angular` it will automaticaly add everything needed
+to handle angular authentication (it will add a separate view, some directives
+and a user service). Have you added `Nodulator-Socket` ?
+So `Nodulator-Angular` will also be highly linked to your server's models,
+by providing a socket interface to your server `Resource`.
 
 Check the [Jump To](#jump-to) section !
 
@@ -180,7 +204,7 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
         res.status(200).send resource.ToJSON()
 
 # We create a resource, and we attach the PlayerRoute
-class PlayerResource extends Nodulator.Resource 'player', PlayerRoute
+class Players extends Nodulator.Resource 'player', PlayerRoute
 
   # We create a LevelUp method
   LevelUp: (done) ->
@@ -194,8 +218,6 @@ class PlayerResource extends Nodulator.Resource 'player', PlayerRoute
 
       done null, _(players).pluck 'username'
 
-# And we Init()
-PlayerResource.Init()
 
 ```
 
@@ -243,7 +265,8 @@ ___
 
 First of all, the configuration process is absolutly optional.
 
-If you don't give Nodulator a config, it will assume you want to use [SqlMem](#sqlmem) DB system, with no persistance at all. Usefull for heavy tests periods.
+If you don't give Nodulator a config, it will assume you want to use
+[SqlMem](#sqlmem) DB system, with no persistance at all. Usefull for heavy tests periods.
 
 If you prefere to use a persistant system, here is the procedure :
 
@@ -291,29 +314,10 @@ A `Resource` is a class permitting to retrive and save a model from a DB.
 Here is an exemple of creating a `Resource`
 
 ```coffeescript
-PlayerResource = Nodulator.Resource 'player'
-
-PlayerResource.Init()
+Players = Nodulator.Resource 'player'
 ```
 
 Here, it creates a `PlayerResource`, linked with a `players` table in DB (if any)
-
-Note the 's' concatenated with the `Resource` name. Its the real `Resource.name` of a resource
-
-For the same name without the 's', there is a `Resource.lname` property.
-
-##### /!\ Never forget to call Init() /!\
-
-It's needed in order to prepare the `Resource`. All the `Nodulator`'s magic is inside this call.
-
-If you forget it :
-- The `Resource` will NOT be linked to `Route` (if any)
-- It will NOT prepare `Account` system (if any)
-- It will NOT prepare inheritance system so you won't be able to inherit from it
-- It will NOT be linked to a corresponding table in DB
-- Nothing will work or happend. Ever.
-
-##### /!\ Please read this section again /!\ (beware of infinite loops :p)
 
 You can pass several params to `Nodulator.Resource` :
 
@@ -324,47 +328,66 @@ Nodulator.Resource name [, Route] [, config]
 You can attach a [Route](#route) and/or a config object to a `Resource`.
 
 
+#### Init
+
+This call prepare the `Resource`. All the `Nodulator`'s magic is
+inside this call.
+
+It is now optional to call Init(), as it will be called by the first Resource query.
+
+However, note that the Init() call can take the config parameter, in case of crossing
+Resource schema definition. You must call it befor the first query.
+
+Also, it returns the whole Resource for chaining purpose.
+
 #### Class methods
 
 Each `Resource` provides some 'Class methods' to manage the specific model in db :
 
 ```coffeescript
-PlayerResource.Fetch(id, done)
-PlayerResource.FetchBy(constraints, done)
-PlayerResource.List(id, done)
-PlayerResource.ListBy(constraints, done)
-PlayerResource.Deserialize(blob, done)
-PlayerResource.Create(blob, done)
+Players.Create(blob, done)
+Players.Fetch(constraints, done)
+Players.List(constraints, done)
+Players.Delete(constraints, done)
 ```
 
-The `Fetch` method take an id and return a `PlayerResource` intance to `done` callback :
+The `Fetch` method can take an id and return a `Players` instance to `done` callback :
+It can take an id, an object or an array
 
 ```coffeescript
-PlayerResource.Fetch 1, (err, player) ->
+Players.Fetch 1, (err, player) ->
   return console.error err if err?
 
   [...] # Do something with player instance
-```
 
-You can also call `FetchBy` method to give a specific field to retrive.
-It can be unique, or the first occurence in DB will return (depends on DB implementations)
+Players.Fetch [1, 5],                        (err, players) -> [...]
+Players.Fetch {login: 'value'},              (err, players) -> [...]
+Players.Fetch [{age: 25}, {login: 'test'}],  (err, players) -> [...]
+```
 
 You can list every models from this `Resource` thanks to `List` call :
 
 ```coffeescript
-PlayerResource.List (err, players) ->
+Players.List (err, players) ->
   return console.error err if err?
 
-  [...] # players is an array of PlayerResource instance
+  [...] # players is an array of Players instance
+
+Players.List {login: 'toto'}, (err, players) -> [...]
+```
+You can delete the same way, except that Delete callback only have one error parameter.
+
+```coffeescript
+Players.Delete 1, (err) ->
+  return console.error err if err?
+
+
+Players.Delete {login: 'toto'}, (err) -> [...]
 ```
 
-Like `FetchBy`, you can `ListBy` a specific field.
-
-The `Deserialize` method allow to get an instance of a given `Resource`.
-
-Never use `new` operator directly on a `Resource`, else you might bypass the relationning system.
-
-`Deserialize` method is used to make pre-processing work (like fetching related models) before instantiation.
+Players.List {login: 'toto'}, (err, players) -> [...]
+Never use `new` operator directly on a `Resource`, else you might bypass the
+relationning system.
 
 `Create` method is an alias to `Deserialize` followed by a `Save`.
 
@@ -386,26 +409,57 @@ player.Serialize()
 player.ToJSON()
     By default, it calls Serialize().
     Generaly used to get what to send to client.
+
+player.ExtendSafe(blob)
+    This method extend the Resource with the given blob,
+    But it keeps safe every Associations and vital stuff.
 ```
+
+Every Instance and Class methods can be chained, they all returns their 'this'. (Except when using Promises,
+read the corresponding chapter)
+
+## Promises or Callbacks
+
+Every call that take a `done` callback can be expressed by Promises:
+
+```coffeescript
+Players.Fetch 1, (err, player) ->
+  return console.error err if err?
+
+  [...] # Do something with player instance
+```
+
+Is equivalent to :
+
+```coffeescript
+Players.Fetch 1
+  .then (player) -> console.log   player
+  .fail (err)    -> console.error err
+
+```
+
+If you omit the callback, it will return a Promise. If you pass a callback, it will return `this` for chaining purpose.
+
+## Schema
 
 #### Schema and Validation
 
-By default, every `Resource` is schema less. It means that you can put almost anything into your `Resource`.
+By default, every `Resource` is schema less. It means that you can put almost
+anything into your `Resource`.
 
-It can obviously be schema less only for DB systems that allows it. When using MySQL for exemple, you'll have
-to define a schema and validation rules if you don't want your server to answer raw SQL errors for non existant fields
+It can obviously be schema less only for DB systems that allows it. When using
+MySQL for exemple, you'll have to define a schema and validation rules
+if you don't want your server to answer raw SQL errors for non existant fields
 
-To make a `Resource` to respect a given schema, you just have to define a `schema` field into `Resource` configuration
+To make a `Resource` to respect a given schema, you just have to define a
+`schema` field into `Resource` configuration
 
 ```coffeescript
 config =
   schema:
-    toto:
-      type: 'array' #This can be an array of everything
-    test:
-      type: ['int'] #This MUST be an array of integer
-    foo:
-      type: 'int'
+    toto: 'array' #This can be an array of everything
+    test: ['int'] #This MUST be an array of integer
+    foo:  'int'
     bar:
       type: 'string'
       optional: true
@@ -422,12 +476,13 @@ Differents types are
 - email
 - array
 
-By default, each fields is required, but you can make one field optional with the `optional` field to `true` or presence of `default` field. It will never complain if this field is not present, but if it is,
-it will check for its validity.
+By default, each fields is required, but you can make one field optional with
+the `optional` field to `true` or presence of `default` field. It will never
+complain if this field is not present, but if it is, it will check for its validity.
 
-If you specify a `default` field, the `Resource` will auto-set its property if not given.
 
-You can specify a type directly with a string, assuming that the given property will be required:
+You can specify a type directly with a string, assuming that the given property
+will be required:
 
 ```coffeescript
 config =
@@ -436,28 +491,54 @@ config =
     bar: 'string'
 ```
 
+#### Default and Virtual fields
 
-#### Model association
+If you specify a `default` field, the `Resource` will auto-set its property
+if the value is not given.
 
-You can make associations between `Resource`. For making a `Resource` to be automaticaly fetched when querying another, you can add it to its schema :
+For exemple, with this Resource config :
 
 ```coffeescript
 config =
   schema:
     foo:
       type: 'int'
-    barId:
+      default: 5
+```
+
+If I dont provide a 'foo' value at Resource instanciation, it will take the
+one given by the 'default' field
+
+You can put a function in place of a default value. In this case, this function
+will be executed to get the default value at instanciation time.
+
+```coffeescript
+config =
+  schema:
+    foo:
       type: 'int'
+      default: (obj) ->
+```
+
+
+#### Model association
+
+You can make associations between `Resource`. For making a `Resource` to be
+automaticaly fetched when querying another, you can add it to its schema :
+
+```coffeescript
+config =
+  schema:
+    foo:    'int'
+    barId:  'int'
     bar:
-      type: BarResource
+      type: Bars
       localKey: 'barId'
 
-class TestResource extends Nodulator.Resource 'test', config
+Tests = Nodulator.Resource 'test', config
 
-TestResource.Init()
-
-# Fetch TestResource with id == 1
-TestResource.Fetch 1, (err, test) ->
+# Fetch Tests with id == 1
+Tests.Fetch 1, (err, test) ->
   # Will print for exemple : {id: 1, foo: 12, barId: 1, bar: {id:1, barProperty: 'test'}}
   console.log test
 ```
@@ -467,31 +548,80 @@ If you want to retrive a collection of resource, you can wrap types in arrays in
 ```coffeescript
 config =
   schema:
-    barIds:
-      type: ['int']
+    barIds: ['int']
     bar:
-      type: [BarResource]
+      type: [Bars]
       localKey: 'barIds'
 
-class TestResource extends Nodulator.Resource 'test', config
+Tests = Nodulator.Resource 'test', config
 
-TestResource.Init()
+# Fetch Tests with id == 1
+Tests.Fetch 1, (err, test) ->
+  # Will print for exemple :
+  # {
+  #   id: 1,
+  #   foo: 12,
+  #   barIds: [1, 2],
+  #   bar: [{id: 1, barProperty: 'test'},
+  #         {id: 2, barProperty: 'test2'}]
+  # }
 
-# Fetch TestResource with id == 1
-TestResource.Fetch 1, (err, test) ->
-  # Will print for exemple : {id: 1, foo: 12, barIds: [1, 2], bar: [{id: 2, barProperty: 'test'}, {id: 2, barProperty: 'test2'}]}
   console.log test
 ```
+
+#### localKey vs distantKey
+
+When you want to retrieve a Resource based on an id property inside the object,
+you must use the 'localKey' property. It will fetch for the given Resource Type
+with the corresponding id from 'localKey' field
+
+If can also retrieve a Resource that have a property containing the actual instance id:
+
+```coffeescript
+config =
+  schema:
+    bar:
+      type: Bars
+      distantKey: 'testId'
+
+Tests = Nodulator.Resource 'test', config
+
+```
+
+Given the last exemple, when you get a Test instance with id == 42, it will have a
+field 'bar' with the Bars instance that have testId == 42
+
+#### Depth
+
+When you have associated Resources, you can choose the depth of your queries.
+
+By default, the depth is at 1 for every Resource. It means that it will fetch only
+one level of Resource maximum.
+
+If you want a deeper level of retrieving, you can set the 'maxDepth' property of
+a Resource configuration:
+
+```coffeescript
+config =
+  maxDepth: 3
+```
+
+Or if you prefer change it at runtime and make it inheritable, you can act on
+the Resource.DEFAULT_DEPTH field.
+
+Note that the config one has priority.
+
 ____
 ## Overriding and Inheritance
 
-You can inherit from a `Resource` to override or enhance its default behaviour, or to make a complex class inheritance system built on `Resource`
+You can inherit from a `Resource` to override or enhance its default behaviour,
+or to make a complex class inheritance system built on `Resource`
 
 #### Override default behaviour
 In CoffeeScript its pretty easy:
 
 ```coffeescript
-class UnitResource extends Nodulator.Resource 'unit'
+class Units extends Nodulator.Resource 'unit'
 
   # We create a new instance method
   LevelUp: (done) ->
@@ -505,44 +635,45 @@ class UnitResource extends Nodulator.Resource 'unit'
 
       done null, units
 
-  UnitResource.Init()
 ```
 
 #### Abstract class
 
-You can define an abstract class, that won't be attached to any model in DB or any `Route`
+You can define an abstract class, that won't be attached to any model in DB or
+any `Route`
 
 ```coffeescript
-class UnitResource extends Nodulator.Resource 'unit', {abstract: true}
+class Units extends Nodulator.Resource 'unit', {abstract: true}
   [...]
 
-UnitResource.Init();
 ```
 
-Of course, abstract classes are only designed to be inherited. (Please note that they can't have a `Route` attached)
+Of course, abstract classes are only designed to be inherited. (Please note that
+  they can't have a `Route` attached)
 
 #### Complex inheritance system
 
-Given the last exemple, here is a class that inherits from `UnitResource`
+Given the last exemple, here is a class that inherits from `Units`
 
 ```coffeescript
 # Note the call to 'Extend()' method
-class PlayerResource extends UnitResource.Extend 'player'
+class Players extends Units.Extend 'player'
 
-  # Give PlayerResource a new beheviour
+  # Give Players a new beheviour
   NewBehaviour: (args, done) ->
     [...]
 
-  # Overriding existing UnitResource LevelUp()
+  # Overriding existing Units LevelUp()
   LevelUp: (done) ->
     [...]
 
-PlayerResource.Init();
 ```
 
-You can call the Extend() method either from a full `Resource` or from an `abstract` one.
+You can call the Extend() method either from a full `Resource` or from an
+`abstract` one.
 
-Please note that if both parent and child are full `Resource`, both will have corresponding model available from ORM (here `units` and `players`)
+Please note that if both parent and child are full `Resource`, both will have
+corresponding model available from ORM (here `units` and `players`)
 
 So be carefull when creating extended `Resource`, and think about `abstract` !
 
@@ -551,13 +682,15 @@ ___
 
 #### Route Object
 
-`Nodulator` provides a `Route` object, to be attached to a `Resource` object in order to describe routing process.
+`Nodulator` provides a `Route` object, to be attached to a `Resource` object
+in order to describe routing process.
 
 ```coffeescript
-class UnitResource extends Nodulator.Resource 'unit', Nodulator.Route
+class Units extends Nodulator.Resource 'unit', Nodulator.Route
 ```
 
-There is no need of `Init()` here. Every `Route` is initiated and configured when its attached `Resource` is.
+There is no need of `Init()` here. Every `Route` is initiated and configured
+ when its attached `Resource` is.
 
 Default `Nodulator.Route` do nothing. You have to inherit from it to describe routes :
 
@@ -584,14 +717,15 @@ class UnitRoute extends Nodulator.Route
       res.status(200).end()
 ```
 
-This `Route`, attached to a `Resource` (here `UnitResource`) add 2 endpoints :
+This `Route`, attached to a `Resource` (here `Units`) add 2 endpoints :
 
 ```
 GET  => /api/1/units/:id
 POST => /api/1/units
 ```
 
-Each `Route` have to implement a `Config()` method, calling `super()` and defining routes thanks to 'verbs' route calls (@Get(), @Post(), @Put(), @Delete(), @All()).
+Each `Route` have to implement a `Config()` method, calling `super()` and
+defining routes thanks to 'verbs' route calls (@Get(), @Post(), @Put(), @Delete(), @All()).
 
 Here are all 'verb' route calls definition :
 
@@ -605,28 +739,33 @@ Nodulator.Route.Delete  [endPoint = '/'], [middleware, [middleware, ...]], callb
 
 #### Single Route Object
 
-Nodulator provides a predefined route system for lazy, adapted for Singleton `Resource`: `Nodulator.Route.SingleRoute`.
-It setups 2 routes (exemple when attached to a `PlayerResource`) :
+Nodulator provides a predefined route system for lazy, adapted for Singleton
+`Resource`: `Nodulator.Route.SingleRoute`.
+
+It setups 2 routes (exemple when attached to a `Players`) :
 
 ```
 GET     => /api/1/player   => Fetch
 PUT     => /api/1/player   => Update
 ```
 
-This route system needs to have a resource with `id == 1` in your actual DB before startup time to work.
+This route system needs to have a resource with `id == 1` in your actual DB
+before startup time to work.
 
-If you don't have a `config.schema` property set in your `Resource`, it will create one for you at startup time.
+If you don't have a `config.schema` property set in your `Resource`, it will
+create one for you at startup time.
 
 Else, `Nodulator` will throw an error and shutdown.
 
-If you use `SqlMem` DB system, you must add a 'default' value to each resource fields in order to add it at startup.
+If you use `SqlMem` DB system, you must add a 'default' value to each resource
+fields in order to add it at startup.
 
 
 #### Multi Route Object
 
 Nodulator provides also a standard route system for lazy : `Nodulator.Route.MultiRoute`.
 It allows you to handle your resources like its a big collection.
- It setups 5 routes (exemple when attached to a `PlayerResource`) :
+ It setups 5 routes (exemple when attached to a `Players`) :
 
 ```
 GET     => /api/1/players       => List
@@ -635,6 +774,8 @@ GET     => /api/1/players/:id   => Get One
 PUT     => /api/1/players/:id   => Update
 DELETE  => /api/1/players/:id   => Delete
 ```
+
+Note that the first GET call accept query parameters for selection.
 
 #### Route Inheritance
 
@@ -646,7 +787,8 @@ class Test2Route extends Nodulator.Route.DefaultRoute
 class Test3Route extends Test2Route
 class Test4Route extends Test3Route
 ```
-And you can override existing route by providing same association verb + url. Exemple :
+And you can override existing route by providing same association verb + url.
+Exemple :
 
 ```coffeescript
 class TestRoute extends Nodulator.Route.DefaultRoute
@@ -656,6 +798,30 @@ class TestRoute extends Nodulator.Route.DefaultRoute
     # Here we override the default GET => /api/1/{resource_name}/:id
     @Get '/:id', (req, res) =>
       [...]
+```
+
+#### Standalone Routes
+
+You can declare Route that dont belongs to any Resource.
+Instead, you define yourself every endpoints :
+
+```coffeescript
+class TestRoute extends Nodulator.Route
+
+  Config: ->
+    super()
+
+    @Get (req, res) =>
+      res.status(200).send {elem: 'value'}
+
+# You have to give them a name, to replace the one a Resource would have given
+route = new TestRoute 'test'
+```
+
+Create the following routes :
+
+```
+GET     => /api/1/tests
 ```
 
 ___
@@ -677,17 +843,20 @@ Table.Update(blob, where, done)
 Table.Delete(id, done)
 ```
 
-Every `Resource` have an associated `Table` instance that links to the good table/document in the good DB driver system
+Every `Resource` have an associated `Table` instance that links to the good
+table/document in the good DB driver system
 
 #### Mysql
 
-Built-in `MySQL` implementation ([node-mysql](https://github.com/felixge/node-mysql/)) for `Nodulator`
+Built-in `MySQL` implementation ([node-mysql](https://github.com/felixge/node-mysql/))
+for `Nodulator`
 
 Check [lib/connectors/sql/Mysql.coffee](https://github.com/Champii/Nodulator/blob/master/lib/connectors/sql/Mysql.coffee)
 
 #### MongoDB
 
-Built-in `MongoDB` implementation ([mongous](https://github.com/amark/mongous)) for `Nodulator`
+Built-in `MongoDB` implementation ([mongous](https://github.com/amark/mongous))
+for `Nodulator`
 
 Check [lib/connectors/sql/Mongo.coffee](https://github.com/Champii/Nodulator/blob/master/lib/connectors/sql/Mongo.coffee)
 
@@ -695,7 +864,8 @@ Check [lib/connectors/sql/Mongo.coffee](https://github.com/Champii/Nodulator/blo
 
 Special DB driver, built on RAM.
 
-It provides same options as others systems do, but nothing is stored. When you stop the server, everything is deleted.
+It provides same options as others systems do, but nothing is stored. When you
+stop the server, everything is deleted.
 
 Check [lib/connectors/sql/SqlMem.coffee](https://github.com/Champii/Nodulator/blob/master/lib/connectors/sql/SqlMem.coffee)
 
@@ -704,7 +874,8 @@ ___
 
 #### Bus
 
-There is a `Nodulator.bus` object that is basicaly an `EventEmitter`. Every objects in `Nodulator` use this bus.
+There is a `Nodulator.bus` object that is basicaly an `EventEmitter`. Every
+objects in `Nodulator` use this bus.
 
 Here are the emitted events:
 
@@ -720,7 +891,7 @@ Here are the emitted events:
 Exemple
 
 ```coffeescript
-PlayerResource = Nodulator.Resource 'player'
+Players = Nodulator.Resource 'player'
 
 Nodulator.on 'new_player', (player) ->
   [...] # Do something with this brand new player
@@ -755,7 +926,8 @@ Replace `ModuleName` with the module's name you want to load
 
 #### Module Hacking
 
-If you want to create a new module for `Nodulator`, you have to export a single function, taking `Nodulator` as parameter :
+If you want to create a new module for `Nodulator`, you have to export a single
+function, taking `Nodulator` as parameter :
 
 ```coffeescript
 module.exports = (Nodulator) ->
@@ -818,20 +990,24 @@ server/
     └── index.coffee
 ```
 
-And then find for every `Nodulator` modules installed, and call their respective `init` method.
+And then find for every `Nodulator` modules installed, and call their
+respective `init` method.
 
 It generate a `main.coffee` and a `package.json` with every modules pre-loaded.
 
-The `server` folder is auto-loaded (check `server/index.coffee` and every `index.coffee` in subfolders).
+The `server` folder is auto-loaded (check `server/index.coffee` and every
+   `index.coffee` in subfolders).
 
-Folders load order is defined in `server/loadOrder.json`, and is automaticaly managed by new modules installed (they care of the order)
+Folders load order is defined in `server/loadOrder.json`, and is automaticaly
+managed by new modules installed (they care of the order)
 
 You can immediately start to write `Resource` in `server/resources` !
 
 ___
 ## Developers
 
-Never forget that I'm always available at contact@champii.io for any questions (Job related or not ;-)
+Never forget that I'm always available at contact@champii.io for any questions
+ (Job related or not ;-)
 
 ___
 ## Contributors
@@ -957,7 +1133,7 @@ By order of priority
 - Abstract class can retrieve every child `Resource`
 - Remove an existing route
 - Type inference in schema for default field
-- Route instanciation without resources
+- LiveScript
 
 
 ___
@@ -972,16 +1148,21 @@ XX/XX/XX: current (not released yet)
   - `Resource.Init()` now returns the `Resource` itself, for chaining purpose.
   - Added tests for resource association
   - Tests are now executed in specific order
-  - You can now give an array as schema type for a field, in order to retrive multiple resources based on id
+  - You can now give an array as schema type for a field, in order to retrive
+  multiple resources based on id
   - Added Javascript support
-  - Added an output line to tell the user when the framework is listening and to which port
+  - Added an output line to tell the user when the framework is listening and
+  to which port
   - Fetch and Create can now take one argument or an array of arguments
   - Fixed bugs on resource association:
     - ToJSON() now call child ToJSON() instead of Serialize()
     - ToJSON() call check if given association exists
-  - Added 'distantKey' in relational schema to fetch relation that have that resource id as given key
-  - Added maxDepth field to resource config in order to limit the relationnal fetch. There is also a Resource.DEFAULT_DEPTH constant that is used when nothing is precised.
-  - Added argument to Resource.Init(): You can give the config object in order to avoid recursive require when two way model association
+  - Added 'distantKey' in relational schema to fetch relation that have that
+  resource id as given key
+  - Added maxDepth field to resource config in order to limit the relationnal
+  fetch. There is also a Resource.DEFAULT_DEPTH constant that is used when nothing is precised.
+  - Added argument to Resource.Init(): You can give the config object in order
+  to avoid recursive require when two way model association
   - Removed Doc section. It will be on the website documentation.
   - Code in Init() has been splited for code clarity
   - Load order has changed between resources and socket
@@ -990,6 +1171,14 @@ XX/XX/XX: current (not released yet)
   - Improved 'arrayOf' type check
   - Added function to default schema value (is that a possible virtual field ?)
   - MultiRoute::Get() now can take query arguments
+  - Added Resource::ExtendSafe() method to preserve associated models while extending a Resource
+  - Modified Route::MultiRoute and Route::SingleRoute to use Resource::ExtendSafe()
+  - Removed app parameter from Route constructor
+  - Route classes can now be instanciated without any Resources
+  - Removed ListBy and FetchBy for simplicity
+  - Resource::Deserialize() is now a private call : Resource::_Deserialize()
+  - Removed the mandatory Init function call !
+  - Added Promises if no callback given.
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

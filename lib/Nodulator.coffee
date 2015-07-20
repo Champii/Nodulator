@@ -57,7 +57,7 @@ class Nodulator
       config = routes
       routes = null
 
-    @Config() if !(@config?) # config of Nodulator instance
+    @Config() if not @config? # config of Nodulator instance
 
     if not routes? or routes.prototype not instanceof @Route
       routes = @Route
@@ -79,8 +79,7 @@ class Nodulator
     if @config?
       return
 
-    @config = config
-    @config = @defaultConfig if !(config?)
+    @config = config || @defaultConfig
 
     for k, v of @defaultConfig
       @config[k] = v if not @config[k]?
@@ -90,6 +89,7 @@ class Nodulator
       secret: 'Nodulator'
       resave: true
       saveUninitialized: true
+
     if @config?.store?.type is 'redis'
       RedisStore = require('connect-redis')(expressSession)
 
