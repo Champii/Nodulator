@@ -4,6 +4,7 @@ path = require 'path'
 http = require 'http'
 Client =  require '../test/common/client'
 express = require 'express'
+Hacktiv = require 'hacktiv'
 bodyParser = require 'body-parser'
 expressSession = require 'express-session'
 
@@ -133,6 +134,9 @@ class Nodulator
     @Init()
 
     done() if done?
+
+  Watch: (f) ->
+    Hacktiv f
 
   _ListEndpoints: (done) ->
     endpoints = []

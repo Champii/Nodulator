@@ -3,6 +3,7 @@ async = require 'async'
 Q = require 'q'
 Nodulator = require '../'
 Validator = require 'validator'
+Hacktiv = require 'hacktiv'
 
 validationError = (field, value, message) ->
   field: field
@@ -22,19 +23,26 @@ Nodulator.Validator = Validator
 
 module.exports = (table, config, app, routes, name) ->
 
-
-
   class Resource
 
     @DEFAULT_DEPTH: 1
     @INITED: false
+    @_DEPS: []
 
     constructor: (blob) ->
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
       @_type = @.__proto__.constructor.lname
+      @_deps = @.__proto__.constructor._DEPS
 
       @id = blob.id || null
+
+      if @id?
+        if not @_deps[@id]?
+          @_deps[@id] = new Hacktiv.Dependency
+
+        @_dep = @_deps[@id]
+        @_dep._Depends()
 
       if @_schema?
         for field, description of @_schema when blob[field]?
@@ -70,6 +78,7 @@ module.exports = (table, config, app, routes, name) ->
             Nodulator.bus.emit 'new_' + name, @ToJSON()
           else
             Nodulator.bus.emit 'update_' + name, @ToJSON()
+          @_dep._Changed() if @_dep?
 
           done null, @
 
@@ -177,10 +186,12 @@ module.exports = (table, config, app, routes, name) ->
         d = Q.defer()
         done = @_WrapPromise d
 
-      @Fetch constraints, (err, instance) =>
-        return done err if err?
+      @_MultiArgsWrap arg, (constraints, done) =>
+        @Fetch constraints, (err, instance) =>
+          return done err if err?
 
-        instance.Delete done
+          instance.Delete done
+      , done
 
       d?.promise || @
 
@@ -209,25 +220,27 @@ module.exports = (table, config, app, routes, name) ->
       d?.promise || @
 
     # Get every records from db
-    @List: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+    @List: (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
       @Init() if not @INITED
 
       d = null
-      if typeof(constraints) is 'function'
-        done = constraints
-        constraints = {}
+      if typeof(arg) is 'function'
+        done = arg
+        arg = {}
 
-      if (typeof(constraints) in ['object', 'undefined']) and not done?
-        if typeof(constraints) is 'undefined'
-          constraints = {}
+      if (typeof(arg) in ['object', 'undefined']) and not done?
+        if typeof(arg) is 'undefined'
+          arg = {}
         d = Q.defer()
         done = @_WrapPromise d
 
 
-      @_table.Select 'id', constraints, {}, (err, ids) =>
-        return done err if err?
+      @_MultiArgsWrap arg, (constraints, done) =>
+        @_table.Select 'id', constraints, {}, (err, ids) =>
+          return done err if err?
 
-        @resource.Fetch _(ids).pluck('id'), done, _depth
+          @resource.Fetch _(ids).pluck('id'), done, _depth
+      , done
 
       d?.promise || @
 

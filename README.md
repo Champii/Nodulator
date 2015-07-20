@@ -34,7 +34,7 @@ ___
 - [Features](#features)
 - [Compatible modules](#compatible-modules)
 - [Installation](#installation)
-- [Quick Start](#quick-start)
+- [Quick Start (TL;DR)](#quick-start)
 - [Configuration](#configuration)
 - [Resource](#resource)
   - [Basics](#basics)
@@ -165,7 +165,7 @@ Nodulator = require 'nodulator'
 ```
 
 ___
-## Quick Start
+## Quick Start (TL;DR)
 
 Here is the quickiest way to play around `Nodulator`
 
@@ -349,6 +349,22 @@ Players.Fetch(constraints, done)
 Players.List(constraints, done)
 Players.Delete(constraints, done)
 ```
+The `Create` method, like its name suggests, can add a row to a given Resource.
+
+```coffeescript
+Players.Create {login: 'player1', age: 24}, (err, player) ->
+  return console.error err if err?
+
+  [...] # Do something with player instance
+
+Players.Create [
+  {login: 'player1', age: 24}
+  {login: 'player2', age: 68}
+  {login: 'player3', age: 34}
+], (err, players) -> [...]
+```
+
+It automaticaly adds an `id` row to every new instance. Don't try to override it !
 
 The `Fetch` method can take an id and return a `Players` instance to `done` callback :
 It can take an id, an object or an array
@@ -359,9 +375,9 @@ Players.Fetch 1, (err, player) ->
 
   [...] # Do something with player instance
 
-Players.Fetch [1, 5],                        (err, players) -> [...]
-Players.Fetch {login: 'value'},              (err, players) -> [...]
-Players.Fetch [{age: 25}, {login: 'test'}],  (err, players) -> [...]
+Players.Fetch [1, 5],                             (err, players) -> [...]
+Players.Fetch {login: 'value'},                   (err, players) -> [...]
+Players.Fetch [7, {age: 25}, 9. {login: 'test'}], (err, players) -> [...]
 ```
 
 You can list every models from this `Resource` thanks to `List` call :
@@ -372,7 +388,8 @@ Players.List (err, players) ->
 
   [...] # players is an array of every Players instance
 
-Players.List {login: 'toto'}, (err, players) -> [...]
+Players.List {age: 26},               (err, players) -> [...]
+Players.List [{age: 26}, {age: 52}],  (err, players) -> [...]
 ```
 You can delete the same way, except that Delete callback only have one error parameter.
 
@@ -381,10 +398,10 @@ Players.Delete 1, (err) ->
   return console.error err if err?
 
 
-Players.Delete {login: 'toto'}, (err) -> [...]
+Players.Delete {login: 'toto'},                    (err) -> [...]
+Players.Delete [9, {login: 'toto'}, 4. {age: 22}], (err) -> [...]
 ```
 
-Players.List {login: 'toto'}, (err, players) -> [...]
 Never use `new` operator directly on a `Resource`, else you might bypass the
 relationning system.
 
@@ -433,7 +450,7 @@ Is equivalent to :
 
 ```coffeescript
 Players.Fetch 1
-  .then (player) -> console.log   player
+  .then (player) -> [...] # Do something with player instance
   .fail (err)    -> console.error err
 
 ```
@@ -695,8 +712,8 @@ in order to describe routing process.
 class Units extends Nodulator.Resource 'unit', Nodulator.Route
 ```
 
-There is no need of `Init()` here. Every `Route` is initiated and configured
- when its attached `Resource` is.
+Every `Route` can be initiated and configured when its attached `Resource` is,
+else you can instantiate one yourself. Please refer to the corresponding section.
 
 Default `Nodulator.Route` do nothing. You have to inherit from it to describe routes :
 
@@ -1085,6 +1102,7 @@ XX/XX/XX: current (not released yet)
   - Removed the mandatory Init function call !
   - Added Promises if no callback given.
   - Routes are now instantiated when attached, not when Init. This helps the new lazy Init system
+  - List can now take an array
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions
