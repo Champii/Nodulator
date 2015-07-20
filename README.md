@@ -418,6 +418,7 @@ player.ExtendSafe(blob)
 Every Instance and Class methods can be chained, they all returns their 'this'. (Except when using Promises,
 read the corresponding chapter)
 
+___
 ## Promises or Callbacks
 
 Every call that take a `done` callback can be expressed by Promises:
@@ -440,6 +441,7 @@ Players.Fetch 1
 
 If you omit the callback, it will return a Promise. If you pass a callback, it will return `this` for chaining purpose.
 
+___
 ## Schema
 
 #### Schema and Validation
@@ -539,8 +541,14 @@ Tests = Nodulator.Resource 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
-  # Will print for exemple : {id: 1, foo: 12, barId: 1, bar: {id:1, barProperty: 'test'}}
-  console.log test
+  # Will be for exemple :
+  # {
+  #   id: 1,
+  #   foo: 12,
+  #   barId: 1,
+  #   bar: {id: 1, barProperty: 'test'}
+  # }
+
 ```
 
 If you want to retrive a collection of resource, you can wrap types in arrays instead:
@@ -557,7 +565,7 @@ Tests = Nodulator.Resource 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
-  # Will print for exemple :
+  # Will be for exemple :
   # {
   #   id: 1,
   #   foo: 12,
@@ -566,7 +574,6 @@ Tests.Fetch 1, (err, test) ->
   #         {id: 2, barProperty: 'test2'}]
   # }
 
-  console.log test
 ```
 
 #### localKey vs distantKey
@@ -783,7 +790,7 @@ You can inherit from any route object :
 
 ```coffeescript
 class Test1Route extends Nodulator.Route
-class Test2Route extends Nodulator.Route.DefaultRoute
+class Test2Route extends Nodulator.Route.MultiRoute
 class Test3Route extends Test2Route
 class Test4Route extends Test3Route
 ```
@@ -791,7 +798,7 @@ And you can override existing route by providing same association verb + url.
 Exemple :
 
 ```coffeescript
-class TestRoute extends Nodulator.Route.DefaultRoute
+class TestRoute extends Nodulator.Route.MultiRoute
   Config: ->
     super()
 
@@ -1015,7 +1022,7 @@ ___
 - [Champii](https://github.com/champii)
 - [SkinyMonkey](https://github.com/skinymonkey)
 
-<!-- ___
+___
 ## DOC
 
 ```
