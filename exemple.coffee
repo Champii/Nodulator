@@ -8,9 +8,9 @@ weaponConfig =
     hitPoints:
       type: 'int'
 
-class WeaponResource extends Nodulator.Resource 'weapon', Nodulator.Route.MultiRoute, weaponConfig
+class Weapons extends Nodulator.Resource 'weapon', Nodulator.Route.MultiRoute, weaponConfig
 
-WeaponResource.Init()
+Weapons.Init()
 
 unitConfig =
   abstract: true
@@ -20,7 +20,7 @@ unitConfig =
     life:
       type: 'int'
     weapon:
-      type: WeaponResource
+      type: Weapons
       localKey: 'weaponId'
       optional: true
     weaponId:
@@ -39,8 +39,8 @@ class UnitRoute extends Nodulator.Route.MultiRoute
 
     @Put '/:id/attack/:targetId', (req, res) =>
       # Hack to stay generic between children
-      TargetResource = MonsterResource if @name is 'players'
-      TargetResource = PlayerResource if @name is 'monsters'
+      TargetResource = Monsters if @name is 'players'
+      TargetResource = Players if @name is 'monsters'
 
       TargetResource.Fetch req.params.targetId, (err, target) =>
         return res.status(500) if err?
@@ -50,7 +50,7 @@ class UnitRoute extends Nodulator.Route.MultiRoute
 
           res.status(200).send target.ToJSON()
 
-class UnitResource extends Nodulator.Resource 'unit', unitConfig
+class Units extends Nodulator.Resource 'unit', unitConfig
   Attack: (target, done) ->
     target.life -= @weapon.hitPoints
     target.Save done
@@ -59,15 +59,15 @@ class UnitResource extends Nodulator.Resource 'unit', unitConfig
     @level++
     @Save done
 
-UnitResource.Init()
+Units.Init()
 
-class PlayerResource extends UnitResource.Extend 'player', UnitRoute
+class Players extends Units.Extend 'player', UnitRoute
 
-PlayerResource.Init()
+Players.Init()
 
-class MonsterResource extends UnitResource.Extend 'monster', UnitRoute
+class Monsters extends Units.Extend 'monster', UnitRoute
 
-MonsterResource.Init()
+Monsters.Init()
 
 Client = require './test/common/client'
 client = new Client Nodulator.app
