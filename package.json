@@ -5,7 +5,6 @@
     "assert": "*",
     "async": "*",
     "body-parser": "*",
-    "coffee-middleware": "*",
     "coffee-script": "*",
     "connect-redis": "*",
     "cookie-parser": "*",
