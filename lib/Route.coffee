@@ -1,15 +1,30 @@
 _ = require 'underscore'
+Nodulator = null
 
 class Route
-  apiVersion: '/api/1/'
 
-  constructor: (@resource, @app, @config) ->
-    @rname = @resource.lname
+  basePath: '/api/'
+  apiVersion: 1
+  rname: ''
+
+  constructor: (@resource, @config) ->
+    Nodulator = require '../' if not Nodulator?
+
+    if typeof(@resource) is 'function'
+      @rname = @resource.lname
+    else if typeof(@resource) is 'string'
+      @rname = @resource
+      @resource = undefined
+      Nodulator.Config() if not Nodulator.config?
+    else
+      throw new Error 'Route constructor needs a Resource or a Name as first parameter'
+
     @name = @rname + 's'
 
     if @rname[@rname.length - 1] is 'y'
       @name = @rname[...-1] + 'ies'
 
+    @app = Nodulator.app
     @Config()
 
   _Add: (type, url, middle..., done) ->
@@ -21,44 +36,79 @@ class Route
       middle.push url
       url = '/'
 
-    # done = @_AddMiddleware type, url, done
-
     if not @[type + url]?
       @[type + url] = done
 
       #FIXME: code clarity
       if middle.length
         middle.push (req, res, next) => @[type + url](req, res, next)
-        @app.route(@apiVersion + @name + url)[type].apply @app.route(@apiVersion + @name + url), middle
+        @app.route(@basePath + @apiVersion + '/' + @name + url)[type].apply @app.route(@basePath + @apiVersion + '/' + @name + url), middle
       else
-        @app.route(@apiVersion + @name + url)[type] (req, res, next) => @[type + url](req, res, next)
+        @app.route(@basePath + @apiVersion + '/' + @name + url)[type] (req, res, next) =>
+          @[type + url](req, res, next)
 
     else
       @[type + url] = done
 
-  All: (args...) ->
-    args.unshift 'all'
-    @_Add.apply @, args
-
-  Get: (args...) ->
-    args.unshift 'get'
-    @_Add.apply @, args
-
-  Post: (args...) ->
-    args.unshift 'post'
-    @_Add.apply @, args
-
-  Put: (args...) ->
-    args.unshift 'put'
-    @_Add.apply @, args
-
-  Delete: (args...) ->
-    args.unshift 'delete'
-    @_Add.apply @, args
+  for verb in ['All', 'Get', 'Post', 'Put', 'Delete']
+    do (verb) =>
+      @::[verb] = (args...) ->
+        args.unshift (verb[0].toLowerCase() + verb[1..])
+        @_Add.apply @, args
 
   Config: ->
 
-class DefaultRoute extends Route
+class SingleRoute extends Route
+
+  constructor: (@resource, @config) ->
+    throw new Error 'SingleRoute constructor needs a Resource as first parameter' if not @resource? or typeof(@resource) isnt 'function'
+
+    @rname = @resource.lname
+
+    @name = @rname
+
+    if @rname[@rname.length - 1] is 'y'
+      @name = @rname[...-1] + 'ies'
+
+    @app = Nodulator.app
+
+    #Resource creation if non-existant
+    @resource.Fetch 1, (err, result) =>
+      if err? and @resource.config?.schema? and
+         _(@resource.config.schema).filter((item) ->
+           not item.default? and not item.optional?).length
+        throw new Error """
+        SingleRoute used with schema Resource and non existant row at id = 1.
+        Please add it manualy to your DB system before continuing.'
+        """
+      if err?
+        @resource.Create {}, (err, res) ->
+          return res.status(500).send(err) if err?
+
+    @Config()
+
+  Config: ->
+    @All (req, res, next) =>
+      @resource.Fetch 1, (err, result) =>
+        return res.status(500).send(err) if err?
+
+        @instance = result
+
+        next()
+
+    @Get (req, res, next) =>
+      res.status(200).send @instance.ToJSON()
+
+    @Put (req, res) =>
+      @instance.ExtendSafe req.body
+
+      @instance.Save (err) =>
+        return res.status(500).send(err) if err?
+
+        res.status(200).send @instance.ToJSON()
+
+class MultiRoute extends Route
+
   Config: ->
     @All '/:id*', (req, res, next) =>
       if not isFinite req.params.id
@@ -67,36 +117,28 @@ class DefaultRoute extends Route
       @resource.Fetch req.params.id, (err, result) =>
         return res.status(500).send(err) if err?
 
-        if not req.instances?
-          req.instances = {}
-
         @instance = result
-
-        #FIXME: deprecated, for retro compatibility only
-        req.instances[@rname] = result
 
         next()
 
     @Get (req, res) =>
-      @resource.List (err, results) ->
-        return res.status(500).send(err) if err?
+      @resource.List req.query, (err, results) =>
+        # console.log 'Resource', @resource.name, 'List', err, results
+        return res.status(500).send {err: err} if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
     @Get '/:id', (req, res) =>
-      res.status(200).send req.instances?[@rname]?.ToJSON()
+      res.status(200).send @instance.ToJSON()
 
     @Post (req, res) =>
-      @resource.Deserialize req.body, (err, result) ->
+      @resource.Create req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
-        result.Save (err) ->
-          return res.status(500).send(err) if err?
-
-          res.status(200).send result.ToJSON()
+        res.status(200).send result.ToJSON()
 
     @Put '/:id', (req, res) =>
-      _(@instance).extend req.body
+      @instance.ExtendSafe req.body
 
       @instance.Save (err) =>
         return res.status(500).send(err) if err?
@@ -109,5 +151,11 @@ class DefaultRoute extends Route
 
         res.status(200).end()
 
+class DefaultRoute extends Route
+  constructor: ->
+    throw new Error 'Deprecated: Route.DefaultRoute. Use Route.MultiRoute instead.'
+
+Route.SingleRoute = SingleRoute
+Route.MultiRoute = MultiRoute
 Route.DefaultRoute = DefaultRoute
 module.exports = Route

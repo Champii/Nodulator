@@ -3,7 +3,7 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '../'
+Nodulator = require '../lib/Nodulator'
 
 TestResource = null
 
@@ -25,8 +25,6 @@ describe 'Nodulator Validation', ->
             type: 'email'
 
       TestResource = Nodulator.Resource 'test', config
-      assert TestResource?
-      TestResource.Init()
 
       done()
 
@@ -74,7 +72,7 @@ describe 'Nodulator Validation', ->
     TestResource.Create blob, (err, test) ->
       return done() if err?
 
-      done new Error 'No error on bool fields'
+      done new Error 'No error on int fields'
 
 #  it 'should not validate Resource string', (done) ->
 #    blob =

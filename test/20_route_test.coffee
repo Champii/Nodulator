@@ -4,7 +4,7 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '../'
+Nodulator = require '../lib/Nodulator'
 
 client = null
 TestResource = null
@@ -20,13 +20,10 @@ describe 'Nodulator Route', ->
   before (done) ->
     Nodulator.Reset ->
       TestResource = Nodulator.Resource 'test', TestRoute
-      assert TestResource?
-      TestResource.Init()
 
-      client = new Client Nodulator.app
       done()
 
   it 'should get resource', (done) ->
-    client.Get '/api/1/tests', (err, res) ->
+    Nodulator.client.Get '/api/1/tests', (err, res) ->
       assert.equal res.body.message, 'Coucou'
       done()

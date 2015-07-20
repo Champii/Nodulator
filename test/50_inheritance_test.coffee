@@ -4,7 +4,7 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '../'
+Nodulator = require '../lib/Nodulator'
 
 client = null
 ATestResource = null
@@ -20,7 +20,7 @@ describe 'Nodulator Inheritance', ->
           @table.FindWhere '*', {name: name}, (err, blob) =>
             throw new Error err if err?
 
-            @resource.Deserialize blob, done
+            @resource._Deserialize blob, done
 
       assert ATestResource?
       ATestResource.Init()

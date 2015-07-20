@@ -47,7 +47,7 @@ class Nodulator
 
     @client = new Client @app
 
-  Resource: (name, routes, config, _parent) ->
+  Resource: (name, routes, config, _parent) =>
 
     name = name.toLowerCase()
     if @resources[name]?
@@ -57,7 +57,7 @@ class Nodulator
       config = routes
       routes = null
 
-    @Config() if !(@config?) # config of Nodulator instance
+    @Config() if not @config? # config of Nodulator instance
 
     if not routes? or routes.prototype not instanceof @Route
       routes = @Route
@@ -79,8 +79,7 @@ class Nodulator
     if @config?
       return
 
-    @config = config
-    @config = @defaultConfig if !(config?)
+    @config = config || @defaultConfig
 
     for k, v of @defaultConfig
       @config[k] = v if not @config[k]?
@@ -90,6 +89,7 @@ class Nodulator
       secret: 'Nodulator'
       resave: true
       saveUninitialized: true
+
     if @config?.store?.type is 'redis'
       RedisStore = require('connect-redis')(expressSession)
 
@@ -102,7 +102,11 @@ class Nodulator
 
     @table = @db(@config).table
 
-    @server.listen @config.port || port++
+    @server.listen @config.port || port
+
+    @bus.emit 'listening'
+
+    console.log '=> Listening to 0.0.0.0:' + (@config.port || port++)
 
   Use: (module) ->
     module @
