@@ -10,7 +10,7 @@
     "cookie-parser": "*",
     "express": "*",
     "express-session": "*",
-    "hacktiv": "0.0.2",
+    "hacktiv": "0.0.3",
     "mocha": "*",
     "mongous": "*",
     "mysql": "*",
