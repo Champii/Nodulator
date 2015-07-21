@@ -359,8 +359,6 @@ module.exports = (table, config, app, routes, name) ->
 
       @INITED = true
 
-      @::_WrapFlipDone = (cb) => @_WrapFlipDone cb
-
       @
 
 

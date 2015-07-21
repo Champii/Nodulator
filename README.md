@@ -34,7 +34,7 @@ ___
 - [Features](#features)
 - [Compatible modules](#compatible-modules)
 - [Installation](#installation)
-- [Quick Start (TL;DR)](#quick-start)
+- [Quick Start (TL;DR)](#quick-start-(tl;dr))
 - [Configuration](#configuration)
 - [Resource](#resource)
   - [Basics](#basics)
@@ -130,6 +130,7 @@ ___
 - Schema-less/Schema-full models
 - Model validation
 - Model association and automatic retrieval
+- Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
 
 ___
 ### Compatible modules
@@ -1107,6 +1108,13 @@ XX/XX/XX: current (not released yet)
   - Added Promises if no callback given.
   - Routes are now instantiated when attached, not when Init. This helps the new lazy Init system
   - List can now take an array
+  - Added Hacktiv support for Resources
+  - Added a ChangeWatcher for Resources that watch for the result of a query to make change
+  - You can now add a `flipDone: true` to the Nodulator.Config() call to have callback like (data, err) ->
+  - Added Wrappers class to regroup every wrappers.
+  - Added Wrappers for Promises, FlipDone, and for WatchArgs
+  - Extend now dont need to be abstract to work
+  - Added tests for promisesm FlipDone and reactive watching
 
 04/05/15: v0.0.18
   - You can specify a 'store' general config property in order to switch to redis-based sessions

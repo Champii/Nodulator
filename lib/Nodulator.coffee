@@ -22,7 +22,6 @@ class Nodulator
   config: null
   table: null
   authApp: false
-  isWatching: false
   defaultConfig:
     dbType: 'SqlMem'
     flipDone: false
