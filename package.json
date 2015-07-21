@@ -1,6 +1,6 @@
 {
   "name": "nodulator",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "dependencies": {
     "assert": "*",
     "async": "*",

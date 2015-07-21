@@ -4,6 +4,8 @@
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
     |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|
 
+V0.0.19
+
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
@@ -1143,9 +1145,7 @@ By order of priority
 
 - Better tests
   - Validation
-  - Promises
   - Every args type for Resource calls
-  -
 - Tests for validation
 - Tests for model association
 - Better error management
@@ -1153,12 +1153,12 @@ By order of priority
 - Abstract class can retrieve every child `Resource`
 - Remove an existing route
 - Type inference in schema for default field
-- LiveScript
-
 
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+
+21/07/89: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
   - Removed `req.instances` from every `Route`
   - Added tests for `SingleRoute`
