@@ -1,6 +1,6 @@
 {
   "name": "nodulator",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "dependencies": {
     "assert": "*",
     "async": "*",
@@ -10,6 +10,7 @@
     "cookie-parser": "*",
     "express": "*",
     "express-session": "*",
+    "hacktiv": "0.0.3",
     "mocha": "*",
     "mongous": "*",
     "mysql": "*",
@@ -22,7 +23,7 @@
     "underscore": "*",
     "validator": "~3.27.0"
   },
-  "description": "Coffeescript REST client/server framework",
+  "description": "Complete NodeJS Framework for Restfull APIs",
   "main": "index.js",
   "bin": {
     "Nodulator": "./bin/Nodulator"
@@ -43,10 +44,17 @@
   "keywords": [
     "REST",
     "API",
-    "coffee",
     "easy",
     "express",
-    "ORM"
+    "ORM",
+    "routing",
+    "framework",
+    "nodejs",
+    "coffee",
+    "coffeescript",
+    "reactive",
+    "programming",
+    "promises"
   ],
   "author": "Champii <greine_f@epitech.eu>",
   "license": "GPLv2",

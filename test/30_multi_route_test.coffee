@@ -7,7 +7,7 @@ Client = require './common/client'
 Nodulator = require '../lib/Nodulator'
 
 client = null
-TestResource = null
+Tests = null
 
 class TestRoute extends Nodulator.Route.MultiRoute
 
@@ -15,7 +15,7 @@ describe 'Nodulator Multi Route', ->
 
   before (done) ->
     Nodulator.Reset ->
-      TestResource = Nodulator.Resource 'test', TestRoute
+      Tests = Nodulator.Resource 'test', TestRoute
 
       done()
 
@@ -74,7 +74,7 @@ describe 'Nodulator Multi Route', ->
         throw new Error 'Has not deleted resource'
 
   it 'should override default get route (GET)', (done) ->
-    TestResource.routes.Get (req, res) ->
+    Tests.routes.Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 
     Nodulator.client.Get '/api/1/tests', (err, res) ->

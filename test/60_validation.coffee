@@ -5,7 +5,7 @@ assert = require 'assert'
 
 Nodulator = require '../lib/Nodulator'
 
-TestResource = null
+Tests = null
 
 describe 'Nodulator Validation', ->
 
@@ -24,7 +24,7 @@ describe 'Nodulator Validation', ->
           field5:
             type: 'email'
 
-      TestResource = Nodulator.Resource 'test', config
+      Tests = Nodulator.Resource 'test', config
 
       done()
 
@@ -36,13 +36,13 @@ describe 'Nodulator Validation', ->
       field4: new Date()
       field5: 'test@test.fr'
 
-    TestResource.Create blob, (err, test) ->
+    Tests.Create blob, (err, test) ->
       return done err if err?
 
       done()
 
   it 'should not validate Resource', (done) ->
-    TestResource.Create {}, (err, test) ->
+    Tests.Create {}, (err, test) ->
       return done() if err?
 
       done new Error 'No error fields'
@@ -56,7 +56,7 @@ describe 'Nodulator Validation', ->
       field4: new Date()
       field5: 'test@test.fr'
 
-    TestResource.Create blob, (err, test) ->
+    Tests.Create blob, (err, test) ->
       return done() if err?
 
       done new Error 'No error on bool fields'
@@ -69,7 +69,7 @@ describe 'Nodulator Validation', ->
       field4: new Date()
       field5: 'test@test.fr'
 
-    TestResource.Create blob, (err, test) ->
+    Tests.Create blob, (err, test) ->
       return done() if err?
 
       done new Error 'No error on int fields'
@@ -82,7 +82,7 @@ describe 'Nodulator Validation', ->
 #      field4: new Date()
 #      field5: 'test@test.fr'
 
-#    TestResource.Create blob, (err, test) ->
+#    Tests.Create blob, (err, test) ->
 #      return done() if err?
 
 #      done new Error 'No error on bool fields'

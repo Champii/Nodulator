@@ -1,8 +1,10 @@
 _ = require 'underscore'
 async = require 'async'
-Q = require 'q'
 Nodulator = require '../'
 Validator = require 'validator'
+Hacktiv = require 'hacktiv'
+ChangeWatcher = require './ChangeWatcher'
+Wrappers = require './Wrappers'
 
 validationError = (field, value, message) ->
   field: field
@@ -22,19 +24,20 @@ Nodulator.Validator = Validator
 
 module.exports = (table, config, app, routes, name) ->
 
+  error = new Hacktiv.Value
 
-
-  class Resource
+  class Resource extends Wrappers
 
     @DEFAULT_DEPTH: 1
     @INITED: false
+    @error: error
 
     constructor: (blob) ->
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
       @_type = @.__proto__.constructor.lname
 
-      @id = blob.id || null
+      @id = blob?.id || null
 
       if @_schema?
         for field, description of @_schema when blob[field]?
@@ -51,12 +54,9 @@ module.exports = (table, config, app, routes, name) ->
         for field, value of blob
           @[field] = blob[field]
 
-    Save: (done) ->
-      d = null
-      if not done?
-        d = Q.defer()
-        done = @_WrapPromise d
+    Save: @_WrapFlipDone @_WrapPromise (args...) -> @_SaveUnwrapped args...
 
+    _SaveUnwrapped: (done) ->
       Resource._Validate @Serialize(), true, (err) =>
         return done err if err?
 
@@ -71,23 +71,23 @@ module.exports = (table, config, app, routes, name) ->
           else
             Nodulator.bus.emit 'update_' + name, @ToJSON()
 
+          ChangeWatcher.Invalidate()
+
           done null, @
 
-      d?.promise || @
+      @
 
-    Delete: (done) ->
-      d = null
-      if not done?
-        d = Q.defer()
-        done = @_WrapPromise d
+    Delete: @_WrapFlipDone @_WrapPromise (args...) -> @_DeleteUnwrapped args...
 
+    _DeleteUnwrapped: (done) ->
       @_table.Delete @id, (err) =>
         return done err if err?
 
         Nodulator.bus.emit 'delete_' + name, @ToJSON()
+        ChangeWatcher.Invalidate()
         done()
 
-      d?.promise
+      null
 
     # Get what to send to the database
     Serialize: ->
@@ -152,46 +152,30 @@ module.exports = (table, config, app, routes, name) ->
       done(if errors.length then {errors} else null)
 
     # Wrapper to allow simple variable or array as first argument
-    @_MultiArgsWrap: (arg, callback, done) ->
+    @_HandleArrayArg: (arg, callback, done) ->
       if Array.isArray arg
         async.map arg, callback, done
       else
         callback arg, done
 
-    @_WrapPromise: (d) ->
-      (err, data) ->
-        return d.reject err if err?
-        d.resolve data
+      # Returs this to avoid writing it in every call
+      @
 
-    #Fixme
-    _WrapPromise: (d) ->
-      (err, data) ->
-        return d.reject err if err?
-        d.resolve data
-
-    @Delete: (arg, done) ->
+    # _Deserialize and Save from a blob or an array of blob
+    @Create: @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) =>
       @Init() if not @INITED
 
-      d = null
-      if not done?
-        d = Q.defer()
-        done = @_WrapPromise d
+      @_HandleArrayArg args, (blob, done) =>
+        @resource._Deserialize blob, (err, instance) ->
+          return done err if err?
 
-      @Fetch constraints, (err, instance) =>
-        return done err if err?
-
-        instance.Delete done
-
-      d?.promise || @
+          instance._SaveUnwrapped done
+        , _depth
+      , done
 
     # Fetch from id or id array
-    @Fetch: (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+    @Fetch: @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) =>
       @Init() if not @INITED
-
-      d = null
-      if not done?
-        d = Q.defer()
-        done = @_WrapPromise d
 
       cb = (done) =>
         (err, blob) =>
@@ -199,62 +183,48 @@ module.exports = (table, config, app, routes, name) ->
 
           @resource._Deserialize blob, done, _depth
 
-      @_MultiArgsWrap arg, (constraints, done) =>
+      @_HandleArrayArg arg, (constraints, done) =>
         if typeof(constraints) is 'object'
           @_table.FindWhere '*', constraints, cb done
         else
           @_table.Find constraints, cb done
       , done
 
-      d?.promise || @
-
     # Get every records from db
-    @List: (constraints, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+    @List: @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) =>
       @Init() if not @INITED
 
-      d = null
-      if typeof(constraints) is 'function'
-        done = constraints
-        constraints = {}
+      if typeof(arg) is 'function'
+        if typeof(done) is 'number'
+          _depth = done
 
-      if (typeof(constraints) in ['object', 'undefined']) and not done?
-        if typeof(constraints) is 'undefined'
-          constraints = {}
-        d = Q.defer()
-        done = @_WrapPromise d
+        done = arg
+        arg = {}
 
 
-      @_table.Select 'id', constraints, {}, (err, ids) =>
-        return done err if err?
-
-        @resource.Fetch _(ids).pluck('id'), done, _depth
-
-      d?.promise || @
-
-    # _Deserialize and Save from a blob or an array of blob
-    @Create: (args, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
-      @Init() if not @INITED
-
-      d = null
-      if not done?
-        d = Q.defer()
-        done = @_WrapPromise d
-
-      @_MultiArgsWrap args, (blob, done) =>
-        @_Deserialize blob, (err, resource) ->
+      @_HandleArrayArg arg, (constraints, done) =>
+        @_table.Select '*', (constraints || {}), {}, (err, blobs) =>
           return done err if err?
 
-          resource.Save done
-        , _depth
+          async.map blobs, (blob, done) =>
+            @resource._Deserialize blob, done, _depth
+          , done
       , done
 
-      d?.promise || @
+    @Delete: @_WrapFlipDone @_WrapPromise (arg, done) =>
+      @Init() if not @INITED
+
+      @_HandleArrayArg arg, (constraints, done) =>
+        @resource.Fetch constraints, (err, instance) =>
+          return done err if err?
+
+          instance._DeleteUnwrapped done
+      , done
 
     # Pre-Instanciation and associated model retrival
-    @_Deserialize: (blob, done, _depth) ->
-      # if @_schema?
-      #   for assoc in @_schema._assoc
-      #     blob[assoc.name] = null
+    @_Deserialize: (blob, done, _depth = @config?.maxDepth || @DEFAULT_DEPTH) ->
+      @Init() if not @INITED
+
       @_Validate blob, true, (err) =>
         return done err if err?
 
@@ -366,6 +336,7 @@ module.exports = (table, config, app, routes, name) ->
 
     @_PrepareAbstract: ->
       @Extend = (name, routes, config) =>
+        @Init() it not @INITED
         if config and not config.abstract
           deleteAbstract = true
 
@@ -383,11 +354,12 @@ module.exports = (table, config, app, routes, name) ->
       if @config? and @config.schema
         @_PrepareSchema()
 
-      if @config? and @config.abstract
-        @_PrepareAbstract()
+      #if @config? and @config.abstract
+      @_PrepareAbstract()
 
       @INITED = true
 
       @
+
 
   Resource._PrepareResource(table, config, app, routes, name)

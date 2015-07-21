@@ -4,6 +4,7 @@ path = require 'path'
 http = require 'http'
 Client =  require '../test/common/client'
 express = require 'express'
+Hacktiv = require 'hacktiv'
 bodyParser = require 'body-parser'
 expressSession = require 'express-session'
 
@@ -23,6 +24,7 @@ class Nodulator
   authApp: false
   defaultConfig:
     dbType: 'SqlMem'
+    flipDone: false
 
   constructor: ->
     @Init()
@@ -133,6 +135,9 @@ class Nodulator
     @Init()
 
     done() if done?
+
+  Watch:    Hacktiv
+  DontWatch: Hacktiv.DontWatch
 
   _ListEndpoints: (done) ->
     endpoints = []
