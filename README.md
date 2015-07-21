@@ -57,6 +57,10 @@ ___
   - [MultiRoute](#multi-route-object)
   - [Route Inheritance](#route-inheritance)
   - [Standalone Routes](#standalone-routes)
+- [Reactive Values](#reactive-values)
+  - [Intro](#intro)
+  - [Resources](#resources)
+  - [Errors](#errors)
 - [DB Systems](#db-systems)
   - [Abstraction](#abstraction)
   - [Mysql](#mysql)
@@ -131,6 +135,8 @@ ___
 - Model validation
 - Model association and automatic retrieval
 - Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
+- Promises or Callbacks
+- Fliped callback parameters
 
 ___
 ### Compatible modules
@@ -296,6 +302,12 @@ Nodulator.Config
 
 If ommited, sessions will be memory based (not recommended)
 
+You can flip the arguments of the default `done` callback by specifying a `flipDone: true` parameter
+
+```coffeescript
+Nodulator.Config
+  flipDone: true
+```
 
 `Nodulator` provides 2 main Objects :
 
@@ -851,6 +863,87 @@ Create the following routes :
 ```
 GET     => /api/1/tests
 ```
+___
+## Reactive Values
+
+  See [Hacktiv](https://github.com/Champii/Hacktiv) documentation for more informations
+
+#### Intro
+
+Reactive programing benefits don't have to be proven. It just works.
+
+You can watch for a fonction and it will be re-executed when reactive values
+inside have changed.
+
+The following exemple will print successively 1 and 2
+
+```coffeescript
+val = new Nodulator.Watch.Value 1
+
+# The function is executed a first time
+Nodulator.Watch ->
+  console.log val()
+
+# This call will cause the function to be reexecuted.
+val 2
+```
+
+#### Resource
+
+You just saw that Nodulator provide the default Hacktiv library.
+
+You can also watch for data-sets to change to retrigger the function :
+
+```coffeescript
+Tests = Nodulator.Resource 'test'
+
+[...]
+
+Nodulator.Watch ->
+  Tests.Fetch 1, (err, test) ->
+
+Tests.Fetch 1
+.then (test) ->
+  test.prop = 'value'
+
+  # This call will cause the watching function to be reexecuted.
+  test.Save()
+```
+
+It works also with List:
+
+```coffeescript
+Nodulator.Watch ->
+  # Get a double array
+  Tests.List [
+    {prop1: 'value1'}
+    {prop1: 'value2'}
+  ], (err, test) ->
+    [...]
+
+
+Tests.Fetch {prop1: 'value1'}
+.then (test) ->
+  test.prop = 'value3'
+
+  # This call will cause the watching function to be reexecuted.
+  test.Save()
+```
+
+
+#### Errors
+
+Every Resource have his own reactive Error property that can be watched:
+
+```coffeescript
+Nodulator.Watch ->
+  console.error Tests.error()
+
+# will produce an error and refresh the console.log above
+Tests.Fetch {unknownProp: 'val'}, (err, test) ->
+```
+
+Very usefull with `flipDone: true` option.
 
 ___
 ## Db Systems
