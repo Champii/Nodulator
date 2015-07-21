@@ -6,7 +6,7 @@ Client = require './common/client'
 
 Nodulator = require '../lib/Nodulator'
 
-TestResource = null
+Tests = null
 
 class TestRoute extends Nodulator.Route.SingleRoute
 
@@ -20,7 +20,7 @@ describe 'Nodulator Single Route', ->
             type: 'string'
             default: 'test'
 
-      TestResource = Nodulator.Resource 'test', TestRoute, config
+      Tests = Nodulator.Resource 'test', TestRoute, config
 
       done()
 
@@ -63,7 +63,7 @@ describe 'Nodulator Single Route', ->
       done()
 
   it 'should override default get route (GET)', (done) ->
-    TestResource.routes.Get (req, res) ->
+    Tests.routes.Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 
     Nodulator.client.Get '/api/1/test', (err, res) ->

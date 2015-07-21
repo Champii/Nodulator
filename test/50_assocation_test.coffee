@@ -5,25 +5,25 @@ assert = require 'assert'
 
 Nodulator = require '../lib/Nodulator'
 
-TestResource = null
-ChildResource = null
-NewResource = null
+Tests = null
+Childs = null
+News = null
 
 describe 'Nodulator Associations', ->
 
   before (done) ->
     Nodulator.Reset ->
-      ChildResource = Nodulator.Resource 'child'
-      ChildResource.Create {field: 'child'}, (err, child) -> return console.error err if err?
+      Childs = Nodulator.Resource 'child'
+      Childs.Create {field: 'child'}, (err, child) -> return console.error err if err?
 
       testConfig =
         schema:
           childId: 'int'
           child:
-            type: ChildResource
+            type: Childs
             localKey: 'childId'
 
-      TestResource = Nodulator.Resource 'test', testConfig
+      Tests = Nodulator.Resource 'test', testConfig
 
       done()
 
@@ -31,7 +31,7 @@ describe 'Nodulator Associations', ->
     blob =
       childId: 1
 
-    TestResource.Create blob, (err, test) ->
+    Tests.Create blob, (err, test) ->
       return done err if err?
 
       assert.equal test.child.field, 'child'
@@ -39,7 +39,7 @@ describe 'Nodulator Associations', ->
       done()
 
   it 'should create another resource with array of association', (done) ->
-    ChildResource.Create
+    Childs.Create
       field: 'child2'
     , (err, res) ->
       return console.error err if err?
@@ -48,10 +48,10 @@ describe 'Nodulator Associations', ->
       schema:
         childIds: ['int']
         children:
-          type: [ChildResource]
+          type: [Childs]
           localKey: 'childIds'
 
-    NewResource = Nodulator.Resource 'new', newConfig
+    News = Nodulator.Resource 'new', newConfig
 
     done()
 
@@ -59,7 +59,7 @@ describe 'Nodulator Associations', ->
     blob =
       childIds: [1, 2]
 
-    NewResource.Create blob, (err, instance) ->
+    News.Create blob, (err, instance) ->
       return done err if err?
 
       assert.equal instance.children.length, 2
