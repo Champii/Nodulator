@@ -4,9 +4,11 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '../lib/Nodulator'
+Nodulator = require '..'
 
 Tests = null
+
+test = it
 
 class TestRoute extends Nodulator.Route.SingleRoute
 
@@ -20,11 +22,11 @@ describe 'Nodulator Single Route', ->
             type: 'string'
             default: 'test'
 
-      Tests = Nodulator.Resource 'test', TestRoute, config
+      Tests := Nodulator.Resource 'test', TestRoute, config
 
       done()
 
-  it 'should fetch resource (GET)', (done) ->
+  test 'should fetch resource (GET)', (done) ->
     Nodulator.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?
 
@@ -32,28 +34,22 @@ describe 'Nodulator Single Route', ->
       assert.equal _(res.body).keys().length, 2
       done()
 
-  it 'should save changed resource (PUT)', (done) ->
-    async.auto
-      test: (done) ->
-        Nodulator.client.Get '/api/1/test', (err, res) ->
-          return done err if err?
+  test 'should save changed resource (PUT)', (done) ->
+    err, {body} <- Nodulator.client.Get '/api/1/test'
+    throw new Error err if err?
 
-          done null, res.body
+    body.test = 'test2'
 
-      change: ['test', (done, results) ->
-        results.test.test = 'test2'
-        Nodulator.client.Put '/api/1/test', results.test, done]
+    err, {body} <- Nodulator.client.Put '/api/1/test', body
+    throw new Error err if err?
 
-    , (err, results) ->
-      throw new Error err if err?
+    err, {body} <- Nodulator.client.Get '/api/1/test'
+    throw new Error err if err?
 
-      Nodulator.client.Get '/api/1/test', (err, res) ->
-        throw new Error err if err?
+    assert body.test, 'test2'
+    done()
 
-        assert res.body.test, 'test2'
-        done()
-
-  it 'should fetch resource (GET)', (done) ->
+  test 'should fetch resource (GET)', (done) ->
     Nodulator.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?
 
@@ -62,7 +58,7 @@ describe 'Nodulator Single Route', ->
       assert.equal res.body.test, 'test2'
       done()
 
-  it 'should override default get route (GET)', (done) ->
+  test 'should override default get route (GET)', (done) ->
     Tests.routes.Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 

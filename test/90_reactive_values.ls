@@ -7,11 +7,13 @@ Nodulator = require '../lib/Nodulator'
 
 Tests = null
 
+test = it
+
 describe 'Nodulator Reactive value', ->
 
   before (done) ->
     Nodulator.Reset ->
-      Tests = Nodulator.Resource 'test'
+      Tests := Nodulator.Resource 'test'
       Tests.Create [
         {test: 1}
         {test: 1}
@@ -22,7 +24,7 @@ describe 'Nodulator Reactive value', ->
       .then ->
         done()
 
-  it 'should be watching', (done) ->
+  test 'should be watching', (done) ->
     assert.equal Nodulator.Watch.active, false
     Nodulator.Watch ->
       assert.equal Nodulator.Watch.active, true
@@ -30,7 +32,7 @@ describe 'Nodulator Reactive value', ->
     assert.equal Nodulator.Watch.active, false
     done()
 
-  it 'should return computation', (done) ->
+  test 'should return computation', (done) ->
     handler = Nodulator.Watch ->
 
     if not handler?
@@ -38,7 +40,7 @@ describe 'Nodulator Reactive value', ->
 
     done()
 
-  it 'should stop computation', (done) ->
+  test 'should stop computation', (done) ->
     times = 0
     handler = Nodulator.Watch ->
       times++
@@ -59,7 +61,7 @@ describe 'Nodulator Reactive value', ->
       test.Save ->
         done()
 
-  it 'should watch changes for Fetch', (done) ->
+  test 'should watch changes for Fetch', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->
@@ -74,7 +76,7 @@ describe 'Nodulator Reactive value', ->
       test.Save ->
         handler.Stop()
 
-  it 'should not watch changes for Fetch ', (done) ->
+  test 'should not watch changes for Fetch ', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->
@@ -93,7 +95,7 @@ describe 'Nodulator Reactive value', ->
       done() if times is 1
     , 100
 
-  it 'should watch changes for List I', (done) ->
+  test 'should watch changes for List I', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->
@@ -108,7 +110,7 @@ describe 'Nodulator Reactive value', ->
       test.Save ->
         handler.Stop()
 
-  it 'should not watch changes for List I', (done) ->
+  test 'should not watch changes for List I', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->
@@ -127,7 +129,7 @@ describe 'Nodulator Reactive value', ->
       done() if times is 1
     , 100
 
-  it 'should watch changes for List II', (done) ->
+  test 'should watch changes for List II', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->
@@ -142,7 +144,7 @@ describe 'Nodulator Reactive value', ->
       test.test++
       test.Save ->
 
-  it 'should watch changes for List III', (done) ->
+  test 'should watch changes for List III', (done) ->
     times = 0
     # console.log
     handler = Nodulator.Watch ->

@@ -4,10 +4,12 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '../lib/Nodulator'
+Nodulator = require '..'
 
 client = null
 Tests = null
+
+test = it
 
 class TestRoute extends Nodulator.Route.MultiRoute
 
@@ -15,12 +17,12 @@ describe 'Nodulator Multi Route', ->
 
   before (done) ->
     Nodulator.Reset ->
-      Tests = Nodulator.Resource 'test', TestRoute
+      Tests := Nodulator.Resource 'test', TestRoute
 
       done()
 
 
-  it 'should add first resource (POST)', (done) ->
+  test 'should add first resource (POST)', (done) ->
     Nodulator.client.Post '/api/1/tests', {test: 'test'}, (err, res) ->
       throw new Error err if err?
 
@@ -28,7 +30,7 @@ describe 'Nodulator Multi Route', ->
       assert.equal res.body.test, 'test'
       done()
 
-  it 'should fetch first resource (GET)', (done) ->
+  test 'should fetch first resource (GET)', (done) ->
     Nodulator.client.Get '/api/1/tests/1', (err, res) ->
       throw new Error err if err?
 
@@ -36,44 +38,40 @@ describe 'Nodulator Multi Route', ->
       assert.equal res.body.test, 'test'
       done()
 
-  it 'should list all resources (GET)', (done) ->
+  test 'should list all resources (GET)', (done) ->
     Nodulator.client.Get '/api/1/tests', (err, res) ->
       throw new Error err if err?
 
       assert.equal res.body.length, 1
       done()
 
-  it 'should save changed resource (PUT)', (done) ->
-    async.auto
-      test: (done) ->
-        Nodulator.client.Get '/api/1/tests/1', (err, res) ->
-          return done err if err?
+  test 'should save changed resource (PUT)', (done) ->
+    err, {body} <- Nodulator.client.Get '/api/1/tests/1'
+    throw new Error err if err?
 
-          done null, res.body
+    body.test = 'test2'
 
-      change: ['test', (done, results) ->
-        results.test.test = 'test2'
-        Nodulator.client.Put '/api/1/tests/1', results.test, done]
+    err, {body} <- Nodulator.client.Put '/api/1/tests/1', body
+    throw new Error err if err?
 
-    , (err, results) ->
-      throw new Error err if err?
 
-      Nodulator.client.Get '/api/1/tests/1', (err, res) ->
-        throw new Error err if err?
+    err, {body} <- Nodulator.client.Get '/api/1/tests/1'
+    throw new Error err if err?
 
-        assert res.body.test, 'test2'
-        done()
+    assert body.test, 'test2'
+    done()
 
-  it 'should delete resource (DELETE)', (done) ->
+  test 'should delete resource (DELETE)', (done) ->
     Nodulator.client.Delete '/api/1/tests/1', (err, res) ->
       throw new Error err if err?
 
       Nodulator.client.Get '/api/1/tests/1', (err, res) ->
         return done() if err?
 
+        console.log 'Found', res
         throw new Error 'Has not deleted resource'
 
-  it 'should override default get route (GET)', (done) ->
+  test 'should override default get route (GET)', (done) ->
     Tests.routes.Get (req, res) ->
       res.status(200).send {message: 'Coucou'}
 

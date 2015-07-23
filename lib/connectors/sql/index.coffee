@@ -42,7 +42,7 @@ class Table
       return done err if err?
       return done {error: 'Error on Delete'} if !affected
 
-      done()
+      done null, affected
 
 module.exports = (config) ->
 

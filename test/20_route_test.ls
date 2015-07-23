@@ -9,6 +9,8 @@ Nodulator = require '../lib/Nodulator'
 client = null
 Tests = null
 
+test = it
+
 class TestRoute extends Nodulator.Route
   Config: ->
     super()
@@ -23,7 +25,7 @@ describe 'Nodulator Route', ->
 
       done()
 
-  it 'should get resource', (done) ->
+  test 'should get resource', (done) ->
     Nodulator.client.Get '/api/1/tests', (err, res) ->
       assert.equal res.body.message, 'Coucou'
       done()

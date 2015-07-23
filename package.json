@@ -5,12 +5,12 @@
     "assert": "*",
     "async": "*",
     "body-parser": "*",
-    "coffee-script": "*",
     "connect-redis": "*",
     "cookie-parser": "*",
     "express": "*",
     "express-session": "*",
     "hacktiv": "0.0.3",
+    "livescript": "^1.4.0",
     "mocha": "*",
     "mongous": "*",
     "mysql": "*",
@@ -35,7 +35,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script/register test"
+    "test": "mocha --compilers ls:LiveScript test"
   },
   "repository": {
     "type": "git",
@@ -52,11 +52,12 @@
     "nodejs",
     "coffee",
     "coffeescript",
+    "livescript",
     "reactive",
     "programming",
     "promises"
   ],
-  "author": "Champii <greine_f@epitech.eu>",
+  "author": "Champii <contact@champii.io>",
   "license": "GPLv2",
   "bugs": {
     "url": "https://github.com/Champii/Nodulator/issues"

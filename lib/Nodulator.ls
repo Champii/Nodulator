@@ -1,12 +1,15 @@
-_ = require 'underscore'
-fs = require 'fs'
-path = require 'path'
-http = require 'http'
-Client =  require '../test/common/client'
-express = require 'express'
-Hacktiv = require 'hacktiv'
-bodyParser = require 'body-parser'
-expressSession = require 'express-session'
+require! {
+  underscore: _
+  fs
+  path
+  http
+  '../test/common/client': Client
+  express
+  hacktiv
+  \body-parser : bodyParser
+  \express-session : express-session
+}
+
 
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
@@ -23,33 +26,33 @@ class Nodulator
   table: null
   authApp: false
   defaultConfig:
-    dbType: 'SqlMem'
+    dbType: \SqlMem
     flipDone: false
 
-  constructor: ->
+  ->
     @Init()
 
   Init: ->
 
-    @appRoot = path.resolve '.'
+    @appRoot = path.resolve \.
 
     @express = express
 
     @app = @express()
 
-    @app.use bodyParser.urlencoded
+    @app.use bodyParser.urlencoded do
       extended: true
 
-    @app.use bodyParser.json
+    @app.use bodyParser.json do
       extended: true
 
     @server = http.createServer @app
 
-    @db = require('./connectors/sql')
+    @db = require \./connectors/sql
 
     @client = new Client @app
 
-  Resource: (name, routes, config, _parent) =>
+  Resource: (name, routes, config, _parent) ~>
 
     name = name.toLowerCase()
     if @resources[name]?
@@ -66,14 +69,14 @@ class Nodulator
 
     if _parent?
       @resources[name] = resource = _parent
-      @resources[name]._PrepareResource @table(name + 's'), config, @app, routes, name
+      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name
     else
       table = null
       if not config? or (config? and not config.abstract)
-        table = @table(name + 's')
+        table = @table(name + \s)
 
       @resources[name] = resource =
-        require('./Resource')(table, config, @app, routes, name)
+        require(\./Resource)(table, config, @app, routes, name)
 
     resource
 
@@ -87,26 +90,26 @@ class Nodulator
       @config[k] = v if not @config[k]?
 
     sessions =
-      key: 'Nodulator'
-      secret: 'Nodulator'
+      key: \Nodulator
+      secret: \Nodulator
       resave: true
       saveUninitialized: true
 
-    if @config?.store?.type is 'redis'
-      RedisStore = require('connect-redis')(expressSession)
+    if @config?.store?.type is \redis
+      RedisStore = require(\connect-redis)(express-session)
 
-      @sessionStore = new RedisStore
-       host: @config.store.host || 'localhost'
+      @sessionStore = new RedisStore do
+       host: @config.store.host || \localhost
 
       sessions.store = @sessionStore
 
-    @app.use expressSession sessions
+    @app.use express-session sessions
 
     @table = @db(@config).table
 
     @server.listen @config.port || port
 
-    @bus.emit 'listening'
+    @bus.emit \listening
 
     console.log '=> Listening to 0.0.0.0:' + (@config.port || port++)
 
@@ -116,10 +119,10 @@ class Nodulator
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
 
-  Bus: require './Bus'
+  Bus: require \./Bus
   bus: new @::Bus()
 
-  Route: require './Route'
+  Route: require \./Route
 
   Reset: (done) ->
     if not @server?
@@ -138,13 +141,19 @@ class Nodulator
 
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
+  # 
+  # WatchErrors: (resource, f) ->
+  #   handle = @Watch =>
+  #     resource.error()
+  #
+  #   f()
 
   _ListEndpoints: (done) ->
     endpoints = []
     for endpoint in @app._router.stack
       if endpoint.route?
         res = {}
-        res[endpoint.route.path] = key for key of endpoint.route.methods
+        res[endpoint.route.path] = [key for key of endpoint.route.methods]
         endpoints.push res
     done(endpoints) if done?
 

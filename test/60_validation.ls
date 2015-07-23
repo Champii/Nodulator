@@ -7,6 +7,8 @@ Nodulator = require '../lib/Nodulator'
 
 Tests = null
 
+test = it
+
 describe 'Nodulator Validation', ->
 
   before (done) ->
@@ -24,11 +26,11 @@ describe 'Nodulator Validation', ->
           field5:
             type: 'email'
 
-      Tests = Nodulator.Resource 'test', config
+      Tests := Nodulator.Resource 'test', config
 
       done()
 
-  it 'should validate Resource', (done) ->
+  test 'should validate Resource', (done) ->
     blob =
       field1: true
       field2: 1
@@ -41,14 +43,14 @@ describe 'Nodulator Validation', ->
 
       done()
 
-  it 'should not validate Resource', (done) ->
+  test 'should not validate Resource', (done) ->
     Tests.Create {}, (err, test) ->
       return done() if err?
 
       done new Error 'No error fields'
 
 
-  it 'should not validate Resource bool', (done) ->
+  test 'should not validate Resource bool', (done) ->
     blob =
       field1: 1
       field2: 1
@@ -61,7 +63,7 @@ describe 'Nodulator Validation', ->
 
       done new Error 'No error on bool fields'
 
-  it 'should not validate Resource int', (done) ->
+  test 'should not validate Resource int', (done) ->
     blob =
       field1: true
       field2: 'lol'

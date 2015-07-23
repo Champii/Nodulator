@@ -3,7 +3,7 @@ agent = superagent.agent()
 
 class Client
 
-  constructor: (@app) ->
+  (@app) ->
     @identity =
       username: ''
       password: ''
@@ -42,8 +42,8 @@ class Client
     req
       .send(data)
       .expect(200)
-      .end (args...) ->
-        done args...
+      .end ->
+        done ...
 
   Put: (url, data, done) ->
     req = @request.put url

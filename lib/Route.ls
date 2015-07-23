@@ -1,5 +1,6 @@
 _ = require 'underscore'
 Nodulator = null
+require! \prelude-ls : {each}
 
 class Route
 
@@ -7,8 +8,8 @@ class Route
   apiVersion: 1
   rname: ''
 
-  constructor: (@resource, @config) ->
-    Nodulator = require '../' if not Nodulator?
+  (@resource, @config) ->
+    Nodulator := require '../' if not Nodulator?
 
     if typeof(@resource) is 'function'
       @rname = @resource.lname
@@ -22,12 +23,12 @@ class Route
     @name = @rname + 's'
 
     if @rname[@rname.length - 1] is 'y'
-      @name = @rname[...-1] + 'ies'
+      @name = @rname[ til @name.length] + 'ies'
 
     @app = Nodulator.app
     @Config()
 
-  _Add: (type, url, middle..., done) ->
+  _Add: (type, url, ...middle, done) ->
     if not done?
       done = url
       url = '/'
@@ -41,26 +42,28 @@ class Route
 
       #FIXME: code clarity
       if middle.length
-        middle.push (req, res, next) => @[type + url](req, res, next)
+        middle.push (req, res, next) ~> @[type + url](req, res, next)
         @app.route(@basePath + @apiVersion + '/' + @name + url)[type].apply @app.route(@basePath + @apiVersion + '/' + @name + url), middle
       else
-        @app.route(@basePath + @apiVersion + '/' + @name + url)[type] (req, res, next) =>
+        @app.route(@basePath + @apiVersion + '/' + @name + url)[type] (req, res, next) ~>
           @[type + url](req, res, next)
 
     else
       @[type + url] = done
 
-  for verb in ['All', 'Get', 'Post', 'Put', 'Delete']
-    do (verb) =>
-      @::[verb] = (args...) ->
-        args.unshift (verb[0].toLowerCase() + verb[1..])
-        @_Add.apply @, args
+  _set = (verb) ~>
+    @::[verb] = (...args) ->
+      args.unshift verb[0].toLowerCase() + verb[1 til verb.length].join('')
+      @_Add.apply @, args
+
+
+  each _set, <[ All Get Post Put Delete ]>
 
   Config: ->
 
 class SingleRoute extends Route
 
-  constructor: (@resource, @config) ->
+  (@resource, @config) ->
     throw new Error 'SingleRoute constructor needs a Resource as first parameter' if not @resource? or typeof(@resource) isnt 'function'
 
     @rname = @resource.lname
@@ -73,7 +76,7 @@ class SingleRoute extends Route
     @app = Nodulator.app
 
     #Resource creation if non-existant
-    @resource.Fetch 1, (err, result) =>
+    @resource.Fetch 1, (err, result) ~>
       if err? and @resource.config?.schema? and
          _(@resource.config.schema).filter((item) ->
            not item.default? and not item.optional?).length
@@ -88,21 +91,21 @@ class SingleRoute extends Route
     @Config()
 
   Config: ->
-    @All (req, res, next) =>
-      @resource.Fetch 1, (err, result) =>
+    @All (req, res, next) ~>
+      @resource.Fetch 1, (err, result) ~>
         return res.status(500).send(err) if err?
 
         @instance = result
 
         next()
 
-    @Get (req, res, next) =>
+    @Get (req, res, next) ~>
       res.status(200).send @instance.ToJSON()
 
-    @Put (req, res) =>
+    @Put (req, res) ~>
       @instance.ExtendSafe req.body
 
-      @instance.Save (err) =>
+      @instance._SaveUnwrapped (err) ~>
         return res.status(500).send(err) if err?
 
         res.status(200).send @instance.ToJSON()
@@ -110,43 +113,43 @@ class SingleRoute extends Route
 class MultiRoute extends Route
 
   Config: ->
-    @All '/:id*', (req, res, next) =>
+    @All '/:id*', (req, res, next) ~>
       if not isFinite req.params.id
         return next()
 
-      @resource.Fetch req.params.id, (err, result) =>
+      @resource.Fetch +req.params.id, (err, result) ~>
         return res.status(500).send(err) if err?
 
         @instance = result
 
         next()
 
-    @Get (req, res) =>
-      @resource.List req.query, (err, results) =>
-        # console.log 'Resource', @resource.name, 'List', err, results
+    @Get (req, res) ~>
+      @resource.List req.query, (err, results) ~>
         return res.status(500).send {err: err} if err?
 
         res.status(200).send _(results).invoke 'ToJSON'
 
-    @Get '/:id', (req, res) =>
+    @Get '/:id', (req, res) ~>
       res.status(200).send @instance.ToJSON()
 
-    @Post (req, res) =>
+    @Post (req, res) ~>
+      # console.log 'Post', @resource.name, @resource
       @resource.Create req.body, (err, result) ->
         return res.status(500).send(err) if err?
 
         res.status(200).send result.ToJSON()
 
-    @Put '/:id', (req, res) =>
+    @Put '/:id', (req, res) ~>
       @instance.ExtendSafe req.body
 
-      @instance.Save (err) =>
+      @instance._SaveUnwrapped (err) ~>
         return res.status(500).send(err) if err?
 
         res.status(200).send @instance.ToJSON()
 
-    @Delete '/:id', (req, res) =>
-      @instance.Delete (err) ->
+    @Delete '/:id', (req, res) ~>
+      @instance._DeleteUnwrapped (err) ->
         return res.status(500).send(err) if err?
 
         res.status(200).end()

@@ -9,30 +9,32 @@ Nodulator = require '../lib/Nodulator'
 client = null
 ATests = null
 
+test = it
+
 class TestRoute extends Nodulator.Route
 
 describe 'Nodulator Inheritance', ->
 
   before (done) ->
     Nodulator.Reset ->
-      class ATests extends Nodulator.Resource 'atest', {abstract: true}
+      class AbTests extends Nodulator.Resource 'atest', {abstract: true}
         FetchByName: (name, done) ->
-          @table.FindWhere '*', {name: name}, (err, blob) =>
+          @table.FindWhere '*', {name: name}, (err, blob) ~>
             throw new Error err if err?
 
             @resource._Deserialize blob, done
 
-      assert ATests?
-      ATests.Init()
-
-      client = new Client Nodulator.app
+      assert AbTests?
+      AbTests.Init()
+      ATests := AbTests
+      # client := new Client Nodulator.app
       done()
 
-  it 'should have Extend function', (done) ->
+  test 'should have Extend function', (done) ->
     assert ATests.Extend
     done()
 
-  it 'should have test1 inherited', (done) ->
+  test 'should have test1 inherited', (done) ->
     class TestResource extends ATests.Extend 'test', TestRoute
 
     assert TestResource.prototype.FetchByName

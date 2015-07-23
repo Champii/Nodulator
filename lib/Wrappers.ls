@@ -4,19 +4,19 @@ Q = require 'q'
 
 class Wrappers
 
-  @_FindDone: (args) ->
+  @_FindDone = (args) ->
     for arg, i in args
       if typeof(arg) is 'function'
         return i
 
     -1
 
-  @_WrapFlipDone: (cb) ->
+  @_WrapFlipDone = (cb) ->
     if not Nodulator.config.flipDone
       return cb
 
     resource = @
-    (args...) ->
+    (...args) ->
 
       doneIdx = resource._FindDone args
       if doneIdx is -1
@@ -35,12 +35,12 @@ class Wrappers
 
       cb.apply @, args
 
-  @_WrapPromise: (cb) ->
+  @_WrapPromise = (cb) ->
     d = null
 
     _FindDone = @_FindDone
 
-    (args...) ->
+    (...args) ->
       idx = _FindDone args
 
       if idx is -1
@@ -54,13 +54,13 @@ class Wrappers
       ret = cb.apply @, args
       d?.promise || ret
 
-  @_WrapWatchArgs: (cb) ->
-    (args...) ->
+  @_WrapWatchArgs = (cb) ->
+    (...args) ->
       if not Nodulator.Watch.active
-        return cb args...
+        return cb ...
 
       if not ChangeWatcher.Watch cb, args
-        cb args...
+        cb ...
 
 
 module.exports = Wrappers

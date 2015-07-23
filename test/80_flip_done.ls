@@ -7,25 +7,27 @@ Nodulator = require '../lib/Nodulator'
 
 Tests = null
 
+test = it
+
 describe 'Nodulator Flip Done', ->
 
   before (done) ->
     Nodulator.Reset ->
-      Nodulator.Config
+      Nodulator.Config do
         flipDone: true
 
-      Tests = Nodulator.Resource 'test'
+      Tests := Nodulator.Resource 'test'
 
       done()
 
-  it 'It should have fliped done args', (done) ->
+  test 'It should have fliped done args', (done) ->
     Tests.Create test: 1, (test, err) ->
       assert test?
       assert not err?
       assert.equal test.test, 1
       done()
 
-  it 'It should still return promise', (done) ->
+  test 'It should still return promise', (done) ->
     Tests.Create test: 1
     .then (test) ->
       assert test?
