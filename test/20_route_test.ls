@@ -11,18 +11,19 @@ Tests = null
 
 test = it
 
-class TestRoute extends Nodulator.Route
-  Config: ->
-    super()
-    @Get (req, res) ->
-      res.status(200).send {message: 'Coucou'}
-
 describe 'Nodulator Route', ->
 
   before (done) ->
     Nodulator.Reset ->
-      Tests = Nodulator.Resource 'test', TestRoute
 
+      class TestRoute extends Nodulator.Route
+        resource: Nodulator.Resource 'test'
+        
+        Config: ->
+          super()
+          @Get -> {message: 'Coucou'}
+
+      new TestRoute
       done()
 
   test 'should get resource', (done) ->

@@ -1,10 +1,10 @@
 require! {
   underscore: __
   async
-  '../': Nodulator
+  '../../': Nodulator
   validator: Validator
   hacktiv: Hacktiv
-  \./ChangeWatcher
+  \../ChangeWatcher
   \./Wrappers
   \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values}
 }
@@ -25,7 +25,7 @@ typeCheck =
 
 Nodulator.Validator = Validator
 
-module.exports = (table, config, app, routes, name) ->
+module.exports = (table, config, app, name) ->
 
   error = new Hacktiv.Value
 
@@ -66,7 +66,7 @@ module.exports = (table, config, app, routes, name) ->
     Save: @_WrapFlipDone @_WrapPromise -> @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
-    Delete: @_WrapFlipDone @_WrapPromise -> @_DeleteUnwrapped ...
+    Delete: @_WrapFlipDone @_WrapPromise (...args) -> @_DeleteUnwrapped ...
 
     # Get what to send to the database
     Serialize: ->
@@ -131,12 +131,13 @@ module.exports = (table, config, app, routes, name) ->
 
     # Delete without wrap
     _DeleteUnwrapped: (done) ->
-      @_table.Delete @id, (err) ~> switch true
-        | err? => done err
-        | _    =>
-          Nodulator.bus.emit \delete_ + @name, @ToJSON()
-          ChangeWatcher.Invalidate()
-          done()
+      @_table.Delete @id, (err, affected) ~>
+        switch true
+          | err? => done err
+          | _    =>
+            Nodulator.bus.emit \delete_ + @name, @ToJSON()
+            ChangeWatcher.Invalidate()
+            done null, {}
 
       null
 
@@ -145,8 +146,8 @@ module.exports = (table, config, app, routes, name) ->
   # Class Methods
   #
     # _Deserialize and Save from a blob or an array of blob
-    @Create = @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ~>
-      @Init! if not @@INITED
+    @Create = @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+      @Init! if not @INITED
 
       @_HandleArrayArg args, (blob, done) ~>
         @resource._Deserialize blob, (err, instance) ->
@@ -158,22 +159,30 @@ module.exports = (table, config, app, routes, name) ->
       , done
 
     # Fetch from id or id array
-    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ~>
-      @Init! if not @@INITED
+    @Fetch = @_WrapFlipDone ~> @_WrapPromise ~> @_WrapWatchArgs (...args) ->
+      # console.log 'Fetch Unwrapped', @INITED, @
+      # @resource = @
+      # @Init! if not @INITED
+      # console.log 'Fetch Unwrapped', @INITED
+      console.log \unwraped, args, @
+      @_FetchUnwrapped ...
+
+    # Fetch from id or id array
+    @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
       cb = (done) ~> (err, blob) ~>
         switch true
           | err?  => done err
           | _     => @resource._Deserialize blob, done, _depth
 
-      @_HandleArrayArg arg, (constraints, done) ~> match constraints
+      @_HandleArrayArg arg, (constraints, done) ~> switch constraints
         | is-type 'Object'  => @_table.FindWhere '*', constraints, cb done
         | _                 => @_table.Find constraints, cb done
       , done
 
     # Get every records from DB
-    @List = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ~>
-      @Init! if not @@INITED
+    @List = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+      @Init! if not @INITED
 
       if typeof(arg) is 'function'
         if typeof(done) is 'number'
@@ -195,12 +204,13 @@ module.exports = (table, config, app, routes, name) ->
 
     # Delete given records from DB
     @Delete = @_WrapFlipDone @_WrapPromise (arg, done) ~>
-      @Init! if not @@INITED
+      @Init! if not @INITED
 
       @_HandleArrayArg arg, (constraints, done) ~>
-        @resource.Fetch constraints, (err, instance) ~> switch true
-          | err?  => done err?
-          | _     => instance._DeleteUnwrapped done
+        @resource._FetchUnwrapped constraints, (err, instance) ~>
+          switch true
+            | err?  => done err
+            | _     => instance._DeleteUnwrapped done
 
       , done
 
@@ -291,14 +301,14 @@ module.exports = (table, config, app, routes, name) ->
   # Init process
   #
     # Prepare the core of the Resource
-    @_PrepareResource = (_table, _config, _app, _routes, _name) ->
+    @_PrepareResource = (_table, _config, _app, _name) ->
       @_table = _table
       @config = _config
       @app = _app
       @lname = _name.toLowerCase()
-      @resource = @
+
       # if _routes?
-      @routes = new _routes(@, @config)
+      # @routes = new _routes(@, @config)
 
       @
 
@@ -373,8 +383,8 @@ module.exports = (table, config, app, routes, name) ->
             @_schema[field] = typeCheck[description]
 
     @_PrepareAbstract = ->
-      @Extend = (name, routes, config) ~>
-        @Init! if not @@INITED
+      @Extend = (name, config) ~>
+        # @Init! if not @@INITED
         if config and not config.abstract
           deleteAbstract = true
 
@@ -383,11 +393,16 @@ module.exports = (table, config, app, routes, name) ->
         if deleteAbstract
           delete config.abstract
 
-        Nodulator.Resource name, routes, config, @
+        Nodulator.Resource name, config, @
 
     @Init = (@config = @config, extendArgs) ->
+      # console.log @INITED
+      return if @INITED
+
       @resource = @
-      @routes.resource = @ if @routes?
+      # @routes = new routes(@, @config)
+      # console.log \Init, @
+      # @routes.resource = @ if @routes?
       # console.log 'INIT', @name, @resource
       Nodulator.resources[@lname] = @
 
@@ -397,8 +412,10 @@ module.exports = (table, config, app, routes, name) ->
       #if @config? and @config.abstract
       @_PrepareAbstract()
 
+
+
       @INITED = true
 
       @
 
-  Resource._PrepareResource(table, config, app, routes, name)
+  Resource._PrepareResource(table, config, app, name)

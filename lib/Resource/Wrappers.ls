@@ -1,5 +1,5 @@
-Nodulator = require '../'
-ChangeWatcher = require './ChangeWatcher'
+Nodulator = require '../..'
+ChangeWatcher = require '../ChangeWatcher'
 Q = require 'q'
 
 class Wrappers
@@ -16,6 +16,7 @@ class Wrappers
       return cb
 
     resource = @
+    # console.log 'flipdone', @
     (...args) ->
 
       doneIdx = resource._FindDone args
@@ -57,10 +58,11 @@ class Wrappers
   @_WrapWatchArgs = (cb) ->
     (...args) ->
       if not Nodulator.Watch.active
-        return cb ...
+        return cb.apply @, args
 
-      if not ChangeWatcher.Watch cb, args
-        cb ...
+      console.log 'watch args', @
+      if not ChangeWatcher.Watch cb, args, @
+        return cb.apply @, args
 
 
 module.exports = Wrappers

@@ -1,5 +1,5 @@
 _ = require 'underscore'
-Nodulator = require './'
+Nodulator = require '../'
 request = require 'superagent'
 async = require 'async'
 
@@ -67,7 +67,7 @@ Monsters = Units.Extend 'monster', UnitRoute
   And Here start the tests.
 */
 
-Client = require './test/common/client'
+Client = require '../test/common/client'
 client = new Client Nodulator.app
 
 # Hack for keep track of weapon

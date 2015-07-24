@@ -22,6 +22,7 @@ describe 'Nodulator Reactive value', ->
         {test: 1}
         {test: 2}]
       .then ->
+        assert it.length, 6
         done()
 
   test 'should be watching', (done) ->

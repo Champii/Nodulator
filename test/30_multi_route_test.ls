@@ -2,22 +2,22 @@ _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
-Client = require './common/client'
 
 Nodulator = require '..'
 
-client = null
 Tests = null
-
+tests = null
 test = it
-
-class TestRoute extends Nodulator.Route.MultiRoute
 
 describe 'Nodulator Multi Route', ->
 
   before (done) ->
     Nodulator.Reset ->
-      Tests := Nodulator.Resource 'test', TestRoute
+
+      class TestRoute extends Nodulator.Route.MultiRoute
+        resource: Nodulator.Resource 'test'
+
+      tests := new TestRoute
 
       done()
 
@@ -72,8 +72,7 @@ describe 'Nodulator Multi Route', ->
         throw new Error 'Has not deleted resource'
 
   test 'should override default get route (GET)', (done) ->
-    Tests.routes.Get (req, res) ->
-      res.status(200).send {message: 'Coucou'}
+    tests.Get -> {message: 'Coucou'}
 
     Nodulator.client.Get '/api/1/tests', (err, res) ->
       throw new Error err if err?

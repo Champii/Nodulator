@@ -10,7 +10,7 @@ class ChangeWatcher
 
   @list = []
 
-  (@func, @args) ->
+  (@func, @args, @instance) ->
     @dep = new Hacktiv.Dependency
     @doneIdx = @_FindDone()
 
@@ -27,7 +27,7 @@ class ChangeWatcher
     @_oldDone = @args[@doneIdx]
     @args[@doneIdx] = (err, res) ~>
       @res = res
-      @_oldDone err, res
+      @_oldDone.call @instance, err, res
       @_ReWrap()
 
   _ReWrap: ->
@@ -40,7 +40,7 @@ class ChangeWatcher
 
   Invalidate: ->
     @dep._Depends()
-    @func ...@args
+    @func.apply @instance, @args
 
   @Watch = (func, args) ->
     return false if not Nodulator.Watch.active or _(@list).find (item) -> item.func is func and _(item.args).isEqual args

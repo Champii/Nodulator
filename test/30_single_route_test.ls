@@ -10,6 +10,8 @@ Tests = null
 
 test = it
 
+tests =  null
+
 class TestRoute extends Nodulator.Route.SingleRoute
 
 describe 'Nodulator Single Route', ->
@@ -22,7 +24,10 @@ describe 'Nodulator Single Route', ->
             type: 'string'
             default: 'test'
 
-      Tests := Nodulator.Resource 'test', TestRoute, config
+      class TestRoute extends Nodulator.Route.SingleRoute
+        resource: Nodulator.Resource 'test', config
+
+      tests := new TestRoute
 
       done()
 
@@ -59,8 +64,7 @@ describe 'Nodulator Single Route', ->
       done()
 
   test 'should override default get route (GET)', (done) ->
-    Tests.routes.Get (req, res) ->
-      res.status(200).send {message: 'Coucou'}
+    tests.Get -> {message: 'Coucou'}
 
     Nodulator.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?

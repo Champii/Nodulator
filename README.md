@@ -2,9 +2,7 @@
     | \ | | ___   __| |_   _| | __ _| |_ ___  _ __
     |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
-    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|
-
-V0.0.19
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.0.19
 
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
@@ -187,13 +185,8 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
 
     # We create: GET => /api/1/{resource_name}/usernames
     # Get a list of every players' usernames
-    @Get '/usernames', (req, res) =>
-
-      # There is a @resource property, containing attached Resource class
-      @resource.ListUsernames (err, usernames) ->
-        return res.status(500).send err if err?
-
-        res.status(200).send usernames
+    # There is a @resource property, containing attached Resource class
+    @Get '/usernames' ~> @resource.ListUsernames!
 
     # We call super() to apply Nodulator.Route.MultiRoute behaviour
     # We called '/usernames' route before, so it won't be override by
@@ -201,15 +194,7 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
     super()
 
     # We create: PUT => /api/1/{resource_name}/:id/levelUp
-    @Put '/:id/levelUp', (req, res) =>
-
-      # For MultiRoute routes with '/:id/*',
-      # Fetch the corresponding Resource and put the instance in @instance
-      # (here it can be called 'req.player' but we want to stay generic)
-      @instance.LevelUp (err, resource) ->
-        return res.status(500).send err if err?
-
-        res.status(200).send resource.ToJSON()
+    @Put '/:id/levelUp' ~> it.instance.LevelUp!
 
 # We create a resource, and we attach the PlayerRoute
 class Players extends Nodulator.Resource 'player', PlayerRoute
@@ -1157,8 +1142,14 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  - LiveScript ! \o/
+  - Lib Folder reorganisation
+  - Replaced @instance in Route by req._instance.
+  - Added a Request class to handle Resource in Route
+  - Now Nodulator.Resource take only a name and a config. Its the Route object that
+  take a Resource as property. Also, Routes have to be Instanciated.
 
-21/07/89: v0.0.19
+21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
   - Removed `req.instances` from every `Route`
   - Added tests for `SingleRoute`

@@ -52,33 +52,35 @@ class Nodulator
 
     @client = new Client @app
 
-  Resource: (name, routes, config, _parent) ~>
+  Resource: (name, config, _parent) ~>
 
     name = name.toLowerCase()
     if @resources[name]?
       return @resources[name]
 
-    if routes? and not routes.prototype
-      config = routes
-      routes = null
+    # if routes? and not routes.prototype
+    #   config = routes
+    #   routes = null
 
     @Config() if not @config? # config of Nodulator instance
 
-    if not routes? or routes.prototype not instanceof @Route
-      routes = @Route
+    # if not routes? or routes.prototype not instanceof @Route
+    #   routes = @Route
 
     if _parent?
       @resources[name] = resource = _parent
-      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name
+      @resources[name]._PrepareResource @table(name + \s), config, @app, name
     else
       table = null
       if not config? or (config? and not config.abstract)
         table = @table(name + \s)
 
       @resources[name] = resource =
-        require(\./Resource)(table, config, @app, routes, name)
+        require(\./Resource/Resource)(table, config, @app, name)
 
     resource
+
+  Route: require \./Route/Route
 
   Config: (config) ->
     if @config?
@@ -122,7 +124,6 @@ class Nodulator
   Bus: require \./Bus
   bus: new @::Bus()
 
-  Route: require \./Route
 
   Reset: (done) ->
     if not @server?
@@ -141,7 +142,7 @@ class Nodulator
 
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
-  # 
+  #
   # WatchErrors: (resource, f) ->
   #   handle = @Watch =>
   #     resource.error()
