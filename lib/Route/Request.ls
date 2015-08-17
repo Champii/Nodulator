@@ -29,7 +29,7 @@ class Request
     return if @sent
 
     @res.status(errors[it.status]).send it
-    @send = true
+    @sent = true
 
   SetInstance: ->
     switch true

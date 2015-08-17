@@ -7,8 +7,8 @@ class Table
   constructor: (@name) ->
 
   Find: (id, done) ->
-    id = parseInt id, 10 if typeof id isnt 'number'
-    @FindWhere '*', {id: id}, done
+    # id = parseInt id, 10 if typeof id isnt 'number'
+    @FindWhere '*', {id: +id}, done
 
   FindWhere: (fields, where, done) ->
     @Select fields, where, {limit: 1}, (err, results) =>

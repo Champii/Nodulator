@@ -61,8 +61,7 @@ describe 'Nodulator Inheritance', ->
 
       LevelUp: @_WrapPromise (done) ->
         @level++
-        @Save (err) ->
-          done2 err
+        @Save done
 
       @ListUsernames = @_WrapPromise (done) ->
         # @List fmapA (-> __(it).pluck \username), done
@@ -76,17 +75,17 @@ describe 'Nodulator Inheritance', ->
 
       Config: ->
         # console.log 'Test Config'
-        @Get '/usernames' ~> @resource.ListUsernames!
+        @Get \/usernames ~> @resource.ListUsernames!
         super()
         @Put '/:id/levelup' ~>
           # console.log 'LEVELUP???', @resource, it.instance.LevelUp
           it.instance.LevelUp!
 
-
     a = new PlayerRoute
 
-    <- Players.Create {test: 1}
+    <- Players.Create {test: 1, level: 1}
     err, {body} <- Nodulator.client.Put \/api/1/players/1/levelup, {}
     throw new Error err if err?
 
+    done2!
     # console.log err, body

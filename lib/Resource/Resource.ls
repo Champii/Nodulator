@@ -7,6 +7,7 @@ require! {
   \../ChangeWatcher
   \./Wrappers
   \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values}
+  \async-ls : {callbacks: {bindA}}
 }
 
 validationError = (field, value, message) ->
@@ -40,6 +41,7 @@ module.exports = (table, config, app, name) ->
   # Public
   # Instance Methods
   #
+
     # Constructor
     (blob) ->
       @_table = @@_table
@@ -62,6 +64,7 @@ module.exports = (table, config, app, name) ->
         import blob
 
       # console.log 'ctor?', @
+
     # Wrap the _SaveUnwrapped() call
     Save: @_WrapFlipDone @_WrapPromise -> @_SaveUnwrapped ...
 
@@ -107,6 +110,7 @@ module.exports = (table, config, app, name) ->
   # Private
   # Instance Methods
   #
+
     # Save without wrap
     _SaveUnwrapped: (done) ->
       Resource._Validate @Serialize(), true, (err) ~>
@@ -145,11 +149,14 @@ module.exports = (table, config, app, name) ->
   # Public
   # Class Methods
   #
+
     # _Deserialize and Save from a blob or an array of blob
     @Create = @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
       @Init! if not @INITED
 
       @_HandleArrayArg args, (blob, done) ~>
+
+        # (bindA @resource._Deserialize blob, ((instance, done) -> instance._SaveUnwrapped done))(done)
         @resource._Deserialize blob, (err, instance) ->
           # console.log instance
           switch true
@@ -159,12 +166,12 @@ module.exports = (table, config, app, name) ->
       , done
 
     # Fetch from id or id array
-    @Fetch = @_WrapFlipDone ~> @_WrapPromise ~> @_WrapWatchArgs (...args) ->
-      # console.log 'Fetch Unwrapped', @INITED, @
+    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs ->
+      console.log 'Fetch wrapped', @INITED, @
       # @resource = @
-      # @Init! if not @INITED
+      @Init! if not @INITED
       # console.log 'Fetch Unwrapped', @INITED
-      console.log \unwraped, args, @
+      # console.log \unwraped, args, @
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
@@ -172,8 +179,10 @@ module.exports = (table, config, app, name) ->
 
       cb = (done) ~> (err, blob) ~>
         switch true
-          | err?  => done err
-          | _     => @resource._Deserialize blob, done, _depth
+          | err?  =>
+            done err
+          | _     =>
+            @resource._Deserialize blob, done, _depth
 
       @_HandleArrayArg arg, (constraints, done) ~> switch constraints
         | is-type 'Object'  => @_table.FindWhere '*', constraints, cb done
@@ -203,7 +212,7 @@ module.exports = (table, config, app, name) ->
       , done
 
     # Delete given records from DB
-    @Delete = @_WrapFlipDone @_WrapPromise (arg, done) ~>
+    @Delete = @_WrapFlipDone @_WrapPromise (arg, done) ->
       @Init! if not @INITED
 
       @_HandleArrayArg arg, (constraints, done) ~>
@@ -218,6 +227,7 @@ module.exports = (table, config, app, name) ->
   # Private
   # Class Methods
   #
+
     # Check for schema validity
     @_Validate = (blob, full, done) ->
       return done() if not config? or not config.schema?
@@ -265,7 +275,7 @@ module.exports = (table, config, app, name) ->
 
     # Pre-Instanciation and associated model retrival
     @_Deserialize = (blob, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
-      @Init! if not @@INITED
+      # @Init! if not @@INITED
 
       @_Validate blob, true, (err) ~>
         return done err if err?
@@ -279,6 +289,7 @@ module.exports = (table, config, app, name) ->
             , _depth
           | _           => done null, new res blob
 
+    # Get each associated Resource
     @_FetchAssoc = (blob, done, _depth) ->
       assocs = {}
 
@@ -300,6 +311,7 @@ module.exports = (table, config, app, name) ->
   # Private
   # Init process
   #
+
     # Prepare the core of the Resource
     @_PrepareResource = (_table, _config, _app, _name) ->
       @_table = _table
@@ -382,9 +394,10 @@ module.exports = (table, config, app, name) ->
           else
             @_schema[field] = typeCheck[description]
 
+    # Setup inheritance
     @_PrepareAbstract = ->
       @Extend = (name, config) ~>
-        # @Init! if not @@INITED
+        # @Init! if not @INITED
         if config and not config.abstract
           deleteAbstract = true
 
@@ -395,8 +408,10 @@ module.exports = (table, config, app, name) ->
 
         Nodulator.Resource name, config, @
 
+    # Initialisation
     @Init = (@config = @config, extendArgs) ->
       # console.log @INITED
+
       return if @INITED
 
       @resource = @
@@ -411,8 +426,6 @@ module.exports = (table, config, app, name) ->
 
       #if @config? and @config.abstract
       @_PrepareAbstract()
-
-
 
       @INITED = true
 

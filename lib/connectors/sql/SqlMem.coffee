@@ -7,7 +7,6 @@ class SqlMem
   constructor: ->
 
   Select: (table, fields, where, options, done) ->
-    # console.log tables
     if where.id? and typeof where.id is 'string'
       where.id = parseInt where.id
 

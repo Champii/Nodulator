@@ -18,6 +18,13 @@ describe 'Nodulator Resource', ->
       assert Tests?
       done()
 
+  test 'should not fetch first resource', (done) ->
+    Tests.Fetch 1, (err, test) ->
+      return done! if err?
+
+
+      throw new Error 'Fetched non-existant resource !'
+
   test 'should add first resource', (done) ->
     Tests.Create {test: 'test'}, (err, test) ->
       throw new Error 'Cannot Create test' if err?

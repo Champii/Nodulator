@@ -56,6 +56,7 @@ class Wrappers
       d?.promise || ret
 
   @_WrapWatchArgs = (cb) ->
+    console.log 'watchargs', @
     (...args) ->
       if not Nodulator.Watch.active
         return cb.apply @, args

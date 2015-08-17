@@ -85,10 +85,7 @@ class MultiRoute extends Route
 
   Config: ->
     super()
-    @All    \/:id* ~>
-      # console.log @resource
-      # @resource.Fetch +it.params.id .then -> console.log 'all fetch', it.LevelUp
-      it.SetInstance @resource.Fetch +it.params.id
+    @All    \/:id* ~> it.SetInstance @resource.Fetch +it.params.id
     @Get           ~> @resource.List it.query
     @Post          ~> @resource.Create it.body
     @Get    \/:id  ~> it.instance
