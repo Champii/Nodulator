@@ -52,31 +52,32 @@ class Nodulator
 
     @client = new Client @app
 
-  Resource: (name, config, _parent) ~>
+  Resource: (name, routes, config, _parent) ~>
 
     name = name.toLowerCase()
     if @resources[name]?
       return @resources[name]
 
-    # if routes? and not routes.prototype
-    #   config = routes
-    #   routes = null
+    if routes? and not routes.prototype
+      config = routes
+      routes = null
 
     @Config() if not @config? # config of Nodulator instance
 
-    # if not routes? or routes.prototype not instanceof @Route
-    #   routes = @Route
+    if not _parent? and (not routes? or routes.prototype not instanceof @Route)
+      routes = @Route
 
     if _parent?
-      @resources[name] = resource = _parent
-      @resources[name]._PrepareResource @table(name + \s), config, @app, name
+      class ExtendedResource extends _parent
+      @resources[name] = resource = ExtendedResource
+      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name
     else
       table = null
       if not config? or (config? and not config.abstract)
         table = @table(name + \s)
 
       @resources[name] = resource =
-        require(\./Resource/Resource)(table, config, @app, name)
+        require(\./Resource/Resource) table, config, @app, routes, name
 
     resource
 

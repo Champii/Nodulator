@@ -1,5 +1,5 @@
 Nodulator = require '../..'
-ChangeWatcher = require '../ChangeWatcher'
+ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
 
 class Wrappers
@@ -56,12 +56,12 @@ class Wrappers
       d?.promise || ret
 
   @_WrapWatchArgs = (cb) ->
-    console.log 'watchargs', @
+    # console.log 'watchargs', @
     (...args) ->
       if not Nodulator.Watch.active
         return cb.apply @, args
 
-      console.log 'watch args', @
+      # console.log 'watch args', @
       if not ChangeWatcher.Watch cb, args, @
         return cb.apply @, args
 

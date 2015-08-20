@@ -18,7 +18,7 @@ describe 'Nodulator Route', ->
 
       class TestRoute extends Nodulator.Route
         resource: Nodulator.Resource 'test'
-        
+
         Config: ->
           super()
           @Get -> {message: 'Coucou'}
@@ -28,5 +28,7 @@ describe 'Nodulator Route', ->
 
   test 'should get resource', (done) ->
     Nodulator.client.Get '/api/1/tests', (err, res) ->
+      throw err if err?
+      
       assert.equal res.body.message, 'Coucou'
       done()

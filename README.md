@@ -191,7 +191,7 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
     # We call super() to apply Nodulator.Route.MultiRoute behaviour
     # We called '/usernames' route before, so it won't be override by
     # default route GET => /api/1/{resource_name}/:id
-    super()
+    super!
 
     # We create: PUT => /api/1/{resource_name}/:id/levelUp
     @Put '/:id/levelUp' ~> it.instance.LevelUp!

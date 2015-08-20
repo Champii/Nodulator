@@ -4,10 +4,10 @@ require! {
   '../../': Nodulator
   validator: Validator
   hacktiv: Hacktiv
-  \../ChangeWatcher
+  \./ChangeWatcher
   \./Wrappers
   \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values}
-  \async-ls : {callbacks: {bindA}}
+  # \async-ls : {callbacks: {bindA}}
 }
 
 validationError = (field, value, message) ->
@@ -26,7 +26,7 @@ typeCheck =
 
 Nodulator.Validator = Validator
 
-module.exports = (table, config, app, name) ->
+module.exports = (table, config, app, routes, name) ->
 
   error = new Hacktiv.Value
 
@@ -44,9 +44,9 @@ module.exports = (table, config, app, name) ->
 
     # Constructor
     (blob) ->
-      @_table = @@_table
-      @_schema = @@_schema
-      @_type = @@lname
+      @_table = @.__proto__.constructor._table
+      @_schema = @.__proto__.constructor._schema
+      @_type = @.__proto__.constructor.lname
 
       @id = blob?.id || null
 
@@ -62,8 +62,6 @@ module.exports = (table, config, app, name) ->
         @id = blob.id
       else
         import blob
-
-      # console.log 'ctor?', @
 
     # Wrap the _SaveUnwrapped() call
     Save: @_WrapFlipDone @_WrapPromise -> @_SaveUnwrapped ...
@@ -113,13 +111,13 @@ module.exports = (table, config, app, name) ->
 
     # Save without wrap
     _SaveUnwrapped: (done) ->
-      Resource._Validate @Serialize(), true, (err) ~>
+      serie = @Serialize()
+      Resource._Validate serie, true, (err) ~>
         exists = @id?
         switch true
           | err? => done err
           | _    =>
-            # console.log 'tamere', @
-            @_table.Save @Serialize(), (err, id) ~> switch true
+            @_table.Save serie, (err, id) ~> switch true
               | err?  =>  done err
               | _     =>
 
@@ -152,13 +150,11 @@ module.exports = (table, config, app, name) ->
 
     # _Deserialize and Save from a blob or an array of blob
     @Create = @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
-      @Init! if not @INITED
+      @Init!
 
       @_HandleArrayArg args, (blob, done) ~>
 
-        # (bindA @resource._Deserialize blob, ((instance, done) -> instance._SaveUnwrapped done))(done)
         @resource._Deserialize blob, (err, instance) ->
-          # console.log instance
           switch true
             | err? => done err
             | _    => instance._SaveUnwrapped done
@@ -167,11 +163,7 @@ module.exports = (table, config, app, name) ->
 
     # Fetch from id or id array
     @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs ->
-      console.log 'Fetch wrapped', @INITED, @
-      # @resource = @
-      @Init! if not @INITED
-      # console.log 'Fetch Unwrapped', @INITED
-      # console.log \unwraped, args, @
+      @Init!
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
@@ -191,7 +183,7 @@ module.exports = (table, config, app, name) ->
 
     # Get every records from DB
     @List = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
-      @Init! if not @INITED
+      @Init!
 
       if typeof(arg) is 'function'
         if typeof(done) is 'number'
@@ -213,7 +205,7 @@ module.exports = (table, config, app, name) ->
 
     # Delete given records from DB
     @Delete = @_WrapFlipDone @_WrapPromise (arg, done) ->
-      @Init! if not @INITED
+      @Init!
 
       @_HandleArrayArg arg, (constraints, done) ~>
         @resource._FetchUnwrapped constraints, (err, instance) ~>
@@ -270,13 +262,10 @@ module.exports = (table, config, app, name) ->
           | is-type 'Array' => async.map arg, callback, done
           | _               => callback arg, done
 
-      # Returs this to avoid writing it in every call
       @
 
     # Pre-Instanciation and associated model retrival
     @_Deserialize = (blob, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
-      # @Init! if not @@INITED
-
       @_Validate blob, true, (err) ~>
         return done err if err?
 
@@ -313,14 +302,15 @@ module.exports = (table, config, app, name) ->
   #
 
     # Prepare the core of the Resource
-    @_PrepareResource = (_table, _config, _app, _name) ->
+    @_PrepareResource = (_table, _config, _app, _routes, _name) ->
       @_table = _table
       @config = _config
       @app = _app
+      @INITED = false
       @lname = _name.toLowerCase()
 
-      # if _routes?
-      # @routes = new _routes(@, @config)
+      if _routes?
+        @routes = new _routes(@, @config)
 
       @
 
@@ -396,21 +386,22 @@ module.exports = (table, config, app, name) ->
 
     # Setup inheritance
     @_PrepareAbstract = ->
-      @Extend = (name, config) ~>
-        # @Init! if not @INITED
-        if config and not config.abstract
-          deleteAbstract = true
+      @Extend = (name, routes, config) ~>
+        @Init!
 
-        config = __(config).extend @config
+        # config = __(config || {}).extend @config
+        config = config with @config
+
+        if config and config.abstract
+          deleteAbstract = true
 
         if deleteAbstract
           delete config.abstract
 
-        Nodulator.Resource name, config, @
+        Nodulator.Resource name, routes, config, @
 
     # Initialisation
     @Init = (@config = @config, extendArgs) ->
-      # console.log @INITED
 
       return if @INITED
 
@@ -431,4 +422,4 @@ module.exports = (table, config, app, name) ->
 
       @
 
-  Resource._PrepareResource(table, config, app, name)
+  Resource._PrepareResource(table, config, app, routes, name)

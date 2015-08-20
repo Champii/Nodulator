@@ -11,22 +11,21 @@ class Route
   apiVersion: 1
   rname: ''
 
-  ->
-    # @resource if not @resource? and it? and typeof! it is 'Function'
-    if not @resource?
-      throw new Error 'Route need an \'resource\' property'
-    Nodulator := require '../..' if not Nodulator?
-    # @resource.Init()
+  (resource, @config) ->
 
-    if typeof(@resource) is 'function'
-      @resource.Init()
-      @rname = @resource.lname
-    else if typeof(@resource) is 'string'
-      @rname = @resource
-      @resource = undefined
-      Nodulator.Config() if not Nodulator.config?
-    else
-      throw new Error 'Route needs a Resource (or a name) as \'resource\' property'
+    @resource = resource || @resource
+
+    Nodulator := require '../..' if not Nodulator?
+
+    if @resource
+      if typeof(@resource) is 'function'
+        @rname = @resource.lname
+      else if typeof(@resource) is 'string'
+        @rname = @resource
+        @resource = undefined
+        Nodulator.Config() if not Nodulator.config?
+      else
+        throw new Error 'Route needs a Resource (or at least a name)'
 
     @name = @rname + 's'
 
@@ -84,6 +83,8 @@ each _set, <[ All Post Get Put Delete ]>
 class MultiRoute extends Route
 
   Config: ->
+    console.log 'Tamere'
+
     super()
     @All    \/:id* ~> it.SetInstance @resource.Fetch +it.params.id
     @Get           ~> @resource.List it.query
