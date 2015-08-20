@@ -34,7 +34,7 @@ ___
 - [Features](#features)
 - [Compatible modules](#compatible-modules)
 - [Installation](#installation)
-- [Quick Start (TL;DR)](#quick-start-(tl;dr))
+- [Quick Start (TL;DR)](#quick-start-tl;dr)
 - [Configuration](#configuration)
 - [Resource](#resource)
   - [Basics](#basics)
@@ -53,10 +53,16 @@ ___
     - [Complex inheritance system](#complex-inheritance-system)
 - [Route](#route)
   - [Route Object](#route-object)
-  - [SingleRoute](#single-route-object)
-  - [MultiRoute](#multi-route-object)
+  - [Request Object](#request-object)
+  - [Existing Routes](#existing-routes)
+    - [SingleRoute](#single-route-object)
+    - [MultiRoute](#multi-route-object)
   - [Route Inheritance](#route-inheritance)
   - [Standalone Routes](#standalone-routes)
+- [Wrappers](#route)
+  - [Flip Done](#flip-done)
+  - [Promise](#promise)
+  - [Watch Args](#watch-args)
 - [Reactive Values](#reactive-values)
   - [Intro](#intro)
   - [Resources](#resources)
@@ -172,7 +178,7 @@ Nodulator = require 'nodulator'
 ```
 
 ___
-## Quick Start (TL;DR)
+## Quick Start TL;DR
 
 Here is the quickiest way to play around `Nodulator`
 
@@ -200,12 +206,14 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
 class Players extends Nodulator.Resource 'player', PlayerRoute
 
   # We create a LevelUp method
-  LevelUp: (done) ->
+  # If you dont provide done callback,
+  # the wrap promise will give one to fill and return as promise
+  LevelUp: @_WrapPromise (done) ->
     @level++
     @Save done
 
   # And a class method to get a list of usernames
-  @ListUsernames: (done) ->
+  @ListUsernames: @_WrapPromise (done) ->
     @List (err, players) ->
       return done err if err?
 
@@ -549,6 +557,9 @@ You can make associations between `Resource`. For making a `Resource` to be
 automaticaly fetched when querying another, you can add it to its schema :
 
 ```coffeescript
+
+Bars = Nodulator.Resource 'bar', {schema: barProperty: 'string'}
+
 config =
   schema:
     foo:    'int'
@@ -576,6 +587,7 @@ If you want to retrive a collection of resource, you can wrap types in arrays in
 ```coffeescript
 config =
   schema:
+    foo: 'int'
     barIds: ['int']
     bar:
       type: [Bars]
@@ -605,18 +617,26 @@ with the corresponding id from 'localKey' field
 If can also retrieve a Resource that have a property containing the actual instance id:
 
 ```coffeescript
+Bars = Nodulator.Resource 'bar', {schema: testId: 'int'}
+
 config =
   schema:
+    foo: 'int'
     bar:
       type: Bars
       distantKey: 'testId'
 
 Tests = Nodulator.Resource 'test', config
 
+Tests.Create {foo: 12}
+.then -> Bars.Create {testId: 1} #We assume its the first created resource
+.then -> Tests.Fetch 1 #We know its the first resource created
+.then (test) -> #Here test have a 'bar' property with testId == 1
+
 ```
 
-Given the last exemple, when you get a Test instance with id == 42, it will have a
-field 'bar' with the Bars instance that have testId == 42
+Given the last exemple, when you get a Test instance with id == 1, it will have a
+field 'bar' with the Bars instance that have testId == 1
 
 #### Depth
 
@@ -709,15 +729,29 @@ ___
 
 #### Route Object
 
-`Nodulator` provides a `Route` object, to be attached to a `Resource` object
+`Nodulator` provides a `Route` object, which can to be attached to a `Resource` object (or not)
 in order to describe routing process.
+
+There is 2 different ways to attach a `Resource` to a `Route`:
+
+You can bind a `Route` to a `Resource`
 
 ```coffeescript
 class Units extends Nodulator.Resource 'unit', Nodulator.Route
 ```
 
+Or you can bind a `Resource` to a `Route`
+
+```coffeescript
+class UnitRoute extends Nodulator.Route
+  resource: Units
+
+#In this case, you have to instanciate the Route yourself once
+route = new UnitRoute
+```
+
 Every `Route` can be initiated and configured when its attached `Resource` is,
-else you can instantiate one yourself. Please refer to the corresponding section.
+else you must instantiate one yourself.
 
 Default `Nodulator.Route` do nothing. You have to inherit from it to describe routes :
 
@@ -1130,14 +1164,12 @@ By order of priority
 
 - Better tests
   - Validation
-  - Every args type for Resource calls
-- Tests for validation
-- Tests for model association
 - Better error management
 - Log system
-- Abstract class can retrieve every child `Resource`
+- Auto add localKey or distantKey field when attached Resource
 - Remove an existing route
 - Type inference in schema for default field
+- Abstract class can retrieve every child `Resource`
 
 ___
 ## ChangeLog
