@@ -28,17 +28,7 @@ describe 'Nodulator Inheritance', ->
       assert AbTests?
       ATests := AbTests
       ATests.Init()
-      #
-      # class _TestRoute extends Nodulator.Route
-      #   resource: ATests
-      #
-      # new _TestRoute
-      #
-
-      # TestRoute := _TestRoute/
-
-      # AbTests.Init()
-      # client := new Client Nodulator.app
+ 
       done()
 
   test 'should have Extend function', (done) ->

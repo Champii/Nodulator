@@ -10,7 +10,6 @@ require! {
   \express-session : express-session
 }
 
-
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
 
