@@ -22,8 +22,8 @@ applications, built with REST APIs and with integrated ORM in CoffeeScript.
 
 You must understand [express](https://github.com/strongloop/express) basics for routing
 
-Open [exemple.coffee](https://github.com/Champii/Nodulator/blob/master/exemple.coffee)
-to see a full working exemple
+Open [exemples](https://github.com/Champii/Nodulator/blob/master/exemples)
+folder to see a full working exemple in JavaScript, CoffeeScript and LiveScript.
 
 Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
 

@@ -72,6 +72,9 @@ class Route
 
   Config: ->
 
+  @Extend = ->
+    class ExtendedRoute extends @
+
 _set = (verb) ~>
   Route::[verb] = (...args) ->
     args.unshift verb[0].toLowerCase() + verb[1 til verb.length].join('')
@@ -83,8 +86,7 @@ each _set, <[ All Post Get Put Delete ]>
 class MultiRoute extends Route
 
   Config: ->
-    console.log 'Tamere'
-
+    
     super()
     @All    \/:id* ~> it.SetInstance @resource.Fetch +it.params.id
     @Get           ~> @resource.List it.query

@@ -49,18 +49,18 @@ class UnitRoute extends Nodulator.Route.MultiRoute
       watcher = Nodulator.Watch ->
         Req.Send TargetResource.error() if TargetResource.error()?
 
-      TargetResource.Fetch +Req.params.targetId (err, target) ->
-        Req.instance.Attack target (err) ->
+      TargetResource.Fetch +Req.params.targetId, (err, target) ->
+        Req.instance.Attack target, (err) ->
           Req.Send target
           watcher.Stop()
 
 Players = Units.Extend 'player', UnitRoute
 Monsters = Units.Extend 'monster', UnitRoute
 
-/*
-  Here stops the exemple,
-  And Here start the tests.
-*/
+#
+#  Here stops the exemple,
+#  And Here start the tests.
+#
 
 # Hack for keep track of weapon
 weaponId = []
