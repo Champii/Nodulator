@@ -123,3 +123,20 @@ async.series do
     util = require 'util'
     util.debug util.inspect err, {depth: null}
     util.debug util.inspect results, {depth: null}
+
+
+
+
+
+
+
+
+
+
+
+
+
+Players.Create test: \lol
+  .fail (console.error)
+  .then -> Players.Fetch 1
+  .then (console.log)

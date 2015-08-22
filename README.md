@@ -4,9 +4,9 @@
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
     |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.0.19
 
-[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
+[![Build Status](https://travis-ci.org/Champii/N.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
-[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
+[![Build Status](https://travis-ci.org/Champii/N.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
 
 [![NPM](https://nodei.co/npm/nodulator.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/nodulator/)
 
@@ -174,7 +174,7 @@ Or check the [Project Generation](#project-generation) section
 After you can require `Nodulator` as a module :
 
 ```coffeescript
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 ```
 
 ___
@@ -184,9 +184,9 @@ Here is the quickiest way to play around `Nodulator`
 
 ```coffeescript
 _ = require 'underscore'
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-class PlayerRoute extends Nodulator.Route.MultiRoute
+class PlayerRoute extends N.Route.MultiRoute
   Config: ->
 
     # We create: GET => /api/1/{resource_name}/usernames
@@ -194,7 +194,7 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
     # There is a @resource property, containing attached Resource class
     @Get '/usernames' ~> @resource.ListUsernames!
 
-    # We call super() to apply Nodulator.Route.MultiRoute behaviour
+    # We call super() to apply N.Route.MultiRoute behaviour
     # We called '/usernames' route before, so it won't be override by
     # default route GET => /api/1/{resource_name}/:id
     super!
@@ -203,7 +203,7 @@ class PlayerRoute extends Nodulator.Route.MultiRoute
     @Put '/:id/levelUp' ~> it.instance.LevelUp!
 
 # We create a resource, and we attach the PlayerRoute
-class Players extends Nodulator.Resource 'player', PlayerRoute
+class Players extends N.Resource 'player', PlayerRoute
 
   # We create a LevelUp method
   # If you dont provide done callback,
@@ -272,9 +272,9 @@ If you don't give Nodulator a config, it will assume you want to use
 If you prefere to use a persistant system, here is the procedure :
 
 ```coffeescript
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-Nodulator.Config
+N.Config
   dbType: 'Mongo'     # You can select 'SqlMem' or 'Mongo' or 'Mysql'
   dbAuth:             # Fields needed if Mongo or Mysql
     host: 'localhost'
@@ -287,9 +287,9 @@ Nodulator.Config
 You can also provide a 'store' property in order to use `Redis` to manage sessions:
 
 ```coffeescript
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-Nodulator.Config
+N.Config
   store:
     type: 'redis'
     host: 'localhost'     # <- default value, can be ignored
@@ -300,15 +300,15 @@ If ommited, sessions will be memory based (not recommended)
 You can flip the arguments of the default `done` callback by specifying a `flipDone: true` parameter
 
 ```coffeescript
-Nodulator.Config
+N.Config
   flipDone: true
 ```
 
 `Nodulator` provides 2 main Objects :
 
 ```coffeescript
-Nodulator.Resource
-Nodulator.Route
+N.Resource
+N.Route
 ```
 
 ___
@@ -321,15 +321,15 @@ A `Resource` is a class permitting to retrive and save a model from a DB.
 Here is an exemple of creating a `Resource`
 
 ```coffeescript
-Players = Nodulator.Resource 'player'
+Players = N.Resource 'player'
 ```
 
 Here, it creates a `PlayerResource`, linked with a `players` table in DB (if any)
 
-You can pass several params to `Nodulator.Resource` :
+You can pass several params to `N.Resource` :
 
 ```coffeescript
-Nodulator.Resource name [, Route] [, config]
+N.Resource name [, Route] [, config]
 ```
 
 You can attach a [Route](#route) and/or a config object to a `Resource`.
@@ -558,7 +558,7 @@ automaticaly fetched when querying another, you can add it to its schema :
 
 ```coffeescript
 
-Bars = Nodulator.Resource 'bar', {schema: barProperty: 'string'}
+Bars = N.Resource 'bar', {schema: barProperty: 'string'}
 
 config =
   schema:
@@ -568,7 +568,7 @@ config =
       type: Bars
       localKey: 'barId'
 
-Tests = Nodulator.Resource 'test', config
+Tests = N.Resource 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
@@ -593,7 +593,7 @@ config =
       type: [Bars]
       localKey: 'barIds'
 
-Tests = Nodulator.Resource 'test', config
+Tests = N.Resource 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
@@ -617,7 +617,7 @@ with the corresponding id from 'localKey' field
 If can also retrieve a Resource that have a property containing the actual instance id:
 
 ```coffeescript
-Bars = Nodulator.Resource 'bar', {schema: testId: 'int'}
+Bars = N.Resource 'bar', {schema: testId: 'int'}
 
 config =
   schema:
@@ -626,7 +626,7 @@ config =
       type: Bars
       distantKey: 'testId'
 
-Tests = Nodulator.Resource 'test', config
+Tests = N.Resource 'test', config
 
 Tests.Create {foo: 12}
 .then -> Bars.Create {testId: 1} #We assume its the first created resource
@@ -668,7 +668,7 @@ or to make a complex class inheritance system built on `Resource`
 In CoffeeScript its pretty easy:
 
 ```coffeescript
-class Units extends Nodulator.Resource 'unit'
+class Units extends N.Resource 'unit'
 
   # We create a new instance method
   LevelUp: (done) ->
@@ -690,7 +690,7 @@ You can define an abstract class, that won't be attached to any model in DB or
 any `Route`
 
 ```coffeescript
-class Units extends Nodulator.Resource 'unit', {abstract: true}
+class Units extends N.Resource 'unit', {abstract: true}
   [...]
 
 ```
@@ -737,13 +737,13 @@ There is 2 different ways to attach a `Resource` to a `Route`:
 You can bind a `Route` to a `Resource`
 
 ```coffeescript
-class Units extends Nodulator.Resource 'unit', Nodulator.Route
+class Units extends N.Resource 'unit', N.Route
 ```
 
 Or you can bind a `Resource` to a `Route`
 
 ```coffeescript
-class UnitRoute extends Nodulator.Route
+class UnitRoute extends N.Route
   resource: Units
 
 #In this case, you have to instanciate the Route yourself once
@@ -753,10 +753,10 @@ route = new UnitRoute
 Every `Route` can be initiated and configured when its attached `Resource` is,
 else you must instantiate one yourself.
 
-Default `Nodulator.Route` do nothing. You have to inherit from it to describe routes :
+Default `N.Route` do nothing. You have to inherit from it to describe routes :
 
 ```coffeescript
-class UnitRoute extends Nodulator.Route
+class UnitRoute extends N.Route
 
   # Override the Config() method
   Config: ->
@@ -791,17 +791,17 @@ defining routes thanks to 'verbs' route calls (@Get(), @Post(), @Put(), @Delete(
 Here are all 'verb' route calls definition :
 
 ```coffeescript
-Nodulator.Route.All     [endPoint = '/'], [middleware, [middleware, ...]], callback
-Nodulator.Route.Get     [endPoint = '/'], [middleware, [middleware, ...]], callback
-Nodulator.Route.Post    [endPoint = '/'], [middleware, [middleware, ...]], callback
-Nodulator.Route.Put     [endPoint = '/'], [middleware, [middleware, ...]], callback
-Nodulator.Route.Delete  [endPoint = '/'], [middleware, [middleware, ...]], callback
+N.Route.All     [endPoint = '/'], [middleware, [middleware, ...]], callback
+N.Route.Get     [endPoint = '/'], [middleware, [middleware, ...]], callback
+N.Route.Post    [endPoint = '/'], [middleware, [middleware, ...]], callback
+N.Route.Put     [endPoint = '/'], [middleware, [middleware, ...]], callback
+N.Route.Delete  [endPoint = '/'], [middleware, [middleware, ...]], callback
 ```
 
 #### Single Route Object
 
 Nodulator provides a predefined route system for lazy, adapted for Singleton
-`Resource`: `Nodulator.Route.SingleRoute`.
+`Resource`: `N.Route.SingleRoute`.
 
 It setups 2 routes (exemple when attached to a `Players`) :
 
@@ -824,7 +824,7 @@ fields in order to add it at startup.
 
 #### Multi Route Object
 
-Nodulator provides also a standard route system for lazy : `Nodulator.Route.MultiRoute`.
+Nodulator provides also a standard route system for lazy : `N.Route.MultiRoute`.
 It allows you to handle your resources like its a big collection.
  It setups 5 routes (exemple when attached to a `Players`) :
 
@@ -843,8 +843,8 @@ Note that the first GET call accept query parameters for selection.
 You can inherit from any route object :
 
 ```coffeescript
-class Test1Route extends Nodulator.Route
-class Test2Route extends Nodulator.Route.MultiRoute
+class Test1Route extends N.Route
+class Test2Route extends N.Route.MultiRoute
 class Test3Route extends Test2Route
 class Test4Route extends Test3Route
 ```
@@ -852,7 +852,7 @@ And you can override existing route by providing same association verb + url.
 Exemple :
 
 ```coffeescript
-class TestRoute extends Nodulator.Route.MultiRoute
+class TestRoute extends N.Route.MultiRoute
   Config: ->
     super()
 
@@ -867,7 +867,7 @@ You can declare Route that dont belongs to any Resource.
 Instead, you define yourself every endpoints :
 
 ```coffeescript
-class TestRoute extends Nodulator.Route
+class TestRoute extends N.Route
 
   Config: ->
     super()
@@ -899,10 +899,10 @@ inside have changed.
 The following exemple will print successively 1 and 2
 
 ```coffeescript
-val = new Nodulator.Watch.Value 1
+val = new N.Watch.Value 1
 
 # The function is executed a first time
-Nodulator.Watch ->
+N.Watch ->
   console.log val()
 
 # This call will cause the function to be reexecuted.
@@ -916,11 +916,11 @@ You just saw that Nodulator provide the default Hacktiv library.
 You can also watch for data-sets to change to retrigger the function :
 
 ```coffeescript
-Tests = Nodulator.Resource 'test'
+Tests = N.Resource 'test'
 
 [...]
 
-Nodulator.Watch ->
+N.Watch ->
   Tests.Fetch 1, (err, test) ->
 
 Tests.Fetch 1
@@ -934,7 +934,7 @@ Tests.Fetch 1
 It works also with List:
 
 ```coffeescript
-Nodulator.Watch ->
+N.Watch ->
   # Get a double array
   Tests.List [
     {prop1: 'value1'}
@@ -957,7 +957,7 @@ Tests.Fetch {prop1: 'value1'}
 Every Resource have his own reactive Error property that can be watched:
 
 ```coffeescript
-Nodulator.Watch ->
+N.Watch ->
   console.error Tests.error()
 
 # will produce an error and refresh the console.log above
@@ -1016,36 +1016,36 @@ ___
 
 #### Bus
 
-There is a `Nodulator.bus` object that is basicaly an `EventEmitter`. Every
+There is a `N.bus` object that is basicaly an `EventEmitter`. Every
 objects in `Nodulator` use this bus.
 
 Here are the emitted events:
 
 - On a new `Resource` being inserted in DB, sends it after a `Serialize()` call
-  - `Nodulator.bus.emit 'new_' + resource_name, @Serialize()`
+  - `N.bus.emit 'new_' + resource_name, @Serialize()`
 
 - On a `Resource` being updated in DB, sends it after a `Serialize()` call
-  - `Nodulator.bus.emit 'update_' + resource_name, @Serialize()`
+  - `N.bus.emit 'update_' + resource_name, @Serialize()`
 
 - On a `Resource` being deleted from DB, sends it after a `Serialize()` call
-  - `Nodulator.bus.emit 'delete_' + resource_name, @Serialize()`
+  - `N.bus.emit 'delete_' + resource_name, @Serialize()`
 
 Exemple
 
 ```coffeescript
-Players = Nodulator.Resource 'player'
+Players = N.Resource 'player'
 
-Nodulator.on 'new_player', (player) ->
+N.on 'new_player', (player) ->
   [...] # Do something with this brand new player
 ```
 
-You can override default `Bus` by setting new class to Nodulator.Bus :
+You can override default `Bus` by setting new class to N.Bus :
 
 ```coffeescript
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 NewBus = require './NewBus'
 
-Nodulator.Bus = NewBus
+N.Bus = NewBus
 ```
 
 Always set new `Bus` before any new `Resource` call or any added `Module`
@@ -1058,10 +1058,10 @@ ___
 To inject a module into `Nodulator`, preceed this way :
 
 ```coffeescript
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 ModuleName = require 'nodulator-ModuleName'
 
-Nodulator.Use ModuleName
+N.Use ModuleName
 ```
 
 Replace `ModuleName` with the module's name you want to load
@@ -1178,8 +1178,9 @@ XX/XX/XX: current (not released yet)
   - Lib Folder reorganisation
   - Replaced @instance in Route by req._instance.
   - Added a Request class to handle Resource in Route
-  - Now Nodulator.Resource take only a name and a config. Its the Route object that
+  - Now N.Resource take only a name and a config. Its the Route object that
   take a Resource as property. Also, Routes have to be Instanciated.
+  - Changed every 'Nodulator' call by 'N', more readable
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
@@ -1226,7 +1227,7 @@ XX/XX/XX: current (not released yet)
   - List can now take an array
   - Added Hacktiv support for Resources
   - Added a ChangeWatcher for Resources that watch for the result of a query to make change
-  - You can now add a `flipDone: true` to the Nodulator.Config() call to have callback like (data, err) ->
+  - You can now add a `flipDone: true` to the N.Config() call to have callback like (data, err) ->
   - Added Wrappers class to regroup every wrappers.
   - Added Wrappers for Promises, FlipDone, and for WatchArgs
   - Extend now dont need to be abstract to work

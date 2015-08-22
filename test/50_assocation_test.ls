@@ -62,7 +62,8 @@ describe 'Nodulator Associations', ->
       childIds: [1, 2]
 
     News.Create blob, (err, instance) ->
-      return done err if err?
+      throw new Error err if err?
+      # return done err if err?
 
       assert.equal instance.children.length, 2
       assert.equal instance.children[0].field, 'child'
