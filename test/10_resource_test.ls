@@ -78,7 +78,7 @@ describe 'Nodulator Resource', ->
 
     throw new Error 'Has not deleted resource'
 
-  test 'sould Create from an array of obj', (done) ->
+  test 'should Create from an array of obj', (done) ->
     blob = [{field1: 1, field2: 1}
             {field1: 2, field2: 2}]
 
@@ -93,7 +93,17 @@ describe 'Nodulator Resource', ->
       # console.log tests
       done()
 
-  test 'sould Fetch from an array of id', (done) ->
+  test 'should Fetch from an obj', (done) ->
+    Tests.Fetch {field1: 1, field2: 1}, (err, tests) ->
+      throw new Error err if err?
+
+      assert.equal tests.field1, 1
+      assert.equal tests.field2, 1
+
+      # console.log tests
+      done()
+
+  test 'should Fetch from an array of id', (done) ->
     Tests.Fetch [2, 3], (err, tests) ->
       throw new Error err if err?
 
@@ -106,4 +116,20 @@ describe 'Nodulator Resource', ->
       assert.equal tests[1].field1, 2
       assert.equal tests[1].field2, 2
 
+      done()
+
+  test 'should Fetch from an array of obj', (done) ->
+    blob = [{field1: 1, field2: 1}
+            {field1: 2, field2: 2}]
+
+    Tests.Fetch [{field1: 1, field2: 1}
+            {field1: 2, field2: 2}], (err, tests) ->
+      throw new Error err if err?
+
+      assert.equal tests[0].field1, 1
+      assert.equal tests[0].field2, 1
+      assert.equal tests[1].field1, 2
+      assert.equal tests[1].field2, 2
+
+      # console.log tests
       done()

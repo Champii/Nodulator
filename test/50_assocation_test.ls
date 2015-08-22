@@ -69,3 +69,23 @@ describe 'Nodulator Associations', ->
       assert.equal instance.children[1].field, 'child2'
 
       done!
+
+  test 'should fetch distantKey' (done) ->
+    Childs = Nodulator.Resource 'child2'
+
+    testConfig =
+      schema:
+        child:
+          type: Childs
+          distantKey: 'testId'
+
+    Tests = Nodulator.Resource 'test2', testConfig
+
+    Childs.Create {testId: 1, field: 'child'}, (err, child) ->
+      throw new Error err if err?
+      Tests.Create {test: \test}, (err, test) ->
+        throw new Error err if err?
+
+        assert.equal test.child.field, 'child'
+
+        done!

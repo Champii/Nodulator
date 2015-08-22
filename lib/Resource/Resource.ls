@@ -154,10 +154,22 @@ module.exports = (table, config, app, routes, name) ->
 
       @_HandleArrayArg args, (blob, done) ~>
 
-        @resource._Deserialize blob, (err, instance) ->
-          switch true
-            | err? => done err
-            | _    => instance._SaveUnwrapped done
+        @resource._Deserialize blob, (err, instance) ~>
+          return done err if err?
+
+          instance._SaveUnwrapped (err, instance) ~>
+            return done err if err?
+
+            if instance._schema?
+              @_FetchAssoc instance, (err, blob) ~>
+                return done err if err?
+
+                instance import  blob
+                done null instance
+              , _depth
+            else
+              done null instance
+
         , _depth
       , done
 
@@ -176,9 +188,11 @@ module.exports = (table, config, app, routes, name) ->
           | _     =>
             @resource._Deserialize blob, done, _depth
 
-      @_HandleArrayArg arg, (constraints, done) ~> switch constraints
-        | is-type 'Object'  => @_table.FindWhere '*', constraints, cb done
-        | _                 => @_table.Find constraints, cb done
+      @_HandleArrayArg arg, (constraints, done) ~>
+        if is-type 'Object', constraints
+          @_table.FindWhere '*', constraints, cb done
+        else
+          @_table.Find constraints, cb done
       , done
 
     # Get every records from DB
@@ -271,7 +285,7 @@ module.exports = (table, config, app, routes, name) ->
 
         res = @
         switch true
-          | @_schema?   =>
+          | @_schema?  =>
             @_FetchAssoc blob, (err, blob) -> switch true
               | err?    => done err
               | _       => done null, new res blob
@@ -279,6 +293,7 @@ module.exports = (table, config, app, routes, name) ->
           | _           => done null, new res blob
 
     # Get each associated Resource
+    i = 0
     @_FetchAssoc = (blob, done, _depth) ->
       assocs = {}
 
@@ -286,7 +301,8 @@ module.exports = (table, config, app, routes, name) ->
         resource.Get blob, (err, instance) ->
           assocs[resource.name] = resource.default if resource.default?
           switch true
-            | err? and config?.schema?  => done err
+            | err? and resource.type is \distant => done!
+            | err? and config?.schema? => done err
             | err? and config? and config.schema?[resource.name]?.optional => done!
             | _                         =>
               assocs[resource.name] = instance
@@ -316,10 +332,12 @@ module.exports = (table, config, app, routes, name) ->
 
     # Prepare Relationships
     @_PrepareRelationship = (isArray, field, description) ->
+      type = null
       get = (blob, done) ->
         done new Error 'No local or distant key given'
 
       if description.localKey?
+        type = \local
         get = (blob, done, _depth) ->
           if not _depth
             return done()
@@ -334,18 +352,18 @@ module.exports = (table, config, app, routes, name) ->
           description.type.Fetch blob[description.localKey], done, _depth - 1
 
       else if description.distantKey?
+        type = \distant
         get = (blob, done, _depth) ->
-          if not _depth
+          if not _depth or not blob.id?
             return done()
 
           if !isArray
-            description.type.FetchBy blob[description.distantKey], done, _depth - 1
+            description.type.Fetch {"#{description.distantKey}": blob.id} , done, _depth - 1
           else
-            constaints = {}
-            constaints[description.distantKey] = blob.id
-            description.type.ListBy constaints, done, _depth - 1
+            description.type.List {"#{description.distantKey}": blob.id}, done, _depth - 1
 
       toPush  =
+        type: type
         name: field
         Get: get
       toPush.default = description.default if description.default?

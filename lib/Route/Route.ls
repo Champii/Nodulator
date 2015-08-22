@@ -1,9 +1,7 @@
-require! \prelude-ls : {each}
+require! \prelude-ls : {each, unchars}
 _ = require 'underscore'
 Nodulator = null
 Request = require './Request'
-
-
 
 class Route
 
@@ -29,8 +27,8 @@ class Route
 
     @name = @rname + 's'
 
-    if @rname[@rname.length - 1] is 'y'
-      @name = @rname[ til @name.length] + 'ies'
+    if @rname[*-1] is 'y'
+      @name = @rname[til @name.length - 2]*'' + 'ies'
 
     @app = Nodulator.app
 
@@ -77,7 +75,7 @@ class Route
 
 _set = (verb) ~>
   Route::[verb] = (...args) ->
-    args.unshift verb[0].toLowerCase() + verb[1 til verb.length].join('')
+    args.unshift verb[0].toLowerCase() + verb[1 til verb.length]*''
     @_Add.apply @, args
 
 
@@ -86,7 +84,6 @@ each _set, <[ All Post Get Put Delete ]>
 class MultiRoute extends Route
 
   Config: ->
-    
     super()
     @All    \/:id* ~> it.SetInstance @resource.Fetch +it.params.id
     @Get           ~> @resource.List it.query
@@ -104,8 +101,8 @@ class SingleRoute extends Route
 
     @name = @rname
 
-    if @rname[@rname.length - 1] is 'y'
-      @name = @rname[ til @ name.length] + 'ies'
+    if @rname[*-1] is 'y'
+      @name = @rname[ til @ name.length]*'' + 'ies'
 
     Nodulator := require '../..' if not Nodulator?
     @app = Nodulator.app
