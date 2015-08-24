@@ -63,7 +63,6 @@ describe 'Nodulator Associations', ->
 
     News.Create blob, (err, instance) ->
       throw new Error err if err?
-      # return done err if err?
 
       assert.equal instance.children.length, 2
       assert.equal instance.children[0].field, 'child'
@@ -71,8 +70,8 @@ describe 'Nodulator Associations', ->
 
       done!
 
-  test 'should fetch distantKey' (done) ->
-    Childs = Nodulator.Resource 'child2'
+  test 'should fetch distantKey with array' (done) ->
+    class Childs extends Nodulator.Resource 'child2', Nodulator.Route.MultiRoute
 
     testConfig =
       schema:
@@ -80,13 +79,29 @@ describe 'Nodulator Associations', ->
           type: Childs
           distantKey: 'testId'
 
-    Tests = Nodulator.Resource 'test2', testConfig
+    class Tests extends Nodulator.Resource 'test2', testConfig
 
-    Childs.Create {testId: 1, field: 'child'}, (err, child) ->
-      throw new Error err if err?
-      Tests.Create {test: \test}, (err, test) ->
-        throw new Error err if err?
+    Childs.Create testId: 1 field: 'child'
+    .fail -> throw new Error it
+    .then -> Tests.Create test: \test
+    .then ->
+      assert.equal it.child.field, 'child'
+      done!
 
-        assert.equal test.child.field, 'child'
+  test 'should fetch distantKey with array of association' (done) ->
+    Childs = Nodulator.Resource 'child3'
 
-        done!
+    testConfig =
+      schema:
+        children:
+          type: [Childs]
+          distantKey: 'testId'
+
+    Tests = Nodulator.Resource 'test3', testConfig
+
+    Childs.Create testId: 1 field: 'child'
+    .fail -> throw new Error it
+    .then -> Tests.Create test: \test
+    .then ->
+      assert.equal it.children.0.field, 'child'
+      done!

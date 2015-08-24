@@ -284,7 +284,7 @@ module.exports = (table, config, app, routes, name) ->
         return done err if err?
 
         res = @
-        console.log 'Deserialize', @_type, @_schema
+        # console.log 'Deserialize', @_type, @_schema
         if @_schema?
           @_FetchAssoc blob, (err, blob) ->
             return done err if err?
@@ -300,10 +300,10 @@ module.exports = (table, config, app, routes, name) ->
       assocs = {}
 
       async.each @_schema._assoc, (resource, done) ~>
-        console.log resource
+        # console.log resource
         resource.Get blob, (err, instance) ->
           assocs[resource.name] = resource.default if resource.default?
-          console.log blob
+          # console.log blob
           if err? and resource.type is \distant => done!
           else if err? and config?.schema? => done err
           else if err? and config? and config.schema?[resource.name]?.optional => done!
@@ -426,7 +426,7 @@ module.exports = (table, config, app, routes, name) ->
     @Init = (@config = @config, extendArgs) ->
 
       return if @INITED
-      console.log @config
+      # console.log @config
 
       @resource = @
       # @routes = new routes(@, @config)
