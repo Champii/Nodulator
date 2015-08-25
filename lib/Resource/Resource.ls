@@ -329,8 +329,7 @@ module.exports = (table, config, app, routes, name) ->
       @INITED = false
       @lname = _name.toLowerCase()
 
-      if _routes?
-        @routes = new _routes(@, @config)
+      @_routes = _routes
 
       @
 
@@ -440,6 +439,10 @@ module.exports = (table, config, app, routes, name) ->
 
       #if @config? and @config.abstract
       @_PrepareAbstract()
+
+      if @_routes?
+        @routes = new @_routes(@, @config)
+
 
       @INITED = true
 

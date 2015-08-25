@@ -28,6 +28,7 @@ class Request
   SendError: ->
     return if @sent
 
+    console.log 'SendError', it
     @res.status(errors[it.status]).send it
     @sent = true
 
