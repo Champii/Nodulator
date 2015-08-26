@@ -55,7 +55,10 @@ module.exports = (table, config, app, routes, name) ->
         @_schema
           |> obj-to-pairs
           |> filter (-> it.0 of blob)
-          |> each (~> @[it.0] = blob[it.0] || it.1.default || void)
+          |> each (~> @[it.0] =
+            | blob[it.0]?   => that
+            | it.1.default? => that
+            | _             => void)
 
         each (~> @[it.name] = blob[it.name]), @_schema._assoc
 
@@ -67,13 +70,13 @@ module.exports = (table, config, app, routes, name) ->
     Save: @_WrapFlipDone @_WrapPromise -> @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
-    Delete: @_WrapFlipDone @_WrapPromise (...args) -> @_DeleteUnwrapped ...
+    Delete: @_WrapFlipDone @_WrapPromise -> @_DeleteUnwrapped ...
 
     # Get what to send to the database
     Serialize: ->
       res = if @id? then id: @id else {}
 
-      switch true
+      switch
         | @_schema? =>  each (~> res[it] = @[it] if it isnt \_assoc), keys @_schema
         | _         =>  each (~> res[it] = @[it] if it[0] isnt \_ and typeof! @[it] isnt 'Function'), keys @
 
@@ -86,9 +89,9 @@ module.exports = (table, config, app, routes, name) ->
       if @_schema?
         map ~>
           if @[it.name]?
-            match Array.isArray @[it.name]
-            | true  =>  res[it.name] = __(@[it.name]).invoke 'ToJSON'
-            | false =>  res[it.name] = @[it.name].ToJSON()
+            switch
+              | Array.isArray @[it.name]  =>  res[it.name] = __(@[it.name]).invoke 'ToJSON'
+              | _                         =>  res[it.name] = @[it.name].ToJSON()
         , @_schema._assoc
 
       res
@@ -99,8 +102,7 @@ module.exports = (table, config, app, routes, name) ->
 
       newBlob = __({}).extend blob
 
-      for assoc in @_schema._assoc
-        delete newBlob[assoc.name]
+      each (-> delete newBlob[it.name]), @_schema._assoc
 
       __(@).extend newBlob
 
@@ -114,13 +116,12 @@ module.exports = (table, config, app, routes, name) ->
       serie = @Serialize()
       Resource._Validate serie, true, (err) ~>
         exists = @id?
-        switch true
+        switch
           | err? => done err
           | _    =>
-            @_table.Save serie, (err, id) ~> switch true
+            @_table.Save serie, (err, id) ~>
               | err?  =>  done err
               | _     =>
-
                 if !exists
                   @id = id
                   Nodulator.bus.emit \new_ + name, @ToJSON()
@@ -134,7 +135,7 @@ module.exports = (table, config, app, routes, name) ->
     # Delete without wrap
     _DeleteUnwrapped: (done) ->
       @_table.Delete @id, (err, affected) ~>
-        switch true
+        switch
           | err? => done err
           | _    =>
             Nodulator.bus.emit \delete_ + @name, @ToJSON()
@@ -155,20 +156,20 @@ module.exports = (table, config, app, routes, name) ->
       @_HandleArrayArg args, (blob, done) ~>
 
         @resource._Deserialize blob, (err, instance) ~>
-          return done err if err?
-
-          instance._SaveUnwrapped (err, instance) ~>
-            return done err if err?
-
-            if instance._schema?
-              @_FetchAssoc instance, (err, blob) ~>
-                return done err if err?
-
-                instance import  blob
-                done null instance
-              , _depth
-            else
-              done null instance
+          | err? => done err
+          | _    =>
+            instance._SaveUnwrapped (err, instance) ~>
+              | err? => done err
+              | _    =>
+                if instance._schema?
+                  @_FetchAssoc instance, (err, blob) ~>
+                    | err? => done err
+                    | _    =>
+                      instance import blob
+                      done null instance
+                  , _depth
+                else
+                  done null instance
 
         , _depth
       , done
@@ -182,11 +183,8 @@ module.exports = (table, config, app, routes, name) ->
     @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
       cb = (done) ~> (err, blob) ~>
-        switch true
-          | err?  =>
-            done err
-          | _     =>
-            @resource._Deserialize blob, done, _depth
+        | err?  => done err
+        | _     => @resource._Deserialize blob, done, _depth
 
       @_HandleArrayArg arg, (constraints, done) ~>
         if is-type 'Object', constraints
@@ -208,7 +206,7 @@ module.exports = (table, config, app, routes, name) ->
 
 
       @_HandleArrayArg arg, (constraints, done) ~>
-        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~> switch true
+        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
           | err?  => done err?
           | _     =>
             async.map blobs, (blob, done) ~>
@@ -223,9 +221,8 @@ module.exports = (table, config, app, routes, name) ->
 
       @_HandleArrayArg arg, (constraints, done) ~>
         @resource._FetchUnwrapped constraints, (err, instance) ~>
-          switch true
-            | err?  => done err
-            | _     => instance._DeleteUnwrapped done
+          | err?  => done err
+          | _     => instance._DeleteUnwrapped done
 
       , done
 
@@ -272,9 +269,8 @@ module.exports = (table, config, app, routes, name) ->
     # Wrapper to allow simple variable or array as first argument
     @_HandleArrayArg = (arg, callback, done) ->
       do ->
-        match arg
-          | is-type 'Array' => async.map arg, callback, done
-          | _               => callback arg, done
+        | is-type 'Array', arg => async.map arg, callback, done
+        | _                    => callback arg, done
 
       @
 

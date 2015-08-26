@@ -2,6 +2,7 @@ require! \prelude-ls : {is-type, map}
 
 errors =
   not_found: 404
+  forbidden: 403
   'Error on Delete': 500
 
 class Request
@@ -9,9 +10,7 @@ class Request
   instance: null
   sent: false
 
-  ([@req, @res, @next]:args) ->
-    # console.log @req
-
+  ([@req, @res, @next]) ->
     @_Parse!
 
   Send: !->
@@ -28,29 +27,26 @@ class Request
   SendError: ->
     return if @sent
 
-    console.log 'SendError', it
-    @res.status(errors[it.status]).send it
+    status = errors[it.status] || 500
+
+    @res.status(status).send it
     @sent = true
 
   SetInstance: ->
-    switch true
-      | it.then? =>
-        it.fail ~>
-          @SendError it
-        it.then ~>
-          @req._instance = it
-          @instance = it
-          @next()
-      | _        =>
+    if it.then?
+      it.fail ~> @SendError it
+      it.then ~>
         @req._instance = it
         @instance = it
         @next()
+    else
+      @req._instance = it
+      @instance = it
+      @next()
 
   _Parse: ->
-    # console.log 'PARSE', @
     import @req
     @instance = @_instance if @_instance?
-    # console.log 'Parsed instance', @instance
 
 Request.errors = errors
 module.exports = Request

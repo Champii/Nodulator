@@ -8,6 +8,7 @@ require! {
   hacktiv
   \body-parser : bodyParser
   \express-session : express-session
+  \prelude-ls : {each, obj-to-pairs}
 }
 
 #FIXME: Hack to prevent EADDRINUSE from mocha
@@ -88,8 +89,9 @@ class Nodulator
 
     @config = config || @defaultConfig
 
-    for k, v of @defaultConfig
-      @config[k] = v if not @config[k]?
+    @defaultConfig
+      |> obj-to-pairs
+      |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
     sessions =
       key: \Nodulator

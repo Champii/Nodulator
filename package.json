@@ -16,6 +16,7 @@
     "mysql": "*",
     "node-mysql": "*",
     "node-rest-client": "*",
+    "prelude-ls": "^1.1.2",
     "q": "^1.4.1",
     "settings": "*",
     "superagent": "*",
