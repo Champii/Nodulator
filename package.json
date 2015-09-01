@@ -36,7 +36,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "mocha --compilers ls:LiveScript test"
+    "test": "mocha --compilers ls:livescript test"
   },
   "repository": {
     "type": "git",
