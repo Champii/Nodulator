@@ -2,16 +2,18 @@
 
 echo
 MW=$1 lsc $2 &
+LOG=benchmarks.log
 pid=$!
 
 sleep 2
-
-wrk 'http://localhost:3000/api/1/players' \
+echo "For $1 $2" >> $LOG
+# echo '' >> $LOG
+wrk2 'http://localhost:3000/api/1/players' \
   -d 30 \
   -c 400 \
   -t 8 \
-  # -R 2000
-  # | grep 'Requests/sec' \
-  # | awk '{ print "  " $2 }'
+  -R 2000 \
+  | grep 'Requests/sec' \
+  | awk '{ print "  " $2 }' >> $LOG
 
 kill $pid

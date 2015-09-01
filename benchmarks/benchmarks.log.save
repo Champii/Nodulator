@@ -1,0 +1,72 @@
+
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   191.64ms   65.96ms 299.26ms   58.64%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  390 requests in 1.23s, 127.10KB read
+Requests/sec:    317.67
+Transfer/sec:    103.53KB
+
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   174.41ms   64.86ms 285.95ms   58.00%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  408 requests in 2.01s, 191.49KB read
+Requests/sec:    203.40
+Transfer/sec:     95.46KB
+
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   257.05ms   66.89ms 365.57ms   61.62%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  391 requests in 1.25s, 465.89KB read
+Requests/sec:    312.91
+Transfer/sec:    372.84KB
+
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   325.15ms   59.07ms 416.51ms   64.44%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  323 requests in 1.24s, 700.40KB read
+Requests/sec:    260.27
+Transfer/sec:    564.38KB
+
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   444.00ms  379.05ms 825.86ms   50.00%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  6 requests in 2.25s, 5.54MB read
+  Socket errors: connect 0, read 0, write 0, timeout 197
+Requests/sec:      2.66
+Transfer/sec:      2.46MB
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   112.86ms    0.00us 112.83ms    0.00%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  1 requests in 2.25s, 6.86MB read
+  Socket errors: connect 0, read 0, write 0, timeout 397
+Requests/sec:      0.44
+Transfer/sec:      3.05MB
+Running 1s test @ http://localhost:3000/api/1/players
+  8 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   175.07ms   64.02ms 284.42ms   59.25%
+    Req/Sec       -nan      -nan   0.00      0.00%
+  408 requests in 2.01s, 132.97KB read
+Requests/sec:    202.55
+Transfer/sec:     66.01KB
+For 1 Resource.Create
+  194.13
+For 10 Resource.Create
+  193.90
+For 50 Resource.Create
+  194.42
+For 100 Resource.Create
+  203.83
+For 1000 Resource.Create
