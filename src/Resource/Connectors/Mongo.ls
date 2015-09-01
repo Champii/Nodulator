@@ -7,7 +7,7 @@ module.exports = (config) ->
 
   class Mongo
 
-    constructor: ->
+    ->
       db().open config.dbAuth.host || 'localhost', config.dbAuth.port || 27017
       console.log config
       if config.dbAuth.user

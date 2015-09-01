@@ -4,18 +4,17 @@ class Table
 
   name: null
 
-  constructor: (@name) ->
+  (@name) ->
 
   Find: (id, done) ->
-    # id = parseInt id, 10 if typeof id isnt 'number'
     @FindWhere '*', {id: +id}, done
 
   FindWhere: (fields, where, done) ->
-    @Select fields, where, {limit: 1}, (err, results) =>
+    @Select fields, where, {limit: 1}, (err, results) ~>
       return done err if err?
 
       if results.length is 0
-        return done
+        return done do
           status: 'not_found'
           reason: JSON.stringify where
           source: @name
@@ -47,7 +46,8 @@ class Table
 module.exports = (config) ->
 
   file = require('./' + config.dbType)
-  driver = file(config)
+  driver := file(config)
+  # driver.Select \tata \* {} {} (err, res) -> console.log err, res
 
   table: (name) ->
     file.AddTable name

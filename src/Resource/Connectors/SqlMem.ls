@@ -4,8 +4,6 @@ tables = {}
 
 class SqlMem
 
-  constructor: ->
-
   Select: (table, fields, where, options, done) ->
     if where.id? and typeof where.id is 'string'
       where.id = parseInt where.id
@@ -14,7 +12,7 @@ class SqlMem
 
     if options.limit?
       offset = options.offset || 0
-      res = res[offset...options.limit]
+      res = res[offset til options.limit]
 
     done null, res
 
@@ -36,10 +34,12 @@ class SqlMem
     done null, 1
 
   _Reset: ->
-    tables = {}
+    tables := {}
+    @
 
 module.exports = (config) ->
-  new SqlMem()
+  res = new SqlMem!
+  res._Reset()
 
 module.exports.AddTable = (name) ->
   if !(tables[name]?)

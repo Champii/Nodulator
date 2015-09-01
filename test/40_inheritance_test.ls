@@ -4,7 +4,7 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '../lib/Nodulator'
+Nodulator = require '..'
 
 client = null
 ATests = null

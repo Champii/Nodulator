@@ -19,8 +19,6 @@ module.exports = (config) ->
 
   class Mysql
 
-    constructor: ->
-
     Select: (table, fields, where, options, done) ->
       f = fields
       if Array.isArray fields

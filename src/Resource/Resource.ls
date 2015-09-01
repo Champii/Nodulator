@@ -26,6 +26,9 @@ typeCheck =
 
 Nodulator.Validator = Validator
 
+
+Nodulator.inited = {}
+
 module.exports = (table, config, app, routes, name) ->
 
   error = new Hacktiv.Value
@@ -77,7 +80,7 @@ module.exports = (table, config, app, routes, name) ->
       res = if @id? then id: @id else {}
 
       switch
-        | @_schema? =>  each (~> res[it] = @[it] if it isnt \_assoc), keys @_schema
+        | @_schema? =>  each (~> res[it] = @[it] if it isnt \_assoc and it not in map (.name), @_schema._assoc), keys @_schema
         | _         =>  each (~> res[it] = @[it] if it[0] isnt \_ and typeof! @[it] isnt 'Function'), keys @
 
       res
@@ -87,13 +90,15 @@ module.exports = (table, config, app, routes, name) ->
       res = @Serialize()
 
       if @_schema?
-        map ~>
+        each ~>
           if @[it.name]?
+            # console.log 'Assoc: ', res, @[it.name].ToJSON? if @_type is 'user'
             switch
               | Array.isArray @[it.name]  =>  res[it.name] = __(@[it.name]).invoke 'ToJSON'
-              | _                         =>  res[it.name] = @[it.name].ToJSON()
+              | @[it.name].ToJSON?        =>  res[it.name] = @[it.name].ToJSON()
         , @_schema._assoc
 
+      # console.log 'ToJSON', @_type, @_schema?._assoc, res if @_type is 'user'
       res
 
     # Preserve the assocs while extending
@@ -150,7 +155,7 @@ module.exports = (table, config, app, routes, name) ->
   #
 
     # _Deserialize and Save from a blob or an array of blob
-    @Create = @_WrapFlipDone @_WrapPromise (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
       @Init!
 
       @_HandleArrayArg args, (blob, done) ~>
@@ -194,8 +199,12 @@ module.exports = (table, config, app, routes, name) ->
       , done
 
     # Get every records from DB
-    @List = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @List =  @_WrapFlipDone @_WrapPromise @_WrapWatchArgs ->
       @Init!
+      @_ListUnwrapped ...
+
+    # Get every records from DB
+    @_ListUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
       if typeof(arg) is 'function'
         if typeof(done) is 'number'
@@ -216,8 +225,12 @@ module.exports = (table, config, app, routes, name) ->
       , done
 
     # Delete given records from DB
-    @Delete = @_WrapFlipDone @_WrapPromise (arg, done) ->
+    @Delete = @_WrapFlipDone @_WrapPromise ->
       @Init!
+      @_DeleteUnwrapped ...
+
+    # Delete given records from DB
+    @_DeleteUnwrapped = (arg, done) ->
 
       @_HandleArrayArg arg, (constraints, done) ~>
         @resource._FetchUnwrapped constraints, (err, instance) ~>
@@ -348,7 +361,7 @@ module.exports = (table, config, app, routes, name) ->
             if not typeCheck.array blob[description.localKey]
               return done new Error 'Model association needs array of integer as ids and localKeys'
 
-          description.type.Fetch blob[description.localKey], done, _depth - 1
+          description.type._FetchUnwrapped blob[description.localKey], done, _depth - 1
 
       else if description.distantKey?
         type = \distant
@@ -357,9 +370,9 @@ module.exports = (table, config, app, routes, name) ->
             return done()
 
           if !isArray
-            description.type.Fetch {"#{description.distantKey}": blob.id} , done, _depth - 1
+            description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth - 1
           else
-            description.type.List {"#{description.distantKey}": blob.id}, done, _depth - 1
+            description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth - 1
 
       toPush  =
         type: type
@@ -372,6 +385,7 @@ module.exports = (table, config, app, routes, name) ->
     @_PrepareSchema = ->
       @_schema = {_assoc: []}
 
+
       for field, description of @config.schema
 
         isArray = false
@@ -381,6 +395,7 @@ module.exports = (table, config, app, routes, name) ->
         else if Array.isArray description
           isArray = true
           description = description[0]
+        # console.log 'PrepareSchema', description, isArray
 
         if description.type? and typeof description.type is 'function'
           @_PrepareRelationship isArray, field, description
@@ -419,28 +434,27 @@ module.exports = (table, config, app, routes, name) ->
 
     # Initialisation
     @Init = (@config = @config, extendArgs) ->
+      if @INITED
+        return @
 
-      return if @INITED
-      # console.log @config
+      if Nodulator.inited[@lname]?
+        return @
+        throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
 
       @resource = @
-      # @routes = new routes(@, @config)
-      # console.log \Init, @
-      # @routes.resource = @ if @routes?
-      # console.log 'INIT', @name, @resource
+
       Nodulator.resources[@lname] = @
 
       if @config? and @config.schema
         @_PrepareSchema()
 
-      #if @config? and @config.abstract
       @_PrepareAbstract()
 
       if @_routes?
         @routes = new @_routes(@, @config)
 
-
       @INITED = true
+      Nodulator.inited[@lname] = true
 
       @
 

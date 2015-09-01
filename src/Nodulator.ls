@@ -48,7 +48,7 @@ class Nodulator
 
     @server = http.createServer @app
 
-    @db = require \./connectors/sql
+    @db = require \./Resource/Connectors
 
     @client = new Client @app
 
@@ -123,11 +123,12 @@ class Nodulator
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
 
-  Bus: require \./Bus
+  Bus: require \./Helpers/Bus
   bus: new @::Bus()
 
 
   Reset: (done) ->
+    @inited = {}
     if not @server?
       @Init()
       done() if done?
@@ -144,12 +145,6 @@ class Nodulator
 
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
-  #
-  # WatchErrors: (resource, f) ->
-  #   handle = @Watch =>
-  #     resource.error()
-  #
-  #   f()
 
   _ListEndpoints: (done) ->
     endpoints = []
