@@ -6,7 +6,7 @@ require! {
   hacktiv: Hacktiv
   \./ChangeWatcher
   \./Wrappers
-  \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values}
+  \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values, capitalize}
   # \async-ls : {callbacks: {bindA}}
 }
 
@@ -25,7 +25,6 @@ typeCheck =
   arrayOf: (type) -> (value) ~> not __(map (@[type]), value).contains (item) -> item is false
 
 Nodulator.Validator = Validator
-
 
 Nodulator.inited = {}
 
@@ -247,6 +246,7 @@ module.exports = (table, config, app, routes, name) ->
     # Check for schema validity
     @_Validate = (blob, full, done) ->
       return done() if not config? or not config.schema?
+      delete blob._id if Nodulator.config.dbType is \Mongo
 
       if not done?
         done = full
@@ -282,7 +282,7 @@ module.exports = (table, config, app, routes, name) ->
     # Wrapper to allow simple variable or array as first argument
     @_HandleArrayArg = (arg, callback, done) ->
       do ->
-        | is-type 'Array', arg => async.map arg, callback, done
+        | is-type 'Array', arg => async.mapSeries arg, callback, done
         | _                    => callback arg, done
 
       @
@@ -455,6 +455,9 @@ module.exports = (table, config, app, routes, name) ->
 
       @INITED = true
       Nodulator.inited[@lname] = true
+
+      #FIXME
+      Nodulator[capitalize @lname] = @
 
       @
 

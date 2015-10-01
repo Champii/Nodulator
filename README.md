@@ -1162,12 +1162,18 @@ ___
 
 By order of priority
 
+- 'Unique' field
+- Cache
+- Better query on Resource (gt, gte, lt, lte, not, range, ...)
+- 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
+- Scaling (cluster, distributed bus)
+- Auto wrap new methods in `Resource`
 - Better tests
   - Validation
+- Remove an existing route easely
 - Better error management
 - Log system
 - Auto add localKey or distantKey field when attached Resource
-- Remove an existing route
 - Type inference in schema for default field
 - Abstract class can retrieve every child `Resource`
 

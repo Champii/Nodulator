@@ -103,7 +103,7 @@ class Nodulator
       RedisStore = require(\connect-redis)(express-session)
 
       @sessionStore = new RedisStore do
-       host: @config.store.host || \localhost
+        host: @config.store.host || \localhost
 
       sessions.store = @sessionStore
 
@@ -125,7 +125,6 @@ class Nodulator
 
   Bus: require \./Helpers/Bus
   bus: new @::Bus()
-
 
   Reset: (done) ->
     @inited = {}

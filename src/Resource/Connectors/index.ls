@@ -50,7 +50,7 @@ module.exports = (config) ->
   # driver.Select \tata \* {} {} (err, res) -> console.log err, res
 
   table: (name) ->
-    file.AddTable name
+    file.AddTable name, config
     new Table name
 
 module.exports._reset = ->
