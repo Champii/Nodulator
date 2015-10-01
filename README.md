@@ -271,7 +271,7 @@ GET     '/api/1/players/usernames'                                   => ['notAUs
 ___
 ## Configuration
 
-First of all, the configuration process is absolutly optional.
+First of all, the configuration process is absolutely optional.
 
 If you don't give Nodulator a config, it will assume you want to use
 [SqlMem](#sqlmem) DB system, with no persistance at all. Usefull for heavy tests periods.
