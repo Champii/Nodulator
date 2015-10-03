@@ -2,6 +2,7 @@ require! \prelude-ls : {each, unchars}
 _ = require 'underscore'
 Nodulator = null
 Request = require './Request'
+require! {\../Helpers/Debug}
 
 class Route
 
@@ -10,6 +11,7 @@ class Route
   rname: ''
 
   (resource, @config) ->
+
 
     @resource = resource || @resource
 
@@ -24,6 +26,8 @@ class Route
         Nodulator.Config() if not Nodulator.config?
       else
         throw new Error 'Route needs a Resource (or at least a name)'
+
+    @debug = new Debug "Nodulator::Route::#{@rname}", Debug.colors.purple
 
     @name = @rname + 's'
 
@@ -53,16 +57,20 @@ class Route
       middle.push url
       url = '/'
 
+    @debug.Log "Declaring Route: #{type} => #{url} "
+
     if not @[type + url]?
       @[type + url] = done
 
       #FIXME: code clarity
       if middle.length
         middle.push (...args) ~>
+          @debug.Log "Request on: #{type} => #{url} "
           @_WrapRequest type + url,  args
         @app.route(@basePath + @apiVersion + '/' + @name + url)[type].apply @app.route(@basePath + @apiVersion + '/' + @name + url), middle
       else
         @app.route(@basePath + @apiVersion + '/' + @name + url)[type] (...args) ~>
+          @debug.Log "Request on: #{type} => #{url} "
           @_WrapRequest type + url,  args
 
     else
@@ -100,6 +108,8 @@ class SingleRoute extends Route
     @rname = @resource.lname
 
     @name = @rname
+    
+    @debug = new Debug "Nodulator::Route::#{@rname}", Debug.colors.purple
 
     if @rname[*-1] is 'y'
       @name = @rname[ til @ name.length]*'' + 'ies'

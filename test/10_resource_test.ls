@@ -20,6 +20,7 @@ describe 'Nodulator Resource', ->
 
   test 'should not fetch first resource', (done) ->
     Tests.Fetch 1, (err, test) ->
+      console.log test, err
       return done! if err?
 
 

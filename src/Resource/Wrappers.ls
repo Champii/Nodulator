@@ -1,6 +1,7 @@
 Nodulator = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
+Debug = require \../Helpers/Debug
 
 class Wrappers
 
@@ -63,5 +64,27 @@ class Wrappers
 
       if not ChangeWatcher.Watch cb, args, @
         return cb.apply @, args
+
+  @_WrapDebugError = (debug, cb) ->
+
+    resource = @
+
+    (...args) ->
+
+      doneIdx = resource._FindDone args
+      if doneIdx is -1
+        return cb.apply @, args
+
+      oldDone = args[doneIdx]
+
+      args[doneIdx] = (err, data) ->
+        if err?
+          debug JSON.stringify err
+          # Debug.UnDepth!
+          return oldDone err, data
+
+        oldDone err, data
+
+      cb.apply @, args
 
 module.exports = Wrappers

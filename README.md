@@ -143,6 +143,7 @@ ___
 - Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
 - Promises or Callbacks
 - Fliped callback parameters
+- Log and Debug system
 
 ___
 ### Compatible modules
@@ -1172,7 +1173,6 @@ By order of priority
   - Validation
 - Remove an existing route easely
 - Better error management
-- Log system
 - Auto add localKey or distantKey field when attached Resource
 - Type inference in schema for default field
 - Abstract class can retrieve every child `Resource`
@@ -1187,6 +1187,7 @@ XX/XX/XX: current (not released yet)
   - Now N.Resource take only a name and a config. Its the Route object that
   take a Resource as property. Also, Routes have to be Instanciated.
   - Changed every 'Nodulator' call by 'N', more readable
+  - Added a debug system with 'debug'
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

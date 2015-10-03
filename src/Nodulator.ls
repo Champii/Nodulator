@@ -9,10 +9,30 @@ require! {
   \body-parser : bodyParser
   \express-session : express-session
   \prelude-ls : {each, obj-to-pairs}
+  \./Helpers/Debug
 }
+
+debug = require 'debug'
 
 #FIXME: Hack to prevent EADDRINUSE from mocha
 port = 3000
+
+
+# debug-test = debug 'Nodulator::Core'
+# for i from 0 to 32
+#   debug-test.color = debug.useColors && debug.colors[i]
+#   debug-test("lol #i")
+
+
+debug-nodulator = new Debug 'Nodulator::Core'
+# debug-nodulator.Log = debug
+#   ..color = debug.useColors && debug._colors.green
+#
+# debug-nodulator.Warn = debug 'Nodulator::Core::Warn'
+#   ..color = debug.useColors && debug._colors.yellow
+#
+# debug-nodulator-error = debug 'Nodulator::Core::Error'
+#   ..color = debug.useColors && debug._colors.red
 
 class Nodulator
 
@@ -34,6 +54,9 @@ class Nodulator
 
   Init: ->
 
+
+    debug-nodulator.Log \Init
+
     @appRoot = path.resolve \.
 
     @express = express
@@ -46,14 +69,19 @@ class Nodulator
     @app.use bodyParser.json do
       extended: true
 
+    debug-nodulator.Log 'Creating server'
+
     @server = http.createServer @app
 
     @db = require \./Resource/Connectors
 
     @client = new Client @app
 
+    debug-nodulator.Log 'Init ended'
+
   Resource: (name, routes, config, _parent) ~>
 
+    resource = null
     name = name.toLowerCase()
     if @resources[name]?
       return @resources[name]
@@ -69,22 +97,30 @@ class Nodulator
 
     if _parent?
       class ExtendedResource extends _parent
-      @resources[name] = resource = ExtendedResource
-      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name
+      @resources[name] = resource := ExtendedResource
+      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name, _parent
     else
       table = null
       if not config? or (config? and not config.abstract)
         table = @table(name + \s)
 
-      @resources[name] = resource =
+      @resources[name] = resource :=
         require(\./Resource/Resource) table, config, @app, routes, name
+
+    getParentChain = ->
+      | it?._parent? => " <= #{that.name}" + getParentChain that
+      | _   => ''
+
+    debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
     resource
 
   Route: require \./Route/Route
 
   Config: (config) ->
+    debug-nodulator.Warn "Start main config"
     if @config?
+      debug-nodulator.Warn "Aleady configured"
       return
 
     @config = config || @defaultConfig
@@ -115,10 +151,13 @@ class Nodulator
 
     @bus.emit \listening
 
-    console.log '=> Listening to 0.0.0.0:' + (@config.port || port++)
+    debug-nodulator.Log "=> Listening to 0.0.0.0: #{(@config.port || port++)}"
 
   Use: (module) ->
-    module @
+    debug-nodulator.Log "Loading module"
+    m = module @
+    debug-nodulator.Log "Loaded module: #{m.name}"
+    m
 
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
@@ -127,6 +166,8 @@ class Nodulator
   bus: new @::Bus()
 
   Reset: (done) ->
+    debug-nodulator.Warn "Reset"
+
     @inited = {}
     if not @server?
       @Init()

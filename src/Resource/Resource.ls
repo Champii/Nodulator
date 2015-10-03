@@ -8,7 +8,11 @@ require! {
   \./Wrappers
   \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values, capitalize}
   # \async-ls : {callbacks: {bindA}}
+  \../Helpers/Debug
 }
+
+debug-res = new Debug 'Nodulator::Resource', Debug.colors.blue
+
 
 validationError = (field, value, message) ->
   field: field
@@ -30,6 +34,18 @@ Nodulator.inited = {}
 
 module.exports = (table, config, app, routes, name) ->
 
+  debug-resource = new Debug "Nodulator::Resource::#name"
+  # debug-resource.Log = debug "Nodulator::Resource::#{name}"
+  #   ..color = debug.useColors && debug._colors.purple
+  #
+  # debug-resource.Warn = debug "Nodulator::Resource::#{name}::Warn"
+  #   ..color = debug.useColors && debug._colors.yellow
+  #
+  # debug-resource.Error = debug "Nodulator::Resource::#{name}::Error"
+  #   ..color = debug.useColors && debug._colors.red
+
+  debug-res.Log "Creating new Resource : #name"
+
   error = new Hacktiv.Value
 
   class Resource extends Wrappers
@@ -46,6 +62,9 @@ module.exports = (table, config, app, routes, name) ->
 
     # Constructor
     (blob) ->
+
+      debug-resource.Log "Instantiate with {id: #{blob.id}}"
+
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
       @_type = @.__proto__.constructor.lname
@@ -69,7 +88,7 @@ module.exports = (table, config, app, routes, name) ->
         import blob
 
     # Wrap the _SaveUnwrapped() call
-    Save: @_WrapFlipDone @_WrapPromise -> @_SaveUnwrapped ...
+    Save: @_WrapFlipDone @_WrapPromise @_WrapDebugError debug-resource~Error, -> @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
     Delete: @_WrapFlipDone @_WrapPromise -> @_DeleteUnwrapped ...
@@ -120,6 +139,10 @@ module.exports = (table, config, app, routes, name) ->
       serie = @Serialize()
       Resource._Validate serie, true, (err) ~>
         exists = @id?
+
+        if exists => debug-resource.Log "Saving  {id: #{@id}}"
+        else      => debug-resource.Log "Saving New"
+
         switch
           | err? => done err
           | _    =>
@@ -133,17 +156,22 @@ module.exports = (table, config, app, routes, name) ->
                   Nodulator.bus.emit \update_ + name, @ToJSON()
                 ChangeWatcher.Invalidate()
 
+                debug-resource.Log "Saved  {id: #{@id}}"
                 done null, @
       @
 
     # Delete without wrap
     _DeleteUnwrapped: (done) ->
+      debug-resource.Log "Deleting  {id: #{@id}}"
       @_table.Delete @id, (err, affected) ~>
         switch
           | err? => done err
           | _    =>
             Nodulator.bus.emit \delete_ + @name, @ToJSON()
             ChangeWatcher.Invalidate()
+
+            debug-resource.Log "Deleted  {id: #{@id}}"
+
             done null, {}
 
       null
@@ -154,11 +182,16 @@ module.exports = (table, config, app, routes, name) ->
   #
 
     # _Deserialize and Save from a blob or an array of blob
-    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
       @Init!
+
+      if is-type \Array args
+        debug-resource.Log "Creating from array: #{args.length} entries"
+
 
       @_HandleArrayArg args, (blob, done) ~>
 
+        debug-resource.Log "Creating"
         @resource._Deserialize blob, (err, instance) ~>
           | err? => done err
           | _    =>
@@ -170,27 +203,43 @@ module.exports = (table, config, app, routes, name) ->
                     | err? => done err
                     | _    =>
                       instance import blob
+                      debug-resource.Log "Created {id: #{instance.id}}"
                       done null instance
                   , _depth
                 else
+                  debug-resource.Log "Created {id: #{instance.id}}"
                   done null instance
 
         , _depth
-      , done
+      , (...args) ->
+        # Debug.UnDepth()
+        done.apply null, args
 
     # Fetch from id or id array
-    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs ->
+    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
     @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
+      if is-type \Array arg
+        debug-resource.Log "Fetching from array: #{arg.length} entries"
+
       cb = (done) ~> (err, blob) ~>
         | err?  => done err
-        | _     => @resource._Deserialize blob, done, _depth
+        | _     =>
+          debug-resource.Log "Fetched {id: #{blob.id}}"
+          Debug.Depth!
+          @resource._Deserialize blob, (err, data)->
+            Debug.UnDepth!
+            done err, data
+          , _depth
 
       @_HandleArrayArg arg, (constraints, done) ~>
+
+        debug-resource.Log "Fetch #{JSON.stringify constraints}"
+
         if is-type 'Object', constraints
           @_table.FindWhere '*', constraints, cb done
         else
@@ -198,7 +247,7 @@ module.exports = (table, config, app, routes, name) ->
       , done
 
     # Get every records from DB
-    @List =  @_WrapFlipDone @_WrapPromise @_WrapWatchArgs ->
+    @List =  @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_ListUnwrapped ...
 
@@ -212,26 +261,40 @@ module.exports = (table, config, app, routes, name) ->
         done = arg
         arg = {}
 
+      if is-type \Array arg
+        debug-resource.Log "Listing from array: #{arg.length} entries"
+        # Debug.Depth!
 
-      @_HandleArrayArg arg, (constraints, done) ~>
+      @_HandleArrayArg arg, (constraints, _done) ~>
+        done = (err, data) ->
+          Debug.UnDepth!
+          _done err, data
+
+        debug-resource.Log "List #{JSON.stringify constraints}"
+        Debug.Depth!
+
         @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
           | err?  => done err?
           | _     =>
             async.map blobs, (blob, done) ~>
+              debug-resource.Log "Listed {id: #{blob.id}}"
               @resource._Deserialize blob, done, _depth
             , done
 
       , done
-
     # Delete given records from DB
-    @Delete = @_WrapFlipDone @_WrapPromise ->
+    @Delete = @_WrapFlipDone @_WrapPromise @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_DeleteUnwrapped ...
 
     # Delete given records from DB
     @_DeleteUnwrapped = (arg, done) ->
 
+      if is-type \Array arg
+        debug-resource.Warn "Deleting from array: #{arg.length} entries"
+
       @_HandleArrayArg arg, (constraints, done) ~>
+        debug-resource.Warn "Deleting #{JSON.stringify constraints}"
         @resource._FetchUnwrapped constraints, (err, instance) ~>
           | err?  => done err
           | _     => instance._DeleteUnwrapped done
@@ -308,11 +371,22 @@ module.exports = (table, config, app, routes, name) ->
     @_FetchAssoc = (blob, done, _depth) ->
       assocs = {}
 
-      async.each @_schema._assoc, (resource, done) ~>
+      debug-resource.Log "Fetching #{@_schema._assoc.length} assocs with Depth #{_depth}"
+      # Debug.Depth!
+      async.eachSeries @_schema._assoc, (resource, _done) ~>
+        done = (err, data)->
+          # Debug.UnDepth!
+          _done err, data
+
         # console.log resource
+        debug-resource.Log "Assoc: Fetching #{resource.name}"
+        # Debug.Depth!
         resource.Get blob, (err, instance) ->
           assocs[resource.name] = resource.default if resource.default?
           # console.log blob
+          if err?
+            debug-resource.Error "Assoc: #{resource.name} #{JSON.stringify err}"
+
           if err? and resource.type is \distant => done!
           else if err? and config?.schema? => done err
           else if err? and config? and config.schema?[resource.name]?.optional => done!
@@ -321,6 +395,7 @@ module.exports = (table, config, app, routes, name) ->
             done!
         , _depth
       , (err) ->
+        # Debug.UnDepth!
         return done err if err?
 
         done null, __.extend blob, assocs
@@ -331,7 +406,8 @@ module.exports = (table, config, app, routes, name) ->
   #
 
     # Prepare the core of the Resource
-    @_PrepareResource = (_table, _config, _app, _routes, _name) ->
+    @_PrepareResource = (_table, _config, _app, _routes, _name, _parent = null) ->
+      debug-res.Log 'Preparing resource'
       @_table = _table
       @config = _config
       @app = _app
@@ -339,6 +415,7 @@ module.exports = (table, config, app, routes, name) ->
       @lname = _name.toLowerCase()
 
       @_routes = _routes
+      @_parent = _parent
 
       @
 
@@ -347,6 +424,8 @@ module.exports = (table, config, app, routes, name) ->
       type = null
       get = (blob, done) ->
         done new Error 'No local or distant key given'
+
+      debug-res.Log "Preparing Relationships with #{description.type.name}"
 
       if description.localKey?
         type = \local
@@ -385,6 +464,8 @@ module.exports = (table, config, app, routes, name) ->
     @_PrepareSchema = ->
       @_schema = {_assoc: []}
 
+
+      debug-res.Log "Preparing Schema for #{name}"
 
       for field, description of @config.schema
 
@@ -440,6 +521,8 @@ module.exports = (table, config, app, routes, name) ->
       if Nodulator.inited[@lname]?
         return @
         throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
+
+      debug-res.Log "Init() #{name}"
 
       @resource = @
 
