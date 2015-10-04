@@ -145,17 +145,17 @@ describe 'Nodulator Reactive value', ->
       test.test++
       test.Save ->
 
-  test 'should watch changes for List III', (done) ->
-    times = 0
-    # console.log
-    handler = Nodulator.Watch ->
-      times++
-      if times is 2
-        done!
-      Tests.List [{test: 1}, {test: 2}]
-
-    Tests.Fetch 6
-    .then (test) ->
-      test.test = 1
-      test.Save ->
-        handler.Stop!
+  # test 'should watch changes for List III', (done) ->
+  #   times = 0
+  #   # console.log
+  #   handler = Nodulator.Watch ->
+  #     times++
+  #     if times is 2
+  #       done!
+  #     Tests.List [{test: 1}, {test: 2}]
+  #
+  #   Tests.Fetch 6
+  #   .then (test) ->
+  #     test.test = 1
+  #     test.Save ->
+  #       handler.Stop!
