@@ -6,12 +6,12 @@ require! {
   repl
   path
   \../ : N
+  \../src/Modules/Nodulator-Account : N-Account
   livescript
 }
 
 module.exports = (configPath, resPath)->
 
-  N.Console()
 
   global import prelude-ls
 
@@ -60,7 +60,7 @@ module.exports = (configPath, resPath)->
       done null, res
 
   inst = repl.start do
-    prompt: 'Nodulator> '
+    prompt: 'N > '
     useGlobal: true
     input: process.stdin
     output: process.stdout
@@ -69,7 +69,10 @@ module.exports = (configPath, resPath)->
 
   try config = require rootPath + \/ + configPath
 
+  N.Console()
   N.Config config || {}
+  N.Use N-Account
+
   inst.context.N = N
 
   fetch-resources = (path) ->
@@ -84,12 +87,11 @@ module.exports = (configPath, resPath)->
         if file[0] isnt '.' and file.split('.')[0] isnt \index and file.split('.')[1] in ['coffee', 'ls', 'js']
           res[file.split('.')[0]] = path + \/ + file
 
-    console.log path, res
     res
 
   fetch-resources resPath
     |> obj-to-pairs
     |> map ->
-      try res = require rootPath + \/ + it.1
+      res = require rootPath + \/ + it.1
       if res?._table?
         inst.context[capitalize res._table.name] = res

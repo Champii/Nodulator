@@ -91,11 +91,11 @@ class Route
     Nodulator.client = new Client Nodulator.app
 
 
-    Nodulator.server.listen Nodulator.config.port || 3000
+    Nodulator.server.listen Nodulator.config?.port || 3000
 
     Nodulator.bus.emit \listening
 
-    debug.Log "Listening to 0.0.0.0: #{(Nodulator.config.port || 3000)}"
+    debug.Log "Listening to 0.0.0.0: #{(Nodulator.config?.port || 3000)}"
 
   _WrapRequest: (fName, args) ->
     Req = new Request args
