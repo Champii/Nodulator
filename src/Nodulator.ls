@@ -2,37 +2,12 @@ require! {
   underscore: _
   fs
   path
-  http
-  '../test/common/client': Client
-  express
   hacktiv
-  \body-parser : bodyParser
-  \express-session : express-session
   \prelude-ls : {each, obj-to-pairs}
   \./Helpers/Debug
 }
 
-debug = require 'debug'
-
-#FIXME: Hack to prevent EADDRINUSE from mocha
-port = 3000
-
-
-# debug-test = debug 'Nodulator::Core'
-# for i from 0 to 32
-#   debug-test.color = debug.useColors && debug.colors[i]
-#   debug-test("lol #i")
-
-
 debug-nodulator = new Debug 'Nodulator::Core'
-# debug-nodulator.Log = debug
-#   ..color = debug.useColors && debug._colors.green
-#
-# debug-nodulator.Warn = debug 'Nodulator::Core::Warn'
-#   ..color = debug.useColors && debug._colors.yellow
-#
-# debug-nodulator-error = debug 'Nodulator::Core::Error'
-#   ..color = debug.useColors && debug._colors.red
 
 class Nodulator
 
@@ -45,6 +20,7 @@ class Nodulator
   config: null
   table: null
   authApp: false
+  consoleMode: false
   defaultConfig:
     dbType: \SqlMem
     flipDone: false
@@ -54,28 +30,11 @@ class Nodulator
 
   Init: ->
 
-
     debug-nodulator.Log \Init
 
     @appRoot = path.resolve \.
 
-    @express = express
-
-    @app = @express()
-
-    @app.use bodyParser.urlencoded do
-      extended: true
-
-    @app.use bodyParser.json do
-      extended: true
-
-    debug-nodulator.Log 'Creating server'
-
-    @server = http.createServer @app
-
     @db = require \./Resource/Connectors
-
-    @client = new Client @app
 
     debug-nodulator.Log 'Init ended'
 
@@ -90,7 +49,7 @@ class Nodulator
       config = routes
       routes = null
 
-    @Config() if not @config? # config of Nodulator instance
+    @Config() if not @config? # config of Nodulator instance, not resource one
 
     if not _parent? and (not routes? or routes.prototype not instanceof @Route)
       routes = @Route
@@ -129,35 +88,16 @@ class Nodulator
       |> obj-to-pairs
       |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
-    sessions =
-      key: \Nodulator
-      secret: \Nodulator
-      resave: true
-      saveUninitialized: true
-
-    if @config?.store?.type is \redis
-      RedisStore = require(\connect-redis)(express-session)
-
-      @sessionStore = new RedisStore do
-        host: @config.store.host || \localhost
-
-      sessions.store = @sessionStore
-
-    @app.use express-session sessions
-
     @table = @db(@config).table
-
-    @server.listen @config.port || port
-
-    @bus.emit \listening
-
-    debug-nodulator.Log "=> Listening to 0.0.0.0: #{(@config.port || port++)}"
 
   Use: (module) ->
     debug-nodulator.Log "Loading module"
     m = module @
     debug-nodulator.Log "Loaded module: #{m.name}"
     m
+
+  Console: ->
+    @consoleMode = true
 
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
@@ -173,6 +113,10 @@ class Nodulator
       @Init()
       done() if done?
       return
+
+    @app = null
+    @server.close()
+    @server = null
 
     @resources = {}
     @config = null

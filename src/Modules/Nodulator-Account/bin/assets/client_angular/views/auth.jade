@@ -1,0 +1,53 @@
+div
+  div(ng-show="state == 'login'")
+    #login-box.form-box
+      | Sign In
+      form
+        .body.bg-gray
+          .form-group
+            input.form-control(type='text', ng-model='ident.username', placeholder='Login')
+          .form-group
+            input.form-control(type='password', ng-model='ident.password', placeholder='Password')
+          .form-group
+            input(type='checkbox', name='remember_me')
+            |  Remember me
+        .footer
+          button.btn.bg-olive.btn-block(type='submit', ng-click="Auth()") Sign me in
+          p
+            a(href='#') I forgot my password
+          a.text-center(href="", ng-click="Toggle()") Register a new membership
+      .margin.text-center
+        span Sign in using social networks
+        br
+        button.btn.bg-light-blue.btn-circle
+          i.fa.fa-facebook
+        button.btn.bg-aqua.btn-circle
+          i.fa.fa-twitter
+        button.btn.bg-red.btn-circle
+          i.fa.fa-google-plus
+
+  div(ng-show="state == 'signup'")
+    #login-box.form-box
+      .header Register New Membership
+      form
+        .body.bg-gray
+          .form-group
+            input.form-control(type='text', ng-model='ident.username', placeholder='Full name')
+          .form-group
+            input.form-control(type='password', ng-model='ident.password', placeholder='Password')
+          .form-group
+            input.form-control(type='password', ng-model='ident.password2', placeholder='Retype password')
+        .footer
+          button.btn.bg-olive.btn-block(ng-click="Signup()") Sign me up
+          a.text-center(href="", ng-click="Toggle()") I already have a membership
+      .margin.text-center
+        span Register using social networks
+        br
+        button.btn.bg-light-blue.btn-circle
+          i.fa.fa-facebook
+        button.btn.bg-aqua.btn-circle
+          i.fa.fa-twitter
+        button.btn.bg-red.btn-circle
+          i.fa.fa-google-plus
+  div(ng-show="error.length")
+    | {{error}}

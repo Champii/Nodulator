@@ -1,0 +1,12 @@
+div
+  div(ng-repeat="task in taskService.list")
+    | {{task.name}} - Is Done ? {{task.isDone}}
+    button(ng-click="Done(task)" ng-if="!task.isDone") Done
+    button(ng-click="Delete(task.id)") Delete
+
+  div
+    input(type="text", ng-model="newTask", placeholder="Task")
+    button(ng-click="New()") New
+
+  div(ng-show="err.length")
+    | {{err}}

@@ -3,16 +3,14 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
-
-test = it
+Nodulator = require 'nodulator'
 
 describe 'Nodulator', ->
 
   before (done) ->
     Nodulator.Reset done
 
-  test 'should create resource', (done) ->
-    Players = Nodulator.Resource \player
-    assert Players
+  it 'should create server', (done) ->
+    assert Nodulator.app
+    assert Nodulator.server
     done()

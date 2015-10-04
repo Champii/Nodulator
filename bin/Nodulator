@@ -11,6 +11,7 @@ fs = require 'fs'
 path = require 'path'
 exec = require('child_process').exec
 async = require 'async'
+livescript = require 'livescript'
 
 args = process.argv[2..]
 
@@ -41,24 +42,26 @@ npmStandard = (action, pack, done) ->
     done() if done?
 
 npmDevInstall = (action, pack, done) ->
+  nameSplited = pack.split('/')
+  name = nameSplited[nameSplited.length - 1]
   if pack.split('-').length is 2
     packCapit = capitalize(pack.split('-')[0]) + '-' + capitalize(pack.split('-')[1])
   else
     packCapit = capitalize pack
 
-  orig = path.resolve(NodulatorRoot, '..') + '/' + packCapit
+  # orig = path.resolve(NodulatorRoot, '..') + '/' + packCapit
 
   exec 'mkdir -p ./node_modules', (err, stdout, stderr) ->
     return done err if err? and done?
 
-    exec 'cd ' + appRoot + '/node_modules && ln -s ' + orig + ' ' + pack + '&& cd ..', (err, stdout, stderr) ->
+    exec  'cd ' + appRoot + ' && ln -s ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
       return done err if err? and done?
       return console.error err if err?
 
       done() if done?
 
 usage = ->
-  console.error 'Usage: Nodulator (init) | ((install |  install-dev | remove) moduleName1 [, moduleName2])'
+  console.error 'Usage: Nodulator (init | console(or c)) | ((install |  install-dev | remove) moduleName1 [, moduleName2])'
 
 generateMain = (modules) ->
 
@@ -77,9 +80,18 @@ generateMain = (modules) ->
 
   fs.writeFileSync appRoot + '/main.coffee', mainBefore + mainAfter
 
-if args.length < 1 or args[0] not in ['init', 'install', 'remove', 'install-dev']
+if args.length < 1 or args[0] not in ['init', 'install', 'remove', 'install-dev', 'console', 'c']
   return usage()
 
+
+if args[0] in ['console', 'c']
+  if not args[1]?
+    args[1] = './settings/dev'
+  if not args[2]?
+    args[2] = './server/resources'
+
+  cons =  require "#{__dirname}/Console"
+  cons args[1], args[2]
 
 if args[0] is 'init'
   async.series [
@@ -119,8 +131,14 @@ if args[0] is 'init'
           binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1..] + '.coffee'
           binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
           exists binPath, (exist) ->
-            return done() if not exist
+            if not exist
+              binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1..] + '.ls'
+              binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
+              return exists binPath, (exist) ->
+                return done() if not exist
 
+                process.stdout.write '\n[' + i++ + ']Processing ' + binName.split('.')[0] + ': \n'
+                (require binPath)(done)
             process.stdout.write '\n[' + i++ + ']Processing ' + binName.split('.')[0] + ': \n'
             (require binPath)(done)
         , done
@@ -134,47 +152,50 @@ else if args[0] in ['install', 'remove', 'install-dev']
   if args[0] is 'install-dev'
     npm = npmDevInstall
 
-  exists 'node_modules/nodulator', (exist) ->
-    if not exist
-      console.log 'Installing nodulator'
-      npm(args[0], 'nodulator')
-    else
-      console.log 'Already installed: nodulator'
+  exec 'mkdir -p node_modules', (err, stdout, stderr) ->
 
-    for packageName in args[1..]
+    exists 'node_modules/nodulator', (exist) ->
+      if not exist
+        console.log 'Installing nodulator'
+        npm(args[0], 'nodulator')
+      else
+        console.log 'Already installed: nodulator'
 
-      async.series [
+      for packageName in args[1..]
 
-        (done) ->
-          #install dependencies
-          if dependencies['nodulator-' + packageName]? and args[0] in ['install', 'install-dev']
-            async.eachSeries dependencies['nodulator-' + packageName], (item, done) ->
-              exists 'node_modules/' + item, (exist) ->
-                if not exist
-                  console.log 'Installing ' + item
-                  npm 'install', item, done
-                else
-                  console.log 'Already installed: ' + item
-                  done()
-            , done
-          else
-            done()
+        async.series [
 
-        (done) ->
-          toInstall = 'nodulator-' + packageName
-          if packageName? and toInstall in moduleOrder
-            exists 'node_modules/' + toInstall, (exist) ->
-              if exist
-                console.log 'Already installed: ' + toInstall
-                return done()
+          (done) ->
+            #install dependencies
+            if dependencies['nodulator-' + packageName]? and args[0] in ['install', 'install-dev']
+              async.eachSeries dependencies['nodulator-' + packageName], (item, done) ->
+                exists 'node_modules/' + item, (exist) ->
+                  if not exist
+                    console.log 'Installing ' + item
+                    newItem = capitalize item.split('-')[0] + '-' + capitalize item.split('-')[1]
+                    npm 'install', './node_modules/nodulator/src/Modules/' + newItem, done
+                  else
+                    console.log 'Already installed: ' + item
+                    done()
+              , done
+            else
+              done()
 
-              console.log 'Installing ' + toInstall
-              npm args[0], toInstall, done
+          (done) ->
+            toInstall = 'nodulator-' + packageName
+            if packageName? and toInstall in moduleOrder
+              exists 'node_modules/' + toInstall, (exist) ->
+                if exist
+                  console.log 'Already installed: ' + toInstall
+                  return done()
 
-          else if args[1]?
-            console.error 'Unknown module: ', toInstall
-            return done()
+                console.log 'Installing ' + toInstall
+                toInstall = capitalize toInstall.split('-')[0] + '-' + capitalize toInstall.split('-')[1]
+                npm args[0], './node_modules/nodulator/src/Modules/' + toInstall, done
 
-      ], (err) ->
-        console.error err if err?
+            else if args[1]?
+              console.error 'Unknown module: ', toInstall
+              return done()
 
+        ], (err) ->
+          console.error err if err?

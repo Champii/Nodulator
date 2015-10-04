@@ -1,0 +1,38 @@
+{
+  "name": "nodulator-assets",
+  "version": "0.0.10",
+  "description": "Assets management for Nodulator",
+  "main": "index.js",
+  "dependencies": {
+    "coffee-middleware": "~0.3.0",
+    "coffee-script": "~1.9.0",
+    "connect-cachify": "~0.0.17",
+    "cookie-parser": "~1.3.3",
+    "jade": "~1.8.1",
+    "livescript": "^1.4.0",
+    "livescript-middleware": "^1.0.1",
+    "underscore": "~1.7.0"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "mocha": "~2.0.1"
+  },
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Champii/Nodulator-Assets.git"
+  },
+  "keywords": [
+    "Nodulator",
+    "Assets"
+  ],
+  "author": "Champii <greine_f@epitech.eu>",
+  "license": "GPLv2",
+  "bugs": {
+    "url": "https://github.com/Champii/Nodulator-Assets/issues"
+  }
+}

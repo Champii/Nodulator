@@ -1,0 +1,10 @@
+{
+  "name": "app",
+  "version": "0.0.1",
+  "dependencies": {
+    "nodulator": "0.0.19",
+    "nodulator-angular": "0.0.10",
+    "nodulator-assets": "0.0.10",
+    "nodulator-socket": "0.0.3"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "nodulator-angular",
+  "version": "0.0.10",
+  "description": "Angular module for Nodulator",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Champii/Nodulator-Angular.git"
+  },
+  "keywords": [
+    "Nodulator",
+    "Angular"
+  ],
+  "author": "Champii <greine_f@epitech.eu>",
+  "license": "0",
+  "bugs": {
+    "url": "https://github.com/Champii/Nodulator-Angular/issues"
+  },
+  "dependencies": {
+    "coffee-script": "^1.9.3",
+    "jade": "~1.8.1"
+  }
+}

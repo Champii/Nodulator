@@ -4,6 +4,7 @@
   "dependencies": {
     "assert": "*",
     "async": "*",
+    "asyncawait": "^1.0.1",
     "body-parser": "*",
     "connect-redis": "*",
     "cookie-parser": "*",

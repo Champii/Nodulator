@@ -1163,6 +1163,8 @@ ___
 
 By order of priority
 
+- Join modules into this git repo and decentralize config
+- Nodulator-Console !
 - 'Unique' field
 - Cache
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
@@ -1188,6 +1190,7 @@ XX/XX/XX: current (not released yet)
   take a Resource as property. Also, Routes have to be Instanciated.
   - Changed every 'Nodulator' call by 'N', more readable
   - Added a debug system with 'debug'
+  - Console mode to "connect" to an existing/running Nodulator instance and perform standard calls
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
