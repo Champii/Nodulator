@@ -24,15 +24,18 @@ dependencies =
   'nodulator-angular': ['nodulator-socket', 'nodulator-assets']
 
 capitalize = (str) ->
-  str[0].toUpperCase() + str[1 to]
+  str[0].toUpperCase() + str[1 to]*''
 
 exists = (path, done) ->
-  fs.open path, 'r', (err, fd) ->
-    if err?
-      done false
-    else
-      fs.closeSync fd
+  realPath = fs.realpathSync path
+  fs.lstat realPath, (err, stat) ->
+    console.log err if err?
+    return done false if err?
+
+    if stat.isDirectory! or stat.isSymbolicLink! or stat.isFile()
       done true
+    else
+      done false
 
 npmStandard = (action, pack, done) ->
   exec 'npm ' + action + ' ' + pack + ' --save', (err, stdout, stderr) ->
@@ -44,6 +47,7 @@ npmStandard = (action, pack, done) ->
 npmDevInstall = (action, pack, done) ->
   nameSplited = pack.split('/')
   name = nameSplited[nameSplited.length - 1]
+  packCapit = ''
   if pack.split('-').length is 2
     packCapit = capitalize(pack.split('-')[0]) + '-' + capitalize(pack.split('-')[1])
   else
@@ -54,7 +58,7 @@ npmDevInstall = (action, pack, done) ->
   exec 'mkdir -p ./node_modules', (err, stdout, stderr) ->
     return done err if err? and done?
 
-    exec  'cd ' + appRoot + ' && ln -s ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
+    exec  'cd ' + appRoot + ' && ln -sf ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
       return done err if err? and done?
       return console.error err if err?
 
@@ -65,7 +69,7 @@ usage = ->
 
 generateMain = (modules) ->
 
-  mainBefore = 'Nodulator = require \'nodulator\'\n'
+  mainBefore = 'N = require \'nodulator\'\n'
   mainBefore += 'Server = require \'./server\'\n'
 
   mainAfter = ''
@@ -73,10 +77,10 @@ generateMain = (modules) ->
   for module in (_(modules).sortBy (item) -> _(moduleOrder).indexOf item)
     name = module.split('-')[1]
     mainBefore += '\n' + capitalize(name) + ' = require \'' + module + '\''
-    mainAfter += 'Nodulator.Use ' + capitalize(name) + '\n'
+    mainAfter += 'N.Use ' + capitalize(name) + '\n'
 
   mainAfter += '\nServer.Init()\n'
-  mainAfter += 'Nodulator.Run()\n' if 'nodulator-assets' in modules
+  mainAfter += 'N.Run()\n' if 'nodulator-assets' in modules
 
   fs.writeFileSync appRoot + '/main.coffee', mainBefore + mainAfter
 
@@ -96,7 +100,7 @@ if not args[0]? or args[0] in ['console', 'c']
 if args[0] is 'init'
   async.series [
     (done) ->
-      exists './node_modules/nodulator', (exist) ->
+      exists "#{appRoot}/node_modules/nodulator", (exist) ->
         if not exist
           process.stdout.write 'Installing Nodulator..............'
           npmStandard 'install', 'nodulator', (err) ->
@@ -128,11 +132,13 @@ if args[0] is 'init'
 
         i = 1
         async.eachSeries (_(nodulatorFiles).sortBy (item) -> _(moduleOrder).indexOf item), (file, done) ->
-          binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to] + '.coffee'
+          binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to]*'' + '.coffee'
           binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
+          test = binPath
           exists binPath, (exist) ->
             if not exist
-              binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to] + '.ls'
+              console.log test, 2
+              binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to]*'' + '.ls'
               binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
               return exists binPath, (exist) ->
                 return done() if not exist
@@ -157,11 +163,11 @@ else if args[0] in ['install', 'remove', 'install-dev']
     exists 'node_modules/nodulator', (exist) ->
       if not exist
         console.log 'Installing nodulator'
-        npm(args[0], 'nodulator')
+        npm(args[0], '../Nodulator')
       else
         console.log 'Already installed: nodulator'
 
-      for packageName in args[1 to]
+      for packageName in args[1 til]
 
         async.series [
 
@@ -172,7 +178,7 @@ else if args[0] in ['install', 'remove', 'install-dev']
                 exists 'node_modules/' + item, (exist) ->
                   if not exist
                     console.log 'Installing ' + item
-                    newItem = capitalize item.split('-')[0] + '-' + capitalize item.split('-')[1]
+                    newItem = capitalize(item.split('-')[0]) + '-' + capitalize item.split('-')[1]
                     npm 'install', './node_modules/nodulator/src/Modules/' + newItem, done
                   else
                     console.log 'Already installed: ' + item
@@ -190,8 +196,8 @@ else if args[0] in ['install', 'remove', 'install-dev']
                   return done()
 
                 console.log 'Installing ' + toInstall
-                toInstall = capitalize toInstall.split('-')[0] + '-' + capitalize toInstall.split('-')[1]
-                npm args[0], './node_modules/nodulator/src/Modules/' + toInstall, done
+                item = capitalize(toInstall.split('-')[0]) + '-' + capitalize toInstall.split('-')[1]
+                npm args[0], './node_modules/nodulator/src/Modules/' + item, done
 
             else if args[1]?
               console.error 'Unknown module: ', toInstall

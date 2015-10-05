@@ -49,4 +49,4 @@ class _N
       class _EmptyDirective extends @Directive template
       _EmptyDirective.Init()
 
-N = new _N
+Nodulator = new _N
