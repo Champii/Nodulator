@@ -1,4 +1,4 @@
-Nodulator = require '../..'
+N = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
 Debug = require \../Helpers/Debug
@@ -13,7 +13,7 @@ class Wrappers
     -1
 
   @_WrapFlipDone = (cb) ->
-    if not Nodulator.config.flipDone
+    if not N.config.flipDone
       return cb
 
     resource = @
@@ -59,7 +59,7 @@ class Wrappers
   @_WrapWatchArgs = (cb) ->
     (...args) ->
 
-      if not Nodulator.Watch.active
+      if not N.Watch.active
         return cb.apply @, args
 
       if not ChangeWatcher.Watch cb, args, @

@@ -3,16 +3,16 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
+N = require '..'
 
 test = it
 
-describe 'Nodulator', ->
+describe 'N', ->
 
   before (done) ->
-    Nodulator.Reset done
+    N.Reset done
 
   test 'should create resource', (done) ->
-    Players = Nodulator.Resource \player
+    Players = N.Resource \player
     assert Players
     done()

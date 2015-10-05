@@ -1,4 +1,4 @@
-class AuthDirective extends Nodulator.Directive 'auth', '$window', '$http', 'userService'
+class AuthDirective extends N.Directive 'auth', '$window', '$http', 'userService'
 
   state: 'login'
   ident:

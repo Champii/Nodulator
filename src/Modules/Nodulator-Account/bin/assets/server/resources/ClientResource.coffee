@@ -1,6 +1,6 @@
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-class ClientResource extends Nodulator.AccountResource 'client', Nodulator.Route.MultiRoute
+class ClientResource extends N.AccountResource 'client', N.Route.MultiRoute
 
 ClientResource.Init()
 

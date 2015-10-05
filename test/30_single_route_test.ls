@@ -4,7 +4,7 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '..'
+N = require '..'
 
 Tests = null
 
@@ -12,27 +12,27 @@ test = it
 
 tests =  null
 
-class TestRoute extends Nodulator.Route.SingleRoute
+class TestRoute extends N.Route.SingleRoute
 
-describe 'Nodulator Single Route', ->
+describe 'N Single Route', ->
 
   before (done) ->
-    Nodulator.Reset ->
+    N.Reset ->
       config =
         schema:
           test:
             type: 'string'
             default: 'test'
 
-      class TestRoute extends Nodulator.Route.SingleRoute
-        resource: Nodulator.Resource 'test', config
+      class TestRoute extends N.Route.SingleRoute
+        resource: N.Resource 'test', config
 
       tests := new TestRoute
 
       done()
 
   test 'should fetch resource (GET)', (done) ->
-    Nodulator.client.Get '/api/1/test', (err, res) ->
+    N.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?
 
       assert.equal res.body.id, 1
@@ -40,22 +40,22 @@ describe 'Nodulator Single Route', ->
       done()
 
   test 'should save changed resource (PUT)', (done) ->
-    err, {body} <- Nodulator.client.Get '/api/1/test'
+    err, {body} <- N.client.Get '/api/1/test'
     throw new Error err if err?
 
     body.test = 'test2'
 
-    err, {body} <- Nodulator.client.Put '/api/1/test', body
+    err, {body} <- N.client.Put '/api/1/test', body
     throw new Error err if err?
 
-    err, {body} <- Nodulator.client.Get '/api/1/test'
+    err, {body} <- N.client.Get '/api/1/test'
     throw new Error err if err?
 
     assert body.test, 'test2'
     done()
 
   test 'should fetch resource (GET)', (done) ->
-    Nodulator.client.Get '/api/1/test', (err, res) ->
+    N.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?
 
       assert.equal res.body.id, 1
@@ -66,7 +66,7 @@ describe 'Nodulator Single Route', ->
   test 'should override default get route (GET)', (done) ->
     tests.Get -> {message: 'Coucou'}
 
-    Nodulator.client.Get '/api/1/test', (err, res) ->
+    N.client.Get '/api/1/test', (err, res) ->
       throw new Error err if err?
 
       assert.equal res.body.message, 'Coucou'

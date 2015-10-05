@@ -29,13 +29,14 @@
   "description": "Complete NodeJS Framework for Restfull APIs",
   "main": "index.js",
   "bin": {
-    "Nodulator": "./bin/Nodulator"
+    "N": "./bin/N"
   },
   "directories": {
     "test": "test"
   },
   "devDependencies": {
-    "mocha": "~2.0.1"
+    "mocha": "~2.0.1",
+    "livescript": "^1.4.0"
   },
   "scripts": {
     "test": "mocha --compilers ls:livescript test"

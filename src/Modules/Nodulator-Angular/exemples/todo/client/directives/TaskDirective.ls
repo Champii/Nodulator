@@ -1,4 +1,4 @@
-class TaskDirective extends Nodulator.Directive 'task', 'taskService'
+class TaskDirective extends N.Directive 'task', 'taskService'
 
   err: ''
   newTask: ''

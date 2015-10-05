@@ -3,7 +3,7 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
+N = require '..'
 
 Tests = null
 Childs = null
@@ -11,11 +11,11 @@ News = null
 
 test = it
 
-describe 'Nodulator Associations', ->
+describe 'N Associations', ->
 
   before (done) ->
-    Nodulator.Reset ->
-      Childs := Nodulator.Resource 'child'
+    N.Reset ->
+      Childs := N.Resource 'child'
       Childs.Create {field: 'child'}, (err, child) -> return console.error err if err?
 
       testConfig =
@@ -25,7 +25,7 @@ describe 'Nodulator Associations', ->
             type: Childs
             localKey: 'childId'
 
-      Tests := Nodulator.Resource 'test', testConfig
+      Tests := N.Resource 'test', testConfig
 
       done!
 
@@ -53,7 +53,7 @@ describe 'Nodulator Associations', ->
           type: [Childs]
           localKey: 'childIds'
 
-    News := Nodulator.Resource 'new', newConfig
+    News := N.Resource 'new', newConfig
 
     done!
 
@@ -71,7 +71,7 @@ describe 'Nodulator Associations', ->
       done!
 
   test 'should fetch distantKey with array' (done) ->
-    class Childs extends Nodulator.Resource 'child2', Nodulator.Route.MultiRoute
+    class Childs extends N.Resource 'child2', N.Route.MultiRoute
 
     testConfig =
       schema:
@@ -79,7 +79,7 @@ describe 'Nodulator Associations', ->
           type: Childs
           distantKey: 'testId'
 
-    class Tests extends Nodulator.Resource 'test2', testConfig
+    class Tests extends N.Resource 'test2', testConfig
 
     Childs.Create testId: 1 field: 'child'
     .fail -> throw new Error it
@@ -89,7 +89,7 @@ describe 'Nodulator Associations', ->
       done!
 
   test 'should fetch distantKey with array of association' (done) ->
-    Childs = Nodulator.Resource 'child3'
+    Childs = N.Resource 'child3'
 
     testConfig =
       schema:
@@ -97,7 +97,7 @@ describe 'Nodulator Associations', ->
           type: [Childs]
           distantKey: 'testId'
 
-    Tests = Nodulator.Resource 'test3', testConfig
+    Tests = N.Resource 'test3', testConfig
 
     Childs.Create testId: 1 field: 'child'
     .fail -> throw new Error it

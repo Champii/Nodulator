@@ -1,6 +1,6 @@
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-class Socket extends Nodulator.Socket()
+class Socket extends N.Socket()
 
   OnConnect: (socket) ->
 

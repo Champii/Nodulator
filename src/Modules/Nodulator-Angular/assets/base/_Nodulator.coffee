@@ -1,4 +1,4 @@
-class _Nodulator
+class _N
 
   directives: {}
   services: {}
@@ -49,4 +49,4 @@ class _Nodulator
       class _EmptyDirective extends @Directive template
       _EmptyDirective.Init()
 
-Nodulator = new _Nodulator
+N = new _N

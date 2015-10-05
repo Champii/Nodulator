@@ -3,16 +3,16 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
+N = require '..'
 
 Tests = null
 
 test = it
 
-describe 'Nodulator Validation', ->
+describe 'N Validation', ->
 
   before (done) ->
-    Nodulator.Reset ->
+    N.Reset ->
       config =
         schema:
           field1:
@@ -26,7 +26,7 @@ describe 'Nodulator Validation', ->
           field5:
             type: 'email'
 
-      Tests := Nodulator.Resource 'test', config
+      Tests := N.Resource 'test', config
 
       done()
 

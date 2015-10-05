@@ -1,8 +1,8 @@
-Nodulator = require '..'
+N = require '..'
 
 n = +process.env.MW || 1
 
-Players = Nodulator.Resource 'player', Nodulator.Route.MultiRoute
+Players = N.Resource 'player', N.Route.MultiRoute
 
 for i til n
   Players.Create nb: i

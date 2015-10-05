@@ -1,6 +1,6 @@
 _ = require 'underscore'
 Hacktiv = require 'hacktiv'
-Nodulator = require '../../'
+N = require '../../'
 
 class ChangeWatcher
 
@@ -43,7 +43,7 @@ class ChangeWatcher
     @func.apply @instance, @args
 
   @Watch = (func, args, instance) ->
-    return false if not Nodulator.Watch.active or _(@list).find (item) -> item.func is func and _(item.args).isEqual args
+    return false if not N.Watch.active or _(@list).find (item) -> item.func is func and _(item.args).isEqual args
 
     elem = new ChangeWatcher func, args, instance
     @list.push elem

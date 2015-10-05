@@ -4,20 +4,20 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require '..'
+N = require '..'
 
 client = null
 Tests = null
 
 test = it
 
-describe 'Nodulator Route', ->
+describe 'N Route', ->
 
   before (done) ->
-    Nodulator.Reset ->
+    N.Reset ->
 
-      class TestRoute extends Nodulator.Route
-        resource: Nodulator.Resource 'test'
+      class TestRoute extends N.Route
+        resource: N.Resource 'test'
 
         Config: ->
           super()
@@ -27,7 +27,7 @@ describe 'Nodulator Route', ->
       done()
 
   test 'should get resource', (done) ->
-    Nodulator.client.Get '/api/1/tests', (err, res) ->
+    N.client.Get '/api/1/tests', (err, res) ->
       throw err if err?
       
       assert.equal res.body.message, 'Coucou'

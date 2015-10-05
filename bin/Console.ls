@@ -1,13 +1,11 @@
-#!/usr/local/bin/lsc
-
 require! {
-  \prelude-ls
   fs
   repl
   path
-  \../ : N
-  \../src/Modules/Nodulator-Account : N-Account
+  \prelude-ls
+  '\../' : N
   livescript
+  \../src/Modules/Nodulator-Account : N-Account
 }
 
 module.exports = (configPath, resPath)->
@@ -27,30 +25,32 @@ module.exports = (configPath, resPath)->
     if cmd.length is 1
       cmd = cmd.replace /\n/g, 'null;'
 
-    _ = require 'underscore'
     util = require 'util'
 
     varName = ''
     if cmd.match /\=/g
       varName := cmd.split ' =' .0
 
-
     res = eval livescript.compile cmd, bare: true, header: false colors: true
+
     if res?
       if res.then?
+
         res.fail ~>
           @[varName] = it
           done null, it
+
         res.then ~>
           if is-type \Array it
-            it.inspect = (__) -> _(@).invoke('ToJSON')
-            it |> each -> it.inspect = -> @ToJSON!
+            it |> each (.inspect = -> @ToJSON!)
+            # it.inspect = -> _(@).invoke('ToJSON')
             @[varName] = it
             done null, it
           else
             it.inspect = -> @ToJSON!
             @[varName] = it
             done null, it
+
       else
         @[varName] = res
         done null, res
@@ -72,6 +72,7 @@ module.exports = (configPath, resPath)->
   N.Console()
   N.Config config || {}
   N.Use N-Account
+  # N.AccountResource = N~Resource
 
   inst.context.N = N
 
@@ -91,7 +92,9 @@ module.exports = (configPath, resPath)->
 
   fetch-resources resPath
     |> obj-to-pairs
-    |> map ->
-      res = require rootPath + \/ + it.1
-      if res?._table?
-        inst.context[capitalize res._table.name] = res
+    |> map -> try require rootPath + \/ + it.1
+    |> each -> inst.context[capitalize it._table.name] = it if it?._table?
+  # N.resources
+  #   |> each ->
+
+      # if res?._table?

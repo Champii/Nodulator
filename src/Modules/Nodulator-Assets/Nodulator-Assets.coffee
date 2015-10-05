@@ -6,7 +6,7 @@ cookieParser = require 'cookie-parser'
 coffeeMiddleware = require 'coffee-middleware'
 livescriptMiddleware = require 'livescript-middleware'
 
-module.exports = (Nodulator) ->
+module.exports = (N) ->
 
   class Assets
 
@@ -21,7 +21,7 @@ module.exports = (Nodulator) ->
 
     constructor: ->
 
-      Nodulator.ExtendDefaultConfig
+      N.ExtendDefaultConfig
         assets:
           app:
             path: '/client'
@@ -30,18 +30,18 @@ module.exports = (Nodulator) ->
         viewRoot: 'client'
         engine: 'jade' #FIXME: no other possible engine
 
-      Nodulator.Config() if not Nodulator.config?
+      N.Config() if not N.config?
 
-      for site, obj of Nodulator.config.assets
+      for site, obj of N.config.assets
         o = {}
-        o["/js/#{site}.js"] = Nodulator.config.assets[site].js
-        o["/css/#{site}.css"] = Nodulator.config.assets[site].css
+        o["/js/#{site}.js"] = N.config.assets[site].js
+        o["/css/#{site}.css"] = N.config.assets[site].css
         @AddFolders o
 
       thus = this
 
       # To be called last
-      Nodulator.Run = ->
+      N.Run = ->
 
         process() for process in thus.extendedRun
 
@@ -52,7 +52,7 @@ module.exports = (Nodulator) ->
         @app.get '*', (req, res) =>
           @Render req, res
 
-      Nodulator.Render = (req, res) ->
+      N.Render = (req, res) ->
 
         for process in thus.extendedRender
           if not process req, res
@@ -60,19 +60,19 @@ module.exports = (Nodulator) ->
 
         res.render 'index'
 
-      Nodulator.ExtendBeforeRender = (process) =>
+      N.ExtendBeforeRender = (process) =>
         @extendedRender.unshift process
 
-      Nodulator.ExtendAfterRender = (process) =>
+      N.ExtendAfterRender = (process) =>
         @extendedRender.push process
 
-      Nodulator.ExtendBeforeRun = (process) =>
+      N.ExtendBeforeRun = (process) =>
         @extendedRun.unshift process
 
-      Nodulator.ExtendAfterRun = (process) =>
+      N.ExtendAfterRun = (process) =>
         @extendedRun.push process
 
-      Nodulator.ExtendBeforeRun =>
+      N.ExtendBeforeRun =>
         @_Serve()
 
     _GetFiles: (name, dirs, rec = false) ->
@@ -81,15 +81,15 @@ module.exports = (Nodulator) ->
         if dir[dir.length - 1] isnt '/'
           dir += '/'
 
-        entries = fs.readdirSync path.resolve Nodulator.appRoot, '.' + dir
+        entries = fs.readdirSync path.resolve N.appRoot, '.' + dir
 
         files = _(entries).filter (entry) =>
-          fs.statSync(Nodulator.appRoot + dir + entry).isFile() and
+          fs.statSync(N.appRoot + dir + entry).isFile() and
             (entry.match(/\.coffee$/g) or entry.match(/\.js$/g) or entry.match(/\.css$/g))
 
         if rec
           folders = _(entries).filter (entry) =>
-            fs.statSync(Nodulator.appRoot + dir + entry).isDirectory() and
+            fs.statSync(N.appRoot + dir + entry).isDirectory() and
               not entry.match(/^\./g)
           folders = _(folders).map (folder) =>
             dir + folder
@@ -116,36 +116,36 @@ module.exports = (Nodulator) ->
         @_GetFiles name, dirs
 
     _Serve: ->
-      Nodulator.app.use cookieParser 'nodulator'
+      N.app.use cookieParser 'nodulator'
       #
-      # Nodulator.app.use livescriptMiddleware
-      #   src: path.resolve Nodulator.appRoot, '.'
+      # N.app.use livescriptMiddleware
+      #   src: path.resolve N.appRoot, '.'
       #   prefix: 'js'
       #   force: true
       #   bare: true
 
-      Nodulator.app.use coffeeMiddleware
-        src: path.resolve Nodulator.appRoot, '.'
+      N.app.use coffeeMiddleware
+        src: path.resolve N.appRoot, '.'
         prefix: 'js'
         bare: true
         force: true
 
-      Nodulator.app.use require('connect-cachify').setup @list,
-        root: path.join Nodulator.appRoot, '.'
+      N.app.use require('connect-cachify').setup @list,
+        root: path.join N.appRoot, '.'
         production: false
 
-      Nodulator.app.use Nodulator.express.static Nodulator.appRoot
+      N.app.use N.express.static N.appRoot
 
-      Nodulator.app.set 'views', path.resolve Nodulator.appRoot, Nodulator.config.viewRoot
-      Nodulator.app.engine '.' + Nodulator.config.engine, jade.__express
-      Nodulator.app.set 'view engine', Nodulator.config.engine
+      N.app.set 'views', path.resolve N.appRoot, N.config.viewRoot
+      N.app.engine '.' + N.config.engine, jade.__express
+      N.app.set 'view engine', N.config.engine
 
-      Nodulator.app.use (req, res, next) =>
+      N.app.use (req, res, next) =>
 
         res.locals.nodulator = (site = 'app') =>
           jcompile = {}
-          if Nodulator.nangulator?
-            jcompile = _(jcompile).extend Nodulator.nangulator.Compile()
+          if N.nangulator?
+            jcompile = _(jcompile).extend N.nangulator.Compile()
 
           @compiled = {}
           for name, list of @list
@@ -156,8 +156,8 @@ module.exports = (Nodulator) ->
           comp += res.locals.cachify_css "/css/#{site}.css"
           comp += res.locals.cachify_js "/js/#{site}.js"
 
-          if Nodulator.AccountResource?
-            comp += Nodulator.AccountResource._AccountResource._InjectUser req
+          if N.AccountResource?
+            comp += N.AccountResource._AccountResource._InjectUser req
 
           comp
 
@@ -167,4 +167,4 @@ module.exports = (Nodulator) ->
       @views[site] = '' if not @views[site]?
       @views[site] += view
 
-  Nodulator.assets = new Assets
+  N.assets = new Assets

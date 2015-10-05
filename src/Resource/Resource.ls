@@ -1,7 +1,7 @@
 require! {
   underscore: __
   async
-  '../../': Nodulator
+  '../../': N
   validator: Validator
   hacktiv: Hacktiv
   \./ChangeWatcher
@@ -11,7 +11,7 @@ require! {
   \../Helpers/Debug
 }
 
-debug-res = new Debug 'Nodulator::Resource', Debug.colors.blue
+debug-res = new Debug 'N::Resource', Debug.colors.blue
 
 
 validationError = (field, value, message) ->
@@ -28,20 +28,20 @@ typeCheck =
   array: (value) -> Array.isArray value
   arrayOf: (type) -> (value) ~> not __(map (@[type]), value).contains (item) -> item is false
 
-Nodulator.Validator = Validator
+N.Validator = Validator
 
-Nodulator.inited = {}
+N.inited = {}
 
 module.exports = (table, config, app, routes, name) ->
 
-  debug-resource = new Debug "Nodulator::Resource::#name"
-  # debug-resource.Log = debug "Nodulator::Resource::#{name}"
+  debug-resource = new Debug "N::Resource::#name"
+  # debug-resource.Log = debug "N::Resource::#{name}"
   #   ..color = debug.useColors && debug._colors.purple
   #
-  # debug-resource.Warn = debug "Nodulator::Resource::#{name}::Warn"
+  # debug-resource.Warn = debug "N::Resource::#{name}::Warn"
   #   ..color = debug.useColors && debug._colors.yellow
   #
-  # debug-resource.Error = debug "Nodulator::Resource::#{name}::Error"
+  # debug-resource.Error = debug "N::Resource::#{name}::Error"
   #   ..color = debug.useColors && debug._colors.red
 
   debug-res.Log "Creating new Resource : #name"
@@ -151,9 +151,9 @@ module.exports = (table, config, app, routes, name) ->
               | _     =>
                 if !exists
                   @id = id
-                  Nodulator.bus.emit \new_ + name, @ToJSON()
+                  N.bus.emit \new_ + name, @ToJSON()
                 else
-                  Nodulator.bus.emit \update_ + name, @ToJSON()
+                  N.bus.emit \update_ + name, @ToJSON()
                 ChangeWatcher.Invalidate()
 
                 debug-resource.Log "Saved  {id: #{@id}}"
@@ -167,7 +167,7 @@ module.exports = (table, config, app, routes, name) ->
         switch
           | err? => done err
           | _    =>
-            Nodulator.bus.emit \delete_ + @name, @ToJSON()
+            N.bus.emit \delete_ + @name, @ToJSON()
             ChangeWatcher.Invalidate()
 
             debug-resource.Log "Deleted  {id: #{@id}}"
@@ -309,7 +309,7 @@ module.exports = (table, config, app, routes, name) ->
     # Check for schema validity
     @_Validate = (blob, full, done) ->
       return done() if not config? or not config.schema?
-      delete blob._id if Nodulator.config.dbType is \Mongo
+      delete blob._id if N.config.dbType is \Mongo
 
       if not done?
         done = full
@@ -511,14 +511,14 @@ module.exports = (table, config, app, routes, name) ->
         if deleteAbstract
           delete config.abstract
 
-        Nodulator.Resource name, routes, config, @
+        N.Resource name, routes, config, @
 
     # Initialisation
     @Init = (@config = @config, extendArgs) ->
       if @INITED
         return @
 
-      if Nodulator.inited[@lname]?
+      if N.inited[@lname]?
         return @
         throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
 
@@ -526,7 +526,7 @@ module.exports = (table, config, app, routes, name) ->
 
       @resource = @
 
-      Nodulator.resources[@lname] = @
+      N.resources[@lname] = @
 
       if @config? and @config.schema
         @_PrepareSchema()
@@ -537,10 +537,10 @@ module.exports = (table, config, app, routes, name) ->
         @routes = new @_routes(@, @config)
 
       @INITED = true
-      Nodulator.inited[@lname] = true
+      N.inited[@lname] = true
 
       #FIXME
-      Nodulator[capitalize @lname] = @
+      N[capitalize @lname + \s] = @
 
       @
 

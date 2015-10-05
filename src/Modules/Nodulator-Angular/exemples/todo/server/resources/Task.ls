@@ -1,6 +1,6 @@
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-class Task extends Nodulator.Resource 'task', Nodulator.Route.MultiRoute
+class Task extends N.Resource 'task', N.Route.MultiRoute
 
 # Task.Init()
 

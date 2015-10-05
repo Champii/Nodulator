@@ -1,4 +1,4 @@
-class UserService extends Nodulator.Service 'user', '$http', '$window', 'socket'
+class UserService extends N.Service 'user', '$http', '$window', 'socket'
 
   current: null
 

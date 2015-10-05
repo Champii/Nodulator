@@ -3,14 +3,14 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 
-describe 'Nodulator', ->
+describe 'N', ->
 
   before (done) ->
-    Nodulator.Reset done
+    N.Reset done
 
   it 'should create server', (done) ->
-    assert Nodulator.app
-    assert Nodulator.server
+    assert N.app
+    assert N.server
     done()

@@ -1,3 +1,3 @@
-class TaskService extends Nodulator.ResourceService 'task'
+class TaskService extends N.ResourceService 'task'
 
 TaskService.Init()

@@ -3,7 +3,7 @@ path = require 'path'
 jade = require 'jade'
 _ = require 'underscore'
 
-module.exports = (Nodulator) ->
+module.exports = (N) ->
 
   class Nangulator
 
@@ -11,35 +11,35 @@ module.exports = (Nodulator) ->
     name: 'Angular'
 
     constructor: ->
-      if not Nodulator.assets?
-        throw new Error 'Nodulator-Angular needs Nodulator-Assets to work'
+      if not N.assets?
+        throw new Error 'N-Angular needs N-Assets to work'
 
-      if not Nodulator.Socket?
-        throw new Error 'Nodulator-Angular needs Nodulator-Socket to work'
+      if not N.Socket?
+        throw new Error 'N-Angular needs N-Socket to work'
 
-      Nodulator.ExtendDefaultConfig
+      N.ExtendDefaultConfig
         servicesPath: '/services'
         directivesPath: '/directives'
         controllersPath: '/controllers'
         factoriesPath: '/factories'
         templatesPath: '/views'
 
-      Nodulator.Config() if not Nodulator.config?
+      N.Config() if not N.config?
 
-      for site, obj of Nodulator.config.assets
+      for site, obj of N.config.assets
         o = {}
         o["/js/#{site}.js"] = [
           '/node_modules/nodulator-angular/assets'
-          obj.path + Nodulator.config.servicesPath
-          obj.path + Nodulator.config.directivesPath
-          obj.path + Nodulator.config.controllersPath
-          obj.path + Nodulator.config.factoriesPath
+          obj.path + N.config.servicesPath
+          obj.path + N.config.directivesPath
+          obj.path + N.config.controllersPath
+          obj.path + N.config.factoriesPath
         ]
 
-        Nodulator.assets.AddFoldersRec o
+        N.assets.AddFoldersRec o
 
     InjectViewsRec: (site, path) ->
-      dirPath = Nodulator.appRoot + Nodulator.config.assets[site].path + path
+      dirPath = N.appRoot + N.config.assets[site].path + path
 
       try files = fs.readdirSync  dirPath
 
@@ -56,12 +56,12 @@ module.exports = (Nodulator) ->
             f.push file.split('.')[0]
             j += '\n'
             j += 'script#' + file.split('.')[0] + '-tpl(type="text/ng-template")\n'
-            j += '  include '+ Nodulator.config.assets[site].path[1..] + path + '/' + file.split('.')[0] + '\n'
+            j += '  include '+ N.config.assets[site].path[1..] + path + '/' + file.split('.')[0] + '\n'
 
       [j, f]
 
     ListDirectives: (site, path = '/') ->
-      dirPath = Nodulator.appRoot + Nodulator.config.assets[site].path + Nodulator.config.directivesPath + path
+      dirPath = N.appRoot + N.config.assets[site].path + N.config.directivesPath + path
       files = fs.readdirSync dirPath
 
       res = 0
@@ -77,13 +77,13 @@ module.exports = (Nodulator) ->
 
     InjectViews: (site) ->
 
-      [j, f] = @InjectViewsRec site, Nodulator.config.templatesPath
+      [j, f] = @InjectViewsRec site, N.config.templatesPath
 
       j += "
         script#_nodulator-assets
           var _views = #{JSON.stringify f};
           var _nbDirectives = #{@ListDirectives(site)};
-          var _resources = #{JSON.stringify _(Nodulator.resources).keys()};\n
+          var _resources = #{JSON.stringify _(N.resources).keys()};\n
       "
 
       j += '''
@@ -92,13 +92,13 @@ module.exports = (Nodulator) ->
 
     Compile: ->
       jcompile = {}
-      for site, obj of Nodulator.config.assets
-        Nodulator.assets.views[site] = ''
-        Nodulator.assets.AddView @InjectViews(site), site
+      for site, obj of N.config.assets
+        N.assets.views[site] = ''
+        N.assets.AddView @InjectViews(site), site
 
-        jcompile[site] = Nodulator.assets.engine.compile Nodulator.assets.views[site],
-          filename: path.resolve Nodulator.appRoot, Nodulator.config.viewRoot
+        jcompile[site] = N.assets.engine.compile N.assets.views[site],
+          filename: path.resolve N.appRoot, N.config.viewRoot
       jcompile
 
 
-  Nodulator.nangulator = new Nangulator
+  N.nangulator = new Nangulator

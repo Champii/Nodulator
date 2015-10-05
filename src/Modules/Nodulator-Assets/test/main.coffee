@@ -1,5 +1,5 @@
 
-describe 'Nodulator Assets', ->
+describe 'N Assets', ->
 
   before (done) ->
     done()

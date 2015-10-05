@@ -3,20 +3,20 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
+N = require '..'
 
 Tests = null
 
 test = it
 
-describe 'Nodulator Flip Done', ->
+describe 'N Flip Done', ->
 
   before (done) ->
-    Nodulator.Reset ->
-      Nodulator.Config do
+    N.Reset ->
+      N.Config do
         flipDone: true
 
-      Tests := Nodulator.Resource 'test'
+      Tests := N.Resource 'test'
 
       done()
 

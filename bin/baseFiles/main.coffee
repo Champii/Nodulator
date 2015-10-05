@@ -1,5 +1,5 @@
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 Server = require './server'
 
 Server.Init()
-Nodulator.Run()
+N.Run()

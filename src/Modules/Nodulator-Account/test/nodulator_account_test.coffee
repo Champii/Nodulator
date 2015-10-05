@@ -4,7 +4,7 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-Nodulator = require 'nodulator'
+N = require 'nodulator'
 Account = require '../'
 client = null
 TestRoute = null
@@ -12,14 +12,14 @@ TestResource = null
 Test2Route = null
 Test2Resource = null
 
-describe 'Nodulator Account', ->
+describe 'N Account', ->
 
   before (done) ->
-    Nodulator.Use Account
+    N.Use Account
     done()
 
   it 'should create account resource', (done) ->
-    class TestRoute extends Nodulator.Route.DefaultRoute
+    class TestRoute extends N.Route.DefaultRoute
       Config: ->
         @Get '/test', @Auth(), (req, res) =>
           res.sendStatus(200)
@@ -35,22 +35,22 @@ describe 'Nodulator Account', ->
         @Get '/:id/test4', @IsOwn('id'), (req, res) =>
           res.sendStatus(200)
 
-    class TestResource extends Nodulator.AccountResource 'test', TestRoute
+    class TestResource extends N.AccountResource 'test', TestRoute
 
     TestResource.Init()
 
-    class Test2Route extends Nodulator.Route
+    class Test2Route extends N.Route
       Config: ->
         super()
         @Put '/test', @Auth(), (req, res) ->
           res.sendStatus(200)
 
 
-    class Test2Resource extends Nodulator.Resource 'test2', Test2Route
+    class Test2Resource extends N.Resource 'test2', Test2Route
 
     Test2Resource.Init()
 
-    client = new Client Nodulator.app
+    client = new Client N.app
 
     client.Post '/api/1/tests', {username: 'user1', password: 'pass', test: 'test', group: 1}, (err, res) ->
       throw new Error err if err?

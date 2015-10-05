@@ -7,9 +7,9 @@ require! {
   \./Helpers/Debug
 }
 
-debug-nodulator = new Debug 'Nodulator::Core'
+debug-nodulator = new Debug 'N::Core'
 
-class Nodulator
+class N
 
   app: null
   express: null
@@ -49,7 +49,7 @@ class Nodulator
       config = routes
       routes = null
 
-    @Config() if not @config? # config of Nodulator instance, not resource one
+    @Config() if not @config? # config of N instance, not resource one
 
     if not _parent? and (not routes? or routes.prototype not instanceof @Route)
       routes = @Route
@@ -139,4 +139,4 @@ class Nodulator
         endpoints.push res
     done(endpoints) if done?
 
-module.exports = new Nodulator
+module.exports = new N

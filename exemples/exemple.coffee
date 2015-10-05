@@ -1,5 +1,5 @@
 _ = require 'underscore'
-Nodulator = require '../'
+N = require '../'
 request = require 'superagent'
 async = require 'async'
 
@@ -7,7 +7,7 @@ weaponConfig =
   schema:
     hitPoints: 'int'
 
-Weapons = Nodulator.Resource 'weapon', Nodulator.Route.MultiRoute, weaponConfig
+Weapons = N.Resource 'weapon', N.Route.MultiRoute, weaponConfig
 
 unitConfig =
   abstract: true
@@ -22,7 +22,7 @@ unitConfig =
       type: 'int'
       optional: true
 
-class Units extends Nodulator.Resource 'unit', unitConfig
+class Units extends N.Resource 'unit', unitConfig
 
   Attack: @_WrapPromise (target, done) ->
     target.life -= @weapon.hitPoints
@@ -34,7 +34,7 @@ class Units extends Nodulator.Resource 'unit', unitConfig
 
 Units.Init()
 
-class UnitRoute extends Nodulator.Route.MultiRoute
+class UnitRoute extends N.Route.MultiRoute
   Config: ->
     super()
 
@@ -46,7 +46,7 @@ class UnitRoute extends Nodulator.Route.MultiRoute
       TargetResource = Monsters if @name is 'players'
       TargetResource = Players if @name is 'monsters'
 
-      watcher = Nodulator.Watch ->
+      watcher = N.Watch ->
         Req.Send TargetResource.error() if TargetResource.error()?
 
       TargetResource.Fetch +Req.params.targetId, (err, target) ->
@@ -67,56 +67,56 @@ weaponId = []
 
 async.series
   addWeapon: (done) ->
-    Nodulator.client.Post '/api/1/weapons', {hitPoints: 2}, (err, res) ->
+    N.client.Post '/api/1/weapons', {hitPoints: 2}, (err, res) ->
       weaponId.push res.body.id
       done err, res.body
 
   addWeapon2: (done) ->
-    Nodulator.client.Post '/api/1/weapons', {hitPoints: 1}, (err, res) ->
+    N.client.Post '/api/1/weapons', {hitPoints: 1}, (err, res) ->
       weaponId.push res.body.id
       done err, res.body
 
   addPlayer: (done) ->
-    Nodulator.client.Post '/api/1/players', {level: 1, life: 100, weaponId: weaponId[0]}, (err, res) -> done err, res.body
+    N.client.Post '/api/1/players', {level: 1, life: 100, weaponId: weaponId[0]}, (err, res) -> done err, res.body
 
   testGet: (done) ->
-    Nodulator.client.Get '/api/1/players', (err, res) -> done err, res.body
+    N.client.Get '/api/1/players', (err, res) -> done err, res.body
 
   levelUp: (done) ->
-    Nodulator.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
 
   levelUp2: (done) ->
-    Nodulator.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
 
   addMonster: (done) ->
-    Nodulator.client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId[1]}, (err, res) -> done err, res.body
+    N.client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId[1]}, (err, res) -> done err, res.body
 
   testGetMonster: (done) ->
-    Nodulator.client.Get '/api/1/monsters', (err, res) -> done err, res.body
+    N.client.Get '/api/1/monsters', (err, res) -> done err, res.body
 
   levelUpMonster: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
 
   levelUpMonster2: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
 
   playerAttack: (done) ->
-    Nodulator.client.Put '/api/1/players/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/players/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack1: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack2: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack3: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
   monsterAttack4: (done) ->
-    Nodulator.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
+    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
 
 , (err, results) ->
   util = require 'util'

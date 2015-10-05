@@ -1,6 +1,6 @@
 require! \prelude-ls : {each, unchars}
 _ = require 'underscore'
-Nodulator = null
+N = null
 Request = require './Request'
 require! {\../Helpers/Debug}
 express = require \express
@@ -9,7 +9,7 @@ http = require 'http'
 body-parser = require \body-parser
 express-session = require 'express-session'
 
-debug = new Debug "Nodulator::Route", Debug.colors.purple
+debug = new Debug "N::Route", Debug.colors.purple
 
 class Route
 
@@ -21,7 +21,7 @@ class Route
 
     @resource = resource || @resource
 
-    Nodulator := require '../..' if not Nodulator?
+    N := require '../..' if not N?
 
     if @resource
       if typeof(@resource) is 'function'
@@ -29,20 +29,20 @@ class Route
       else if typeof(@resource) is 'string'
         @rname = @resource
         @resource = undefined
-        Nodulator.Config() if not Nodulator.config?
+        N.Config() if not N.config?
       else
         throw new Error 'Route needs a Resource (or at least a name)'
 
-    @debug = new Debug "Nodulator::Route::#{@rname}", Debug.colors.purple
+    @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
 
-    Nodulator.Config!
-    if Nodulator.consoleMode
+    N.Config!
+    if N.consoleMode
       return
 
-    if not Nodulator.app?
+    if not N.app?
       Route._InitServer!
 
-    @app = Nodulator.app
+    @app = N.app
 
     @name = @rname + 's'
 
@@ -52,50 +52,50 @@ class Route
     @Config()
 
   @_InitServer = ->
-    Nodulator := require '../..' if not Nodulator?
+    N := require '../..' if not N?
 
-    if Nodulator.app?
+    if N.app?
       debug.Log 'Server already started.'
       return
 
-    Nodulator.express = express
+    N.express = express
 
-    Nodulator.app = express()
+    N.app = express()
 
-    Nodulator.app.use bodyParser.urlencoded do
+    N.app.use bodyParser.urlencoded do
       extended: true
 
-    Nodulator.app.use bodyParser.json do
+    N.app.use bodyParser.json do
       extended: true
 
     sessions =
-      key: \Nodulator
-      secret: \Nodulator
+      key: \N
+      secret: \N
       resave: true
       saveUninitialized: true
 
-    if Nodulator.config?.store?.type is \redis
+    if N.config?.store?.type is \redis
       RedisStore = require(\connect-redis)(express-session)
 
-      Nodulator.sessionStore = new RedisStore do
-        host: Nodulator.config.store.host || \localhost
+      N.sessionStore = new RedisStore do
+        host: N.config.store.host || \localhost
 
-      sessions.store = Nodulator.sessionStore
+      sessions.store = N.sessionStore
 
-    Nodulator.app.use express-session sessions
+    N.app.use express-session sessions
 
     debug.Log 'Creating server'
 
-    Nodulator.server = http.createServer Nodulator.app
+    N.server = http.createServer N.app
 
-    Nodulator.client = new Client Nodulator.app
+    N.client = new Client N.app
 
 
-    Nodulator.server.listen Nodulator.config?.port || 3000
+    N.server.listen N.config?.port || 3000
 
-    Nodulator.bus.emit \listening
+    N.bus.emit \listening
 
-    debug.Log "Listening to 0.0.0.0: #{(Nodulator.config?.port || 3000)}"
+    debug.Log "Listening to 0.0.0.0: #{(N.config?.port || 3000)}"
 
   _WrapRequest: (fName, args) ->
     Req = new Request args
@@ -168,13 +168,13 @@ class SingleRoute extends Route
 
     @name = @rname
 
-    @debug = new Debug "Nodulator::Route::#{@rname}", Debug.colors.purple
+    @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
 
     if @rname[*-1] is 'y'
       @name = @rname[ til @ name.length]*'' + 'ies'
 
-    Nodulator := require '../..' if not Nodulator?
-    @app = Nodulator.app
+    N := require '../..' if not N?
+    @app = N.app
     # @resource.Init()
 
     #Resource creation if non-existant

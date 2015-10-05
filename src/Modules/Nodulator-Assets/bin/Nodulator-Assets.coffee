@@ -3,7 +3,7 @@ path = require 'path'
 exec = require('child_process').exec
 async = require 'async'
 
-NodulatorRoot = path.resolve __dirname, '..'
+NRoot = path.resolve __dirname, '..'
 appRoot = path.resolve '.'
 
 module.exports = (done) ->
@@ -15,7 +15,7 @@ module.exports = (done) ->
     (done) ->
       process.stdout.write 'Ok\n'
       process.stdout.write '  Init base folder tree...........'
-      exec 'cp -ran ' + (path.resolve NodulatorRoot, 'bin/baseFiles') + '/* ' + appRoot + '/client/', done]
+      exec 'cp -ran ' + (path.resolve NRoot, 'bin/baseFiles') + '/* ' + appRoot + '/client/', done]
 
     , (err, results) ->
       return done err if err?

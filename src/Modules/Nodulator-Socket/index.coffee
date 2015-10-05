@@ -5,8 +5,8 @@ passportSocketIO = require "passport.socketio"
 io = null
 prefixes = ['new_', 'update_', 'delete_']
 
-module.exports = (Nodulator) ->
-  Nodulator.ExtendDefaultConfig
+module.exports = (N) ->
+  N.ExtendDefaultConfig
    store:
      type: 'redis'
 
@@ -18,20 +18,20 @@ module.exports = (Nodulator) ->
 
       # @_OverrideResource()
 
-      Nodulator.Config()
-      Nodulator.Route._InitServer()
+      N.Config()
+      N.Route._InitServer()
       @_InitSockets()
 
     # _OverrideResource: ->
-    #   oldResource = Nodulator.Resource
-    #   Nodulator.Resource = (name, routes, config, _parent) ->
+    #   oldResource = N.Resource
+    #   N.Resource = (name, routes, config, _parent) ->
     #     if not @resources[name.toLowerCase()]?
     #       @bus.emit 'new_resource', name
     #
-    #     oldResource.call Nodulator, name, routes, config, _parent
+    #     oldResource.call N, name, routes, config, _parent
 
     _InitSockets: ->
-      @io = socket.listen Nodulator.server
+      @io = socket.listen N.server
       io = @io
       onAuthorizeSuccess = (data, accept) ->
         accept null, true
@@ -41,13 +41,13 @@ module.exports = (Nodulator) ->
 
         accept null, false
 
-      if Nodulator.AccountResource?
+      if N.AccountResource?
         @io.use passportSocketIO.authorize
-          passport:       Nodulator.passport
+          passport:       N.passport
           cookieParser:   cookieParser
-          key:            'Nodulator'
-          secret:         'Nodulator'
-          store:          Nodulator.sessionStore
+          key:            'N'
+          secret:         'N'
+          store:          N.sessionStore
           success:        onAuthorizeSuccess
           fail:           onAuthorizeFail
 
@@ -88,16 +88,16 @@ module.exports = (Nodulator) ->
     #   @rooms.push name
     #   for prefix in prefixes
     #     do (prefix) ->
-    #       Nodulator.bus.on prefix + name, (item) =>
+    #       N.bus.on prefix + name, (item) =>
     #         Socket.EmitRoom name, prefix + name, item
 
     @Init: ->
       res = @
-      Nodulator.socket = new res
+      N.socket = new res
 
-  Nodulator.bus.on 'new_resource', (name) -> Socket.NewRoom name
+  N.bus.on 'new_resource', (name) -> Socket.NewRoom name
 
-  Nodulator.Socket = ->
+  N.Socket = ->
     Socket
 
   {name: 'Socket'}

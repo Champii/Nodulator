@@ -3,17 +3,17 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 
-Nodulator = require '..'
+N = require '..'
 
 test = it
 
 Tests = null
 
-describe 'Nodulator Resource', ->
+describe 'N Resource', ->
 
   before (done) ->
-    Nodulator.Reset ->
-      Tests := Nodulator.Resource 'test'
+    N.Reset ->
+      Tests := N.Resource 'test'
 
       assert Tests?
       done()
