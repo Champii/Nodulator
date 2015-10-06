@@ -27,6 +27,8 @@ folder to see a full working exemple in JavaScript, CoffeeScript and LiveScript.
 
 Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
 
+### Following documentation is almost deprecated or incomplete and will be removing soon. Please prefer the most updated documentation at [http://nodulator.champii.io](http://nodulator.champii.io)
+
 ___
 ## Jump To
 
@@ -205,7 +207,7 @@ class PlayerRoute extends N.Route.MultiRoute
     @Put '/:id/levelUp' ~> it.instance.LevelUp!
 
 # We create a resource, and we attach the PlayerRoute
-class Players extends N.Resource 'player', PlayerRoute
+class Players extends N 'player', PlayerRoute
 
   # We create a LevelUp method
   # If you dont provide done callback,
@@ -309,7 +311,7 @@ N.Config
 `Nodulator` provides 2 main Objects :
 
 ```coffeescript
-N.Resource
+N
 N.Route
 ```
 
@@ -323,15 +325,15 @@ A `Resource` is a class permitting to retrive and save a model from a DB.
 Here is an exemple of creating a `Resource`
 
 ```coffeescript
-Players = N.Resource 'player'
+Players = N 'player'
 ```
 
 Here, it creates a `PlayerResource`, linked with a `players` table in DB (if any)
 
-You can pass several params to `N.Resource` :
+You can pass several params to `N` :
 
 ```coffeescript
-N.Resource name [, Route] [, config]
+N name [, Route] [, config]
 ```
 
 You can attach a [Route](#route) and/or a config object to a `Resource`.
@@ -560,7 +562,7 @@ automaticaly fetched when querying another, you can add it to its schema :
 
 ```coffeescript
 
-Bars = N.Resource 'bar', {schema: barProperty: 'string'}
+Bars = N 'bar', {schema: barProperty: 'string'}
 
 config =
   schema:
@@ -570,7 +572,7 @@ config =
       type: Bars
       localKey: 'barId'
 
-Tests = N.Resource 'test', config
+Tests = N 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
@@ -595,7 +597,7 @@ config =
       type: [Bars]
       localKey: 'barIds'
 
-Tests = N.Resource 'test', config
+Tests = N 'test', config
 
 # Fetch Tests with id == 1
 Tests.Fetch 1, (err, test) ->
@@ -619,7 +621,7 @@ with the corresponding id from 'localKey' field
 If can also retrieve a Resource that have a property containing the actual instance id:
 
 ```coffeescript
-Bars = N.Resource 'bar', {schema: testId: 'int'}
+Bars = N 'bar', {schema: testId: 'int'}
 
 config =
   schema:
@@ -628,7 +630,7 @@ config =
       type: Bars
       distantKey: 'testId'
 
-Tests = N.Resource 'test', config
+Tests = N 'test', config
 
 Tests.Create {foo: 12}
 .then -> Bars.Create {testId: 1} #We assume its the first created resource
@@ -670,7 +672,7 @@ or to make a complex class inheritance system built on `Resource`
 In CoffeeScript its pretty easy:
 
 ```coffeescript
-class Units extends N.Resource 'unit'
+class Units extends N 'unit'
 
   # We create a new instance method
   LevelUp: (done) ->
@@ -692,7 +694,7 @@ You can define an abstract class, that won't be attached to any model in DB or
 any `Route`
 
 ```coffeescript
-class Units extends N.Resource 'unit', {abstract: true}
+class Units extends N 'unit', {abstract: true}
   [...]
 
 ```
@@ -739,7 +741,7 @@ There is 2 different ways to attach a `Resource` to a `Route`:
 You can bind a `Route` to a `Resource`
 
 ```coffeescript
-class Units extends N.Resource 'unit', N.Route
+class Units extends N 'unit', N.Route
 ```
 
 Or you can bind a `Resource` to a `Route`
@@ -918,7 +920,7 @@ You just saw that Nodulator provide the default Hacktiv library.
 You can also watch for data-sets to change to retrigger the function :
 
 ```coffeescript
-Tests = N.Resource 'test'
+Tests = N 'test'
 
 [...]
 
@@ -1035,7 +1037,7 @@ Here are the emitted events:
 Exemple
 
 ```coffeescript
-Players = N.Resource 'player'
+Players = N 'player'
 
 N.on 'new_player', (player) ->
   [...] # Do something with this brand new player
@@ -1188,7 +1190,7 @@ XX/XX/XX: current (not released yet)
   - Lib Folder reorganisation
   - Replaced @instance in Route by req._instance.
   - Added a Request class to handle Resource in Route
-  - Now N.Resource take only a name and a config. Its the Route object that
+  - Now N take only a name and a config. Its the Route object that
   take a Resource as property. Also, Routes have to be Instanciated.
   - Changed every 'Nodulator' call by 'N', more readable
   - Added a debug system with 'debug'
