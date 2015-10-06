@@ -35,14 +35,6 @@ N.inited = {}
 module.exports = (table, config, app, routes, name) ->
 
   debug-resource = new Debug "N::Resource::#name"
-  # debug-resource.Log = debug "N::Resource::#{name}"
-  #   ..color = debug.useColors && debug._colors.purple
-  #
-  # debug-resource.Warn = debug "N::Resource::#{name}::Warn"
-  #   ..color = debug.useColors && debug._colors.yellow
-  #
-  # debug-resource.Error = debug "N::Resource::#{name}::Error"
-  #   ..color = debug.useColors && debug._colors.red
 
   debug-res.Log "Creating new Resource : #name"
 
@@ -82,15 +74,7 @@ module.exports = (table, config, app, routes, name) ->
             | _             => void)
 
         @_schema._assoc
-          |> each ~>
-            # console.log @_schema[it.name].desc
-            # desc = @_schema[it.name].desc
-            @[it.name] = blob[it.name]
-            # console.log @_schema[desc.localKey].desc
-            # if not @[it.name]? and (is-type \Array @_schema[desc.localKey].desc or is-type \Array @_schema[desc.localKey].desc?.type)
-            # if not @[it.name]? and (is-type \Array @_schema[it.name] or is-type \Array @_schema[it.name]?.type)
-              # @[it.name] = []
-
+          |> each ~> @[it.name] = blob[it.name]
 
         @id = blob.id
       else
@@ -124,7 +108,6 @@ module.exports = (table, config, app, routes, name) ->
               | @[it.name].ToJSON?                          =>  res[it.name] = @[it.name].ToJSON()
         , @_schema._assoc
 
-      # console.log 'ToJSON', @_type, @_schema?._assoc, res if @_type is 'user'
       res
 
     # Preserve the assocs while extending

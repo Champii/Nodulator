@@ -106,25 +106,6 @@ class N
   Bus: require \./Helpers/Bus
   bus: new @::Bus()
 
-  # Reset: (done) ->
-  #   debug-nodulator.Warn "Reset"
-  #
-  #   @inited = {}
-  #   @db._reset() if @db?
-  #   @table = null
-  #   @resources = {}
-  #   @config = null
-  #
-  #   if @server?
-  #     @app = null
-  #     @server.close()
-  #     @server = null
-  #
-  #   @db._reset() if @db?
-  #   @Init()
-  #
-  #   done() if done?
-
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
 
@@ -146,6 +127,8 @@ f = (...args) ->
   f.Resource.apply f, args
 
 f = f <<<< Nodulator
+
+# Dirty:
 f.Reset = (done) ->
   debug-nodulator.Warn "Reset"
 
