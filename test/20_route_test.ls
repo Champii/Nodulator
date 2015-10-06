@@ -17,7 +17,7 @@ describe 'N Route', ->
     N.Reset ->
 
       class TestRoute extends N.Route
-        resource: N.Resource 'test'
+        resource: N 'test'
 
         Config: ->
           super()

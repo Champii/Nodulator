@@ -26,7 +26,7 @@ describe 'N Validation', ->
           field5:
             type: 'email'
 
-      Tests := N.Resource 'test', config
+      Tests := N 'test', config
 
       done()
 

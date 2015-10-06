@@ -17,7 +17,7 @@ describe 'N Inheritance', ->
 
   before (done) ->
     N.Reset ->
-      class AbTests extends N.Resource 'atest', {abstract: true}
+      class AbTests extends N 'atest', {abstract: true}
 
         FetchByName: (name, done) ->
           @table.FindWhere '*', {name: name}, (err, blob) ~>
@@ -28,7 +28,7 @@ describe 'N Inheritance', ->
       assert AbTests?
       ATests := AbTests
       ATests.Init()
- 
+
       done()
 
   test 'should have Extend function', (done) ->
@@ -45,7 +45,7 @@ describe 'N Inheritance', ->
 
   test 'should have inherited in route', (done2) ->
 
-    class Players extends N.Resource 'player'
+    class Players extends N 'player'
 
       level: 1
 
@@ -87,7 +87,7 @@ describe 'N Inheritance', ->
         super()
         @Put '/:id/levelup' ~> it.instance.LevelUp!
 
-    class Players extends N.Resource 'player', PlayerRoute
+    class Players extends N 'player2', PlayerRoute
 
       level: 1
 

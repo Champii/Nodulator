@@ -13,6 +13,7 @@ class Wrappers
     -1
 
   @_WrapFlipDone = (cb) ->
+    # console.log N
     if not N.config.flipDone
       return cb
 

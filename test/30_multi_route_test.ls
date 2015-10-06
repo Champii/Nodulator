@@ -15,7 +15,7 @@ describe 'N Multi Route', ->
     N.Reset ->
 
       class TestRoute extends N.Route.MultiRoute
-        resource: N.Resource 'test'
+        resource: N 'test'
 
       tests := new TestRoute
 

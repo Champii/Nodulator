@@ -16,7 +16,7 @@ describe 'N Flip Done', ->
       N.Config do
         flipDone: true
 
-      Tests := N.Resource 'test'
+      Tests := N 'test'
 
       done()
 

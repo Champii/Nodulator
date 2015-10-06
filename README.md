@@ -1178,6 +1178,8 @@ By order of priority
 - Auto add localKey or distantKey field when attached Resource
 - Type inference in schema for default field
 - Abstract class can retrieve every child `Resource`
+- When in Association, if the localKey doesnt exists, it is created on the fly
+- Added a instance.Watch() call, to make the instance to auto-update when part of it change
 
 ___
 ## ChangeLog
@@ -1192,6 +1194,8 @@ XX/XX/XX: current (not released yet)
   - Added a debug system with 'debug'
   - Console mode to "connect" to an existing/running Nodulator instance and perform standard calls
   - Joined Every modules into this git repo for a stronger compatibility
+  - Shortcut the N.Resource() into a simple N()
+  - Added a 'Watch' for both Instance and Class of Resource, that allow more flexibility
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

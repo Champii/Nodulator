@@ -13,6 +13,6 @@ describe 'N', ->
     N.Reset done
 
   test 'should create resource', (done) ->
-    Players = N.Resource \player
+    Players = N \player
     assert Players
     done()

@@ -1,4 +1,4 @@
-class Socket extends N.Factory 'socket', '$rootScope'
+class Socket extends Nodulator.Factory 'socket', '$rootScope'
 
   socket: {}
 

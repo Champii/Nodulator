@@ -15,7 +15,7 @@ describe 'N Associations', ->
 
   before (done) ->
     N.Reset ->
-      Childs := N.Resource 'child'
+      Childs := N 'child'
       Childs.Create {field: 'child'}, (err, child) -> return console.error err if err?
 
       testConfig =
@@ -25,7 +25,7 @@ describe 'N Associations', ->
             type: Childs
             localKey: 'childId'
 
-      Tests := N.Resource 'test', testConfig
+      Tests := N 'test', testConfig
 
       done!
 
@@ -53,7 +53,7 @@ describe 'N Associations', ->
           type: [Childs]
           localKey: 'childIds'
 
-    News := N.Resource 'new', newConfig
+    News := N 'new', newConfig
 
     done!
 
@@ -71,7 +71,7 @@ describe 'N Associations', ->
       done!
 
   test 'should fetch distantKey with array' (done) ->
-    class Childs extends N.Resource 'child2', N.Route.MultiRoute
+    class Childs extends N 'child2', N.Route.MultiRoute
 
     testConfig =
       schema:
@@ -79,7 +79,7 @@ describe 'N Associations', ->
           type: Childs
           distantKey: 'testId'
 
-    class Tests extends N.Resource 'test2', testConfig
+    class Tests extends N 'test2', testConfig
 
     Childs.Create testId: 1 field: 'child'
     .fail -> throw new Error it
@@ -89,7 +89,7 @@ describe 'N Associations', ->
       done!
 
   test 'should fetch distantKey with array of association' (done) ->
-    Childs = N.Resource 'child3'
+    Childs = N 'child3'
 
     testConfig =
       schema:
@@ -97,7 +97,7 @@ describe 'N Associations', ->
           type: [Childs]
           distantKey: 'testId'
 
-    Tests = N.Resource 'test3', testConfig
+    Tests = N 'test3', testConfig
 
     Childs.Create testId: 1 field: 'child'
     .fail -> throw new Error it

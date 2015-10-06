@@ -13,7 +13,7 @@ describe 'N Promises', ->
 
   before (done) ->
     N.Reset ->
-      Tests := N.Resource 'test'
+      Tests := N 'test'
 
       done()
 

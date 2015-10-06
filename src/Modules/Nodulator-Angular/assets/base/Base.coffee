@@ -11,8 +11,8 @@ Base = (name, injects) ->
 
       for arg, i in @_injects when typeof(arg) is 'string'
         service = arg.slice 0, arg.search /Service$/g
-        if not (service in _(N.services).keys()) and service in _resources
-          N.ResourceService(service).Init()
+        if not (service in _(Nodulator.services).keys()) and service in _resources
+          Nodulator.ResourceService(service).Init()
 
       return [@_name, @_injects.concat [(args...) => @_Body.apply @, [args]]]
 

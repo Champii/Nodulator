@@ -43,6 +43,7 @@ class N
     resource = null
     name = name.toLowerCase()
     if @resources[name]?
+      debug-nodulator.Log "Existing resource : #{name}"
       return @resources[name]
 
     if routes? and not routes.prototype
@@ -105,27 +106,24 @@ class N
   Bus: require \./Helpers/Bus
   bus: new @::Bus()
 
-  Reset: (done) ->
-    debug-nodulator.Warn "Reset"
-
-    @inited = {}
-    if not @server?
-      @Init()
-      done() if done?
-      return
-
-    @app = null
-    @server.close()
-    @server = null
-
-    @resources = {}
-    @config = null
-    @table = null
-
-    @db._reset() if @db?
-    @Init()
-
-    done() if done?
+  # Reset: (done) ->
+  #   debug-nodulator.Warn "Reset"
+  #
+  #   @inited = {}
+  #   @db._reset() if @db?
+  #   @table = null
+  #   @resources = {}
+  #   @config = null
+  #
+  #   if @server?
+  #     @app = null
+  #     @server.close()
+  #     @server = null
+  #
+  #   @db._reset() if @db?
+  #   @Init()
+  #
+  #   done() if done?
 
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
@@ -139,4 +137,39 @@ class N
         endpoints.push res
     done(endpoints) if done?
 
-module.exports = new N
+
+Nodulator = new N
+
+f = (...args) ->
+
+  f.Config! if not f.config?
+  f.Resource.apply f, args
+
+f = f <<<< Nodulator
+f.Reset = (done) ->
+  debug-nodulator.Warn "Reset"
+
+  @inited = {}
+  Nodulator.inited = {}
+  @db._reset() if @db?
+  Nodulator.db._reset() if Nodulator.db?
+  @table = null
+  Nodulator.table = null
+  @resources = {}
+  Nodulator.resources = {}
+  @config = null
+  Nodulator.config = null
+
+  if @server?
+    @app = null
+    Nodulator.app = null
+    @server.close()
+    @server = null
+    Nodulator.server = null
+
+  @db._reset() if @db?
+  Nodulator.db._reset() if Nodulator.db?
+  @Init()
+
+  done() if done?
+module.exports = f

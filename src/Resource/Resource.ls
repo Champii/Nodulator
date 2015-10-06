@@ -81,7 +81,16 @@ module.exports = (table, config, app, routes, name) ->
             | it.1.default? => that
             | _             => void)
 
-        each (~> @[it.name] = blob[it.name]), @_schema._assoc
+        @_schema._assoc
+          |> each ~>
+            # console.log @_schema[it.name].desc
+            # desc = @_schema[it.name].desc
+            @[it.name] = blob[it.name]
+            # console.log @_schema[desc.localKey].desc
+            # if not @[it.name]? and (is-type \Array @_schema[desc.localKey].desc or is-type \Array @_schema[desc.localKey].desc?.type)
+            # if not @[it.name]? and (is-type \Array @_schema[it.name] or is-type \Array @_schema[it.name]?.type)
+              # @[it.name] = []
+
 
         @id = blob.id
       else
@@ -110,10 +119,9 @@ module.exports = (table, config, app, routes, name) ->
       if @_schema?
         each ~>
           if @[it.name]?
-            # console.log 'Assoc: ', res, @[it.name].ToJSON? if @_type is 'user'
             switch
-              | Array.isArray @[it.name]  =>  res[it.name] = __(@[it.name]).invoke 'ToJSON'
-              | @[it.name].ToJSON?        =>  res[it.name] = @[it.name].ToJSON()
+              | Array.isArray @[it.name] and @[it.name].0?  =>  res[it.name] = __(@[it.name]).invoke 'ToJSON'
+              | @[it.name].ToJSON?                          =>  res[it.name] = @[it.name].ToJSON()
         , @_schema._assoc
 
       # console.log 'ToJSON', @_type, @_schema?._assoc, res if @_type is 'user'
@@ -128,6 +136,15 @@ module.exports = (table, config, app, routes, name) ->
       each (-> delete newBlob[it.name]), @_schema._assoc
 
       __(@).extend newBlob
+
+    Watch: (done) ->
+      N.Watch ~>
+        N[capitalize name + \s ].Fetch @id, (err, res) ~>
+          return console.log err if err?
+
+          @ <<<< res
+          done err, res if done?
+      @
 
   #
   # Private
@@ -151,9 +168,9 @@ module.exports = (table, config, app, routes, name) ->
               | _     =>
                 if !exists
                   @id = id
-                  N.bus.emit \new_ + name, @ToJSON()
+                  N.bus.emit \new_ + name, @
                 else
-                  N.bus.emit \update_ + name, @ToJSON()
+                  N.bus.emit \update_ + name, @
                 ChangeWatcher.Invalidate()
 
                 debug-resource.Log "Saved  {id: #{@id}}"
@@ -167,12 +184,13 @@ module.exports = (table, config, app, routes, name) ->
         switch
           | err? => done err
           | _    =>
-            N.bus.emit \delete_ + @name, @ToJSON()
+            @id = undefined
+            N.bus.emit \delete_ + @name, @
             ChangeWatcher.Invalidate()
 
             debug-resource.Log "Deleted  {id: #{@id}}"
 
-            done null, {}
+            done null, @
 
       null
 
@@ -301,10 +319,53 @@ module.exports = (table, config, app, routes, name) ->
 
       , done
 
+    @Watch = (...args) ->
+
+      @Init! if not @inited
+
+      query = {}
+      types = []
+      done = null
+      for arg in args
+
+        if is-type \Function arg
+          done := arg
+        else if is-type \Object arg
+          query := arg
+        else if is-type \Array arg
+          types := []
+        else if is-type \String arg
+          types.push arg
+
+      if not types.length
+        types.push \all
+
+      for type in types
+        if type is 'new'
+          N.bus.on 'new_' + name, (item) ->
+            done item.Watch! if done?
+
+        else if type is 'changed'
+          N.bus.on 'update_' + name, (item) ->
+            done item.Watch! if done?
+        else if type is 'deleted'
+          N.bus.on 'delete_' + name, (item) ->
+            done item.Watch! if done?
+
+        else if type is 'all'
+          return N.Watch ~>
+            N[capitalize name + \s ].List query, (err, res) ~>
+              return done err if err?
+
+              done res if done?
+
+      @
+
   #
   # Private
   # Class Methods
   #
+
 
     # Check for schema validity
     @_Validate = (blob, full, done) ->
@@ -422,6 +483,7 @@ module.exports = (table, config, app, routes, name) ->
     # Prepare Relationships
     @_PrepareRelationship = (isArray, field, description) ->
       type = null
+      foreign = null
       get = (blob, done) ->
         done new Error 'No local or distant key given'
 
@@ -429,6 +491,7 @@ module.exports = (table, config, app, routes, name) ->
 
       if description.localKey?
         type = \local
+        foreign = description.localKey
         get = (blob, done, _depth) ->
           if not _depth
             return done()
@@ -443,6 +506,7 @@ module.exports = (table, config, app, routes, name) ->
           description.type._FetchUnwrapped blob[description.localKey], done, _depth - 1
 
       else if description.distantKey?
+        foreign = description.distantKey
         type = \distant
         get = (blob, done, _depth) ->
           if not _depth or not blob.id?
@@ -457,6 +521,7 @@ module.exports = (table, config, app, routes, name) ->
         type: type
         name: field
         Get: get
+        foreign: foreign
       toPush.default = description.default if description.default?
       @_schema._assoc.push toPush
 
@@ -476,9 +541,16 @@ module.exports = (table, config, app, routes, name) ->
         else if Array.isArray description
           isArray = true
           description = description[0]
-        # console.log 'PrepareSchema', description, isArray
 
         if description.type? and typeof description.type is 'function'
+          if description.localKey? and not @config.schema[description.localKey]?
+            if isArray
+              @_schema[description.localKey] = {desc: [\int], typeCheck: typeCheck.arrayOf \int}
+              @config.schema[description.localKey] = [\int]
+            else
+              @_schema[description.localKey] = {desc: \int, typeCheck: typeCheck.int}
+              @config.schema[description.localKey] = \int
+
           @_PrepareRelationship isArray, field, description
 
         else if description.type?
@@ -496,6 +568,7 @@ module.exports = (table, config, app, routes, name) ->
             @_schema[field] = typeCheck.arrayOf description
           else
             @_schema[field] = typeCheck[description]
+
 
     # Setup inheritance
     @_PrepareAbstract = ->

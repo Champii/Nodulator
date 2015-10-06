@@ -25,7 +25,7 @@ describe 'N Single Route', ->
             default: 'test'
 
       class TestRoute extends N.Route.SingleRoute
-        resource: N.Resource 'test', config
+        resource: N 'test', config
 
       tests := new TestRoute
 

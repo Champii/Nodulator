@@ -13,7 +13,7 @@ describe 'N Reactive value', ->
 
   before (done) ->
     N.Reset ->
-      Tests := N.Resource 'test'
+      Tests := N 'test'
       Tests.Create [
         {test: 1}
         {test: 1}

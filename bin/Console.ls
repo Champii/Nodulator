@@ -1,6 +1,7 @@
 require! {
   fs
   repl
+  "repl.history": rhistory
   path
   \prelude-ls
   '\../' : N
@@ -60,12 +61,14 @@ module.exports = (configPath, resPath)->
       done null, res
 
   inst = repl.start do
-    prompt: 'N > '
+    prompt: '\033[92mN\033[0m \033[91m>\033[0m '
     useGlobal: true
     input: process.stdin
     output: process.stdout
     eval: (cmd, context, filename, callback) ->
       wrapper.call context, cmd, callback
+
+  rhistory inst, process.env.HOME + '/.nodulator_history'
 
   try config = require rootPath + \/ + configPath
 
