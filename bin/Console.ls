@@ -6,6 +6,7 @@ require! {
   \prelude-ls
   '\../' : N
   livescript
+  util
   \../src/Modules/Nodulator-Account : N-Account
 }
 
@@ -60,13 +61,21 @@ module.exports = (configPath, resPath)->
       @[varName] = res
       done null, res
 
+  util.inspect.colors.lightred = [91,39];
+  util.inspect.styles.name = 'red';
+  util.inspect.styles.symbol = 'green';
+
   inst = repl.start do
-    prompt: '\033[92mN\033[0m \033[91m>\033[0m '
+    prompt: '\n\033[92mN\033[0m \033[91m>\033[0m '
     useGlobal: true
     input: process.stdin
     output: process.stdout
+    writer: ->
+      # it = it.replace '{', '\033[91{\033[0m'
+      util.inspect it, depth: 10 colors: true
     eval: (cmd, context, filename, callback) ->
-      wrapper.call context, cmd, callback
+      wrapper.call context, cmd, (err, res) ->
+        callback err, res
 
   rhistory inst, process.env.HOME + '/.nodulator_history'
 

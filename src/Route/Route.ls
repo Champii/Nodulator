@@ -174,6 +174,8 @@ class SingleRoute extends Route
       @name = @rname[ til @ name.length]*'' + 'ies'
 
     N := require '../..' if not N?
+    if not N.app?
+      Route._InitServer!
     @app = N.app
     # @resource.Init()
 

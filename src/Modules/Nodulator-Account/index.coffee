@@ -23,7 +23,7 @@ module.exports = (N) ->
     N.app.use N.passport.initialize()
     N.app.use N.passport.session()
 
-  class AccountResource extends N.Resource '_account', {abstract: true}
+  class AccountResource extends N '_account', {abstract: true}
 
     @userField:
       usernameField: 'username'

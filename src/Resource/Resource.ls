@@ -6,13 +6,14 @@ require! {
   hacktiv: Hacktiv
   \./ChangeWatcher
   \./Wrappers
-  \prelude-ls : {Obj, keys, map, lists-to-obj, filter, intersection, difference, obj-to-pairs, each, is-type, values, capitalize}
+  \prelude-ls
   # \async-ls : {callbacks: {bindA}}
   \../Helpers/Debug
 }
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
+global import prelude-ls
 
 validationError = (field, value, message) ->
   field: field
@@ -77,6 +78,16 @@ module.exports = (table, config, app, routes, name) ->
           |> each ~> @[it.name] = blob[it.name]
 
         @id = blob.id
+
+        @_schema._virt
+          |> each (virt) ~>
+            return if @[virt.name]?
+            res = virt.virtual @, (val) ~>
+              @[virt.name] = val
+
+            if res?
+              @[virt.name] = res
+
       else
         import blob
 
@@ -91,7 +102,9 @@ module.exports = (table, config, app, routes, name) ->
       res = if @id? then id: @id else {}
 
       switch
-        | @_schema? =>  each (~> res[it] = @[it] if it isnt \_assoc and it not in map (.name), @_schema._assoc), keys @_schema
+        | @_schema? =>  keys @_schema |> each ~>
+          if not (it in <[_assoc _virt]>) and (it not in map (.name), @_schema._assoc) and (it not in map (.name), @_schema._virt)
+            res[it] = @[it]
         | _         =>  each (~> res[it] = @[it] if it[0] isnt \_ and typeof! @[it] isnt 'Function'), keys @
 
       res
@@ -100,7 +113,9 @@ module.exports = (table, config, app, routes, name) ->
     ToJSON: ->
       res = @Serialize()
 
+
       if @_schema?
+        @_schema._virt |> each ~> res[it.name] = @[it.name]
         each ~>
           if @[it.name]?
             switch
@@ -123,10 +138,11 @@ module.exports = (table, config, app, routes, name) ->
     Watch: (done) ->
       N.Watch ~>
         N[capitalize name + \s ].Fetch @id, (err, res) ~>
-          return console.log err if err?
+          return done err if err? and done?
+          return console.error err if err?
 
           @ <<<< res
-          done err, res if done?
+          done res if done?
       @
 
   #
@@ -185,6 +201,10 @@ module.exports = (table, config, app, routes, name) ->
     # _Deserialize and Save from a blob or an array of blob
     @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
       @Init!
+
+      if is-type \Function args
+        done = args
+        args = {}
 
       if is-type \Array args
         debug-resource.Log "Creating from array: #{args.length} entries"
@@ -310,49 +330,77 @@ module.exports = (table, config, app, routes, name) ->
       types = []
       done = null
       for arg in args
-
-        if is-type \Function arg
-          done := arg
-        else if is-type \Object arg
-          query := arg
-        else if is-type \Array arg
-          types := []
-        else if is-type \String arg
-          types.push arg
+        switch
+          | is-type \Function arg => done := arg;
+          | is-type \Object arg   => query := arg;
+          | is-type \Array arg    => types := arg;
+          | is-type \String arg   => types.push arg;
 
       if not types.length
         types.push \all
 
       for type in types
-        if type is 'new'
-          N.bus.on 'new_' + name, (item) ->
-            done item.Watch! if done?
-
-        else if type is 'changed'
-          N.bus.on 'update_' + name, (item) ->
-            done item.Watch! if done?
-        else if type is 'deleted'
-          N.bus.on 'delete_' + name, (item) ->
-            done item.Watch! if done?
-
-        else if type is 'all'
-          return N.Watch ~>
-            N[capitalize name + \s ].List query, (err, res) ~>
-              return done err if err?
-
-              done res if done?
+        switch type
+          | <[new updated deleted]> => N.bus.on that + '_' + name, (item) -> done item.Watch! if done?
+          | \all                    => N.Watch -> N[capitalize name + \s ].List query .fail done .then done
 
       @
+
+    @AttachRoute = (@_routes) ->
+      @Init!
+
+    @AddField = (field, type) ->
+
+    @HasOne = (res, belongsTo = true) ->
+      @Init!
+      if not @_schema?
+        @_schema = {_assoc: [], _virt: []}
+
+      if not @_schema[res.lname + 'Id']?
+        @_schema[res.lname + 'Id'] = {desc: \int, typeCheck: typeCheck.int}
+        @[]config.{}schema[res.lname + 'Id'] = \int
+
+      @_PrepareRelationship false, capitalize(res.lname), type: res, localKey: res.lname + 'Id'
+      res.BelongsTo @ if belongsTo
+
+    @HasMany = (res) ->
+      @Init!
+      if not @_schema?
+        @_schema = {_assoc: [], _virt: []}
+
+      if not @_schema[res.lname + 'Ids']?
+        @_schema[res.lname + 'Ids'] = {desc: [\int], typeCheck: typeCheck.arrayOf \int, default: []}
+        @[]config.{}schema[res.lname + 'Ids'] = type: [\int], default: []
+        @::[res.lname + 'Ids'] = []
+
+      @_PrepareRelationship true, capitalize(res.lname + \s), type: res, localKey: res.lname + 'Ids'
+
+    @BelongsTo = (res) ->
+      @Init!
+      if not @_schema?
+        @_schema = {_assoc: [], _virt: []}
+
+      @_PrepareRelationship false, capitalize(res.lname), type: res, distantKey: @lname + 'Id'
+
+    @BelongsToMany = (res) ->
+      @Init!
+      if not @_schema?
+        @_schema = {_assoc: [], _virt: []}
+
+      if not res._schema[@lname + 'Id']?
+        res._schema[@lname + 'Id'] = {desc: \int, typeCheck: typeCheck.int}
+        res.[]config.{}schema[@lname + 'Id'] = type: \int
+
+      @_PrepareRelationship true, capitalize(res.lname + \s), type: res, distantKey: @lname + 'Id'
 
   #
   # Private
   # Class Methods
   #
 
-
     # Check for schema validity
     @_Validate = (blob, full, done) ->
-      return done() if not config? or not config.schema?
+      return done() if not @config? or not @config.schema?
       delete blob._id if N.config.dbType is \Mongo
 
       if not done?
@@ -362,27 +410,27 @@ module.exports = (table, config, app, routes, name) ->
       errors = []
 
       @_schema
-      |> obj-to-pairs
-      |> filter (-> it.1? and it.0 isnt '_assoc')
-      |> each (~>
-        if full and
-            not blob[it.0]? and
-            not config?.schema?[it.0]?.optional and
-            not config?.schema?[it.0]?.default
+        |> obj-to-pairs
+        |> filter (-> it.1? and (it.0 not in ['_assoc', '_virt']))
+        |> each ~>
+          if full and
+              not blob[it.0]? and
+              not @config?.schema?[it.0]?.optional and
+              not @config?.schema?[it.0]?.default?
 
-          errors[*] = validationError it.0, blob[it.0], ' was not present.'
+            errors[*] = validationError it.0, blob[it.0], ' was not present.'
 
-        else if blob[it.0]? and not (it.1)(blob[it.0])
+          else if blob[it.0]? and not (it.1.typeCheck)(blob[it.0])
 
-          errors[*] = validationError it.0,
-                                      blob[it.0],
-                                      ' was not a valid ' + config.schema[it.0].type
+            errors[*] = validationError it.0,
+                                        blob[it.0],
+                                        ' was not a valid ' + @config.schema[it.0].type
 
-        for field, value of blob when not @_schema[field]? and
-                                      field isnt \id and
-                                      field not in __(@_schema._assoc).pluck \name
+          for field, value of blob when not @_schema[field]? and
+                                        field isnt \id and
+                                        field not in __(@_schema._assoc).pluck \name
 
-          errors.push validationError field, blob[field], ' is not in schema')
+            errors.push validationError field, blob[field], ' is not in schema'
 
       done(if errors.length then {errors} else null)
 
@@ -400,7 +448,6 @@ module.exports = (table, config, app, routes, name) ->
         return done err if err?
 
         res = @
-        # console.log 'Deserialize', @_type, @_schema
         if @_schema?
           @_FetchAssoc blob, (err, blob) ->
             return done err if err?
@@ -408,7 +455,7 @@ module.exports = (table, config, app, routes, name) ->
             done null, new res blob
           , _depth
         else
-         done null, new res blob
+          done null, new res blob
 
     # Get each associated Resource
     i = 0
@@ -432,8 +479,8 @@ module.exports = (table, config, app, routes, name) ->
             debug-resource.Error "Assoc: #{resource.name} #{JSON.stringify err}"
 
           if err? and resource.type is \distant => done!
-          else if err? and config?.schema? => done err
-          else if err? and config? and config.schema?[resource.name]?.optional => done!
+          else if err? and @config?.schema? => done err
+          else if err? and @config? and @config.schema?[resource.name]?.optional => done!
           else
             assocs[resource.name] = instance
             done!
@@ -510,7 +557,9 @@ module.exports = (table, config, app, routes, name) ->
 
     # Setup Schema
     @_PrepareSchema = ->
-      @_schema = {_assoc: []}
+
+      if not @_schema?
+        @_schema = {_assoc: [], _virt: []}
 
 
       debug-res.Log "Preparing Schema for #{name}"
@@ -525,7 +574,12 @@ module.exports = (table, config, app, routes, name) ->
           isArray = true
           description = description[0]
 
-        if description.type? and typeof description.type is 'function'
+        if typeof(description) is 'function'
+          @_schema._virt.push do
+            name: field
+            virtual: description
+
+        else if description.type? and typeof description.type is 'function'
           if description.localKey? and not @config.schema[description.localKey]?
             if isArray
               @_schema[description.localKey] = {desc: [\int], typeCheck: typeCheck.arrayOf \int}
@@ -542,16 +596,15 @@ module.exports = (table, config, app, routes, name) ->
               @::[field] = description.default()
             else
               @::[field] = description.default
-          @_schema[field] = typeCheck[description.type]
+          @_schema[field] = {desc: description, typeCheck: typeCheck[description.type]}
           if isArray
-            @_schema[field] = typeCheck.arrayOf description.type
+            @_schema[field] = {desc: description, typeCheck: typeCheck.arrayOf description.type}
 
         else if typeof(description) is 'string'
           if isArray
-            @_schema[field] = typeCheck.arrayOf description
+            @_schema[field] = {desc: description, typeCheck: typeCheck.arrayOf description}
           else
-            @_schema[field] = typeCheck[description]
-
+            @_schema[field] = {desc: description, typeCheck: typeCheck[description]}
 
     # Setup inheritance
     @_PrepareAbstract = ->

@@ -1198,6 +1198,8 @@ XX/XX/XX: current (not released yet)
   - Joined Every modules into this git repo for a stronger compatibility
   - Shortcut the N.Resource() into a simple N()
   - Added a 'Watch' for both Instance and Class of Resource, that allow more flexibility
+  - Added a virtual field filled when the resource is.
+  - Added HasOne, HasMany, BelongsTo and BelongsToMany calls. Buggy at the moment and not standard
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

@@ -52,8 +52,8 @@ class N
 
     @Config() if not @config? # config of N instance, not resource one
 
-    if not _parent? and (not routes? or routes.prototype not instanceof @Route)
-      routes = @Route
+    # if not _parent? and (not routes? or routes.prototype not instanceof @Route)
+    #   routes = @Route
 
     if _parent?
       class ExtendedResource extends _parent
@@ -78,10 +78,11 @@ class N
   Route: require \./Route/Route
 
   Config: (config) ->
-    debug-nodulator.Warn "Start main config"
     if @config?
       debug-nodulator.Warn "Aleady configured"
       return
+
+    debug-nodulator.Warn "Start main config"
 
     @config = config || @defaultConfig
 
