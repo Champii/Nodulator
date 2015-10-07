@@ -153,7 +153,7 @@ module.exports = (table, config, app, routes, name) ->
     # Save without wrap
     _SaveUnwrapped: (done) ->
       serie = @Serialize()
-      Resource._Validate serie, true, (err) ~>
+      Resource._Validate.call @, serie, true, (err) ~>
         exists = @id?
 
         if exists => debug-resource.Log "Saving  {id: #{@id}}"
@@ -199,8 +199,11 @@ module.exports = (table, config, app, routes, name) ->
   #
 
     # _Deserialize and Save from a blob or an array of blob
-    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
+      @_CreateUnwrapped ...
+
+    @_CreateUnwrapped = (args, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
       if is-type \Function args
         done = args
@@ -424,7 +427,7 @@ module.exports = (table, config, app, routes, name) ->
 
             errors[*] = validationError it.0,
                                         blob[it.0],
-                                        ' was not a valid ' + @config.schema[it.0] || @config.schema[it.0].type
+                                        ' was not a valid ' + @config.schema[it.0]?.type || @config.schema[it.0]
 
           for field, value of blob when not @_schema[field]? and
                                         field isnt \id and

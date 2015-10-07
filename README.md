@@ -1166,6 +1166,12 @@ ___
 
 By order of priority
 
+- Watch a specific field
+- Relations not only based on id but on every property types
+- Schema 'strict' mode that disallow any other properties
+- Schema 'cool' mode that only performs validation check
+- Internal property that isnt sent to the client by default
+- Schema and SchemaProperty classes (with .Internal() or .Default() or ...) to clarify the code
 - Decentralize modules config
 - 'Unique' field
 - Cache
@@ -1204,6 +1210,7 @@ XX/XX/XX: current (not released yet)
   - Added _WrapDebug() Wrapper
   - Web server now starts only when needed (when first Route is being declared)
   - Fixed validation fails
+  - Added _CreateUnwrapped
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

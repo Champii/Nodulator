@@ -113,6 +113,25 @@ class N
   Watch:    Hacktiv
   DontWatch: Hacktiv.DontWatch
 
+  Reset: (done) ->
+    debug-nodulator.Warn "Reset"
+
+    @inited = {}
+    @db._reset() if @db?
+    @table = null
+    @resources = {}
+    @config = null
+
+    if @server?
+      @app = null
+      @server.close()
+      @server = null
+
+    @db._reset() if @db?
+    @Init()
+
+    done() if done?
+
   _ListEndpoints: (done) ->
     endpoints = []
     for endpoint in @app._router.stack
@@ -130,33 +149,5 @@ f = (...args) ->
   f.Resource.apply f, args
 
 f = f <<<< Nodulator
-
-# Dirty:
-f.Reset = (done) ->
-  debug-nodulator.Warn "Reset"
-
-  @inited = {}
-  Nodulator.inited = {}
-  @db._reset() if @db?
-  Nodulator.db._reset() if Nodulator.db?
-  @table = null
-  Nodulator.table = null
-  @resources = {}
-  Nodulator.resources = {}
-  @config = null
-  Nodulator.config = null
-
-  if @server?
-    @app = null
-    Nodulator.app = null
-    @server.close()
-    @server = null
-    Nodulator.server = null
-
-  @db._reset() if @db?
-  Nodulator.db._reset() if Nodulator.db?
-  @Init()
-
-  done() if done?
 
 module.exports = f
