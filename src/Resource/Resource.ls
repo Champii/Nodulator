@@ -424,7 +424,7 @@ module.exports = (table, config, app, routes, name) ->
 
             errors[*] = validationError it.0,
                                         blob[it.0],
-                                        ' was not a valid ' + @config.schema[it.0].type
+                                        ' was not a valid ' + @config.schema[it.0] || @config.schema[it.0].type
 
           for field, value of blob when not @_schema[field]? and
                                         field isnt \id and

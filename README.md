@@ -27,7 +27,7 @@ folder to see a full working exemple in JavaScript, CoffeeScript and LiveScript.
 
 Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
 
-### Following documentation is almost deprecated or incomplete and will be removing soon. Please prefer the most updated documentation at [http://nodulator.champii.io](http://nodulator.champii.io)
+### Following documentation is almost deprecated or incomplete and will be removed soon. Please prefer the most updated documentation at [http://nodulator.champii.io](http://nodulator.champii.io)
 
 ___
 ## Jump To
@@ -1188,6 +1188,7 @@ ___
 XX/XX/XX: current (not released yet)
   - LiveScript ! \o/
   - Lib Folder reorganisation
+  - Added benchmarks folder
   - Replaced @instance in Route by req._instance.
   - Added a Request class to handle Resource in Route
   - Now N take only a name and a config. Its the Route object that
@@ -1200,6 +1201,9 @@ XX/XX/XX: current (not released yet)
   - Added a 'Watch' for both Instance and Class of Resource, that allow more flexibility
   - Added a virtual field filled when the resource is.
   - Added HasOne, HasMany, BelongsTo and BelongsToMany calls. Buggy at the moment and not standard
+  - Added _WrapDebug() Wrapper
+  - Web server now starts only when needed (when first Route is being declared)
+  - Fixed validation fails
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

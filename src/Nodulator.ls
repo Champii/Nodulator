@@ -38,7 +38,13 @@ class N
 
     debug-nodulator.Log 'Init ended'
 
-  Resource: (name, routes, config, _parent) ~>
+  Resource: (name, routes, config, _parent) ->
+
+    getParentChain = ->
+      | it?._parent? => " <= #{that.name}" + getParentChain that
+      | _   => ''
+
+    debug-nodulator.Log "Start creating resource: #{name + getParentChain @resources[name]}"
 
     resource = null
     name = name.toLowerCase()
@@ -50,7 +56,7 @@ class N
       config = routes
       routes = null
 
-    @Config() if not @config? # config of N instance, not resource one
+    @Config() # config of N instance, not resource one
 
     # if not _parent? and (not routes? or routes.prototype not instanceof @Route)
     #   routes = @Route
@@ -67,9 +73,6 @@ class N
       @resources[name] = resource :=
         require(\./Resource/Resource) table, config, @app, routes, name
 
-    getParentChain = ->
-      | it?._parent? => " <= #{that.name}" + getParentChain that
-      | _   => ''
 
     debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
@@ -119,7 +122,6 @@ class N
         endpoints.push res
     done(endpoints) if done?
 
-
 Nodulator = new N
 
 f = (...args) ->
@@ -156,4 +158,5 @@ f.Reset = (done) ->
   @Init()
 
   done() if done?
+
 module.exports = f

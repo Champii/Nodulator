@@ -40,7 +40,7 @@ class Route
       return
 
     if not N.app?
-      Route._InitServer!
+      N.Route._InitServer!
 
     @app = N.app
 

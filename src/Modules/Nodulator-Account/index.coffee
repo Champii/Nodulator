@@ -29,6 +29,7 @@ module.exports = (N) ->
       usernameField: 'username'
       passwordField: 'password'
 
+
     @_InitPassport: ->
 
       N.passport.serializeUser (user, done) =>
@@ -49,7 +50,8 @@ module.exports = (N) ->
           return done null, false, {message: 'Incorrect Username/password'} if err? or !(user?) or user[@userField.passwordField] isnt password
           return done null, user
 
-    @_InitRoutes: (resName) ->
+    @_InitLoginRoutes: (resName) ->
+      @app = N.app
       @app.post '/api/1/' + resName + 's' + '/login', N.passport.authenticate('local'), (req, res) =>
         if @config? and @config.loginCallback?
           @config.loginCallback req, ->
@@ -101,8 +103,10 @@ module.exports = (N) ->
     if res.config? and res.config.fields?
       res.userField = res.config.fields
 
+    console.log N.app
+
     res._InitPassport()
-    res._InitRoutes args[0]
+    res._InitLoginRoutes args[0]
 
     res
 

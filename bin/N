@@ -27,15 +27,18 @@ capitalize = (str) ->
   str[0].toUpperCase() + str[1 to]*''
 
 exists = (path, done) ->
-  realPath = fs.realpathSync path
-  fs.lstat realPath, (err, stat) ->
+  fs.realpath path, (err, realPath) ->
     console.log err if err?
     return done false if err?
 
-    if stat.isDirectory! or stat.isSymbolicLink! or stat.isFile()
-      done true
-    else
-      done false
+    fs.lstat realPath, (err, stat) ->
+      console.log err if err?
+      return done false if err?
+
+      if stat.isDirectory! or stat.isSymbolicLink! or stat.isFile()
+        done true
+      else
+        done false
 
 npmStandard = (action, pack, done) ->
   exec 'npm ' + action + ' ' + pack + ' --save', (err, stdout, stderr) ->
@@ -53,12 +56,13 @@ npmDevInstall = (action, pack, done) ->
   else
     packCapit = capitalize pack
 
-  # orig = path.resolve(NodulatorRoot, '..') + '/' + packCapit
+  orig = path.resolve(NodulatorRoot, packCapit)
 
   exec 'mkdir -p ./node_modules', (err, stdout, stderr) ->
     return done err if err? and done?
 
-    exec  'cd ' + appRoot + ' && ln -sf ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
+    # exec  'cd ' + appRoot + ' && ln -sf ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
+    exec  "cd #appRoot && ln -sf #appRoot/#packCapit #appRoot/node_modules/#{name.toLowerCase!} && cd ..", (err, stdout, stderr) ->
       return done err if err? and done?
       return console.error err if err?
 
