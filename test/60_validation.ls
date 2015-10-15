@@ -14,19 +14,26 @@ describe 'N Validation', ->
   before (done) ->
     N.Reset ->
       config =
-        schema:
-          field1:
-            type: 'bool'
-          field2:
-            type: 'int'
-          field3:
-            type: 'string'
-          field4:
-            type: 'date'
-          field5:
-            type: 'email'
+        schema: \strict
+
+
+          # field1:
+          #   type: 'bool'
+          # field2:
+          #   type: 'int'
+          # field3:
+          #   type: 'string'
+          # field4:
+          #   type: 'date'
+          # field5:
+          #   type: 'email'
 
       Tests := N 'test', config
+      Tests.Field \field1 \bool
+      Tests.Field \field2 \int
+      Tests.Field \field3 \string
+      Tests.Field \field4 \date
+      Tests.Field \field5 \email
 
       done()
 

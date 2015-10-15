@@ -3,55 +3,38 @@ N = require '../'
 request = require 'superagent'
 async = require 'async'
 
-weaponConfig =
-  schema:
-    hitPoints: 'int'
+Weapons = N 'weapon', N.Route.MultiRoute
 
-Weapons = N.Resource 'weapon', N.Route.MultiRoute, weaponConfig
+Weapons.Field \hitPoints \int
 
-unitConfig =
-  abstract: true
-  schema:
-    level: 'int'
-    life: 'int'
-    weapon:
-      type: Weapons
-      localKey: 'weaponId'
-      optional: true
-    weaponId:
-      type: 'int'
-      optional: true
 
-class Units extends N.Resource 'unit', unitConfig
+class Units extends N 'unit' abstract: true
 
-  Attack: @_WrapPromise (target, done) ->
-    target.life -= @weapon.hitPoints
-    target.Save done
+  Attack: @_WrapPromise (targetId, done) ->
+    @targetType.Fetch targetId
+      .then ~>
+        it.life -= @Weapon.hitPoints
+        it.Save done
+      .fail done
 
   LevelUp: @_WrapPromise (done) ->
     @level++
     @Save done
 
+Units.Field \level \int
+    ..Field \life \int
+    ..HasOne Weapons
+
 Units.Init()
 
 class UnitRoute extends N.Route.MultiRoute
+
   Config: ->
     super()
 
     @Put '/:id/levelUp' -> it.instance.LevelUp!
 
-    @Put '/:id/attack/:targetId' (Req) ~>
-      # Hack to stay generic between children
-      TargetResource = Monsters if @name is 'players'
-      TargetResource = Players if @name is 'monsters'
-
-      watcher = N.Watch ->
-        Req.Send TargetResource.error! if TargetResource.error!?
-
-      err, target <- TargetResource.Fetch +Req.params.targetId
-      err <- Req.instance.Attack target
-      Req.Send target
-      watcher.Stop!
+    @Put '/:id/attack/:targetId' ~> it.instance.Attack +it.params.targetId
 
 Players = Units.Extend 'player', UnitRoute
 Monsters = Units.Extend 'monster', UnitRoute

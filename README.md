@@ -1166,6 +1166,8 @@ ___
 
 By order of priority
 
+- Migration system
+- Persistant sessions in Console
 - Watch a specific field
 - Relations not only based on id but on every property types
 - Schema 'strict' mode that disallow any other properties
@@ -1186,8 +1188,7 @@ By order of priority
 - Auto add localKey or distantKey field when attached Resource
 - Type inference in schema for default field
 - Abstract class can retrieve every child `Resource`
-- When in Association, if the localKey doesnt exists, it is created on the fly
-- Added a instance.Watch() call, to make the instance to auto-update when part of it change
+- Extend Array ?
 
 ___
 ## ChangeLog
@@ -1197,8 +1198,7 @@ XX/XX/XX: current (not released yet)
   - Added benchmarks folder
   - Replaced @instance in Route by req._instance.
   - Added a Request class to handle Resource in Route
-  - Now N take only a name and a config. Its the Route object that
-  take a Resource as property. Also, Routes have to be Instanciated.
+  - The Route class can take a Resource as property. Also, Routes can be Instanciated.
   - Changed every 'Nodulator' call by 'N', more readable
   - Added a debug system with 'debug'
   - Console mode to "connect" to an existing/running Nodulator instance and perform standard calls
@@ -1211,6 +1211,9 @@ XX/XX/XX: current (not released yet)
   - Web server now starts only when needed (when first Route is being declared)
   - Fixed validation fails
   - Added _CreateUnwrapped
+  - Added a instance.Watch() call, to make the instance to auto-update when part of it change
+  - When in Association, if the localKey doesnt exists, it is created on the fly
+  - Better HasOne, HasMany and BelongsTo.
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

@@ -4,9 +4,9 @@
   "dependencies": {
     "assert": "*",
     "async": "*",
-
     "body-parser": "*",
-    "connect-redis": "*",
+    "coffee-script": "*",
+    "connect-redis": "^3.0.0",
     "cookie-parser": "*",
     "debug": "2.2.0",
     "express": "*",
@@ -15,6 +15,7 @@
     "livescript": "1.4.0",
     "mocha": "*",
     "mongous": "*",
+    "ms": "",
     "mysql": "*",
     "node-mysql": "*",
     "node-rest-client": "*",

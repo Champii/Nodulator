@@ -13,95 +13,143 @@ test = it
 
 describe 'N Associations', ->
 
-  before (done) ->
+  beforeEach (done) ->
     N.Reset ->
-      Childs := N 'child'
-      Childs.Create {field: 'child'}, (err, child) -> return console.error err if err?
+      Childs := N \child
 
-      testConfig =
-        schema:
-          childId: 'int'
-          child:
-            type: Childs
-            localKey: 'childId'
-
-      Tests := N 'test', testConfig
+      Tests := N \test
 
       done!
 
-  test 'should fetch child Resource', (done) ->
-    blob =
-      childId: 1
+  test 'should fetch one child Resource', (done) ->
+    Tests.HasOne Childs
+    Tests.Create name: \test
+      .fail !-> throw new Error it
 
-    Tests.Create blob, (err, test) ->
-      throw new Error err if err?
+      .then ->
+        Childs.Create name: \child1 testId: 1
 
-      assert.equal test.child.field, 'child'
+      .fail !-> throw new Error it
 
-      done!
+      .then ->
+        assert.equal it.Test.name, \test
 
-  test 'should create another resource with array of association', (done) ->
-    err, res <- Childs.Create do
-      field: 'child2'
+      .then ->
+        Tests.Fetch 1
 
-    throw new Error err if err?
+      .then ->
+        assert.equal it.Child.name, \child1
+        assert.equal it.Child.testId, 1
+        done!
 
-    newConfig =
-      schema:
-        childIds: ['int']
-        children:
-          type: [Childs]
-          localKey: 'childIds'
+      .fail !-> throw new Error it
 
-    News := N 'new', newConfig
+  test 'should fetch many child Resource', (done) ->
+    Tests.HasMany Childs
+    Tests.Create name: \test
+      .fail !-> throw new Error it
 
-    done!
+      .then ->
+        Childs.Create name: \child1 testId: 1
 
-  test 'should fetch every child Resource', (done) ->
-    blob =
-      childIds: [1, 2]
+      .then ->
+        Childs.Create name: \child2 testId: 1
 
-    News.Create blob, (err, instance) ->
-      throw new Error err if err?
+      .fail !-> throw new Error it
 
-      assert.equal instance.children.length, 2
-      assert.equal instance.children[0].field, 'child'
-      assert.equal instance.children[1].field, 'child2'
+      .then ->
+        assert.equal it.Test.name, \test
 
-      done!
+      .then ->
+        Tests.Fetch 1
 
-  test 'should fetch distantKey with array' (done) ->
-    class Childs extends N 'child2', N.Route.MultiRoute
+      .then ->
+        assert.equal it.Childs.0.name, \child1
+        assert.equal it.Childs.1.name, \child2
+        assert.equal it.Childs.0.testId, 1
+        assert.equal it.Childs.1.testId, 1
+        done!
 
-    testConfig =
-      schema:
-        child:
-          type: Childs
-          distantKey: 'testId'
+      .fail !-> throw new Error it
 
-    class Tests extends N 'test2', testConfig
+  test 'should fetch belonging parent', (done) ->
+    Childs.BelongsTo Tests
+    Tests.Create name: \test
+      .fail !-> throw new Error it
 
-    Childs.Create testId: 1 field: 'child'
-    .fail -> throw new Error it
-    .then -> Tests.Create test: \test
-    .then ->
-      assert.equal it.child.field, 'child'
-      done!
+      .then ->
+        Childs.Create testId: 1
 
-  test 'should fetch distantKey with array of association' (done) ->
-    Childs = N 'child3'
+      .fail !-> throw new Error it
 
-    testConfig =
-      schema:
-        children:
-          type: [Childs]
-          distantKey: 'testId'
+      .then ->
+        assert.equal it.Test.name, \test
+        done!
 
-    Tests = N 'test3', testConfig
+      .fail !-> throw new Error it
 
-    Childs.Create testId: 1 field: 'child'
-    .fail -> throw new Error it
-    .then -> Tests.Create test: \test
-    .then ->
-      assert.equal it.children.0.field, 'child'
-      done!
+  # test 'should create another resource with array of association', (done) ->
+  #   err, res <- Childs.Create do
+  #     field: 'child2'
+  #
+  #   throw new Error err if err?
+  #
+  #   newConfig =
+  #     schema:
+  #       childIds: ['int']
+  #       children:
+  #         type: [Childs]
+  #         localKey: 'childIds'
+  #
+  #   News := N 'new', newConfig
+  #
+  #   done!
+  #
+  # test 'should fetch every child Resource', (done) ->
+  #   blob =
+  #     childIds: [1, 2]
+  #
+  #   News.Create blob, (err, instance) ->
+  #     throw new Error err if err?
+  #
+  #     assert.equal instance.children.length, 2
+  #     assert.equal instance.children[0].field, 'child'
+  #     assert.equal instance.children[1].field, 'child2'
+  #
+  #     done!
+  #
+  # test 'should fetch distantKey with array' (done) ->
+  #   class Childs extends N 'child2', N.Route.MultiRoute
+  #
+  #   testConfig =
+  #     schema:
+  #       child:
+  #         type: Childs
+  #         distantKey: 'testId'
+  #
+  #   class Tests extends N 'test2', testConfig
+  #
+  #   Childs.Create testId: 1 field: 'child'
+  #   .fail -> throw new Error it
+  #   .then -> Tests.Create test: \test
+  #   .then ->
+  #     assert.equal it.child.field, 'child'
+  #     done!
+  #
+  # test 'should fetch distantKey with array of association' (done) ->
+  #   Childs = N 'child3'
+  #
+  #   testConfig =
+  #     schema:
+  #       children:
+  #         type: [Childs]
+  #         distantKey: 'testId'
+  #
+  #   Tests = N 'test3', testConfig
+  #
+  #   Childs.Create testId: 1 field: 'child'
+  #   .fail -> throw new Error it
+  #   .then -> Tests.Create test: \test
+  #   .then ->
+  #     assert.equal it.children.0.field, 'child'
+  #     done!
