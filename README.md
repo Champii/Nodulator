@@ -1214,6 +1214,7 @@ XX/XX/XX: current (not released yet)
   - Added a instance.Watch() call, to make the instance to auto-update when part of it change
   - When in Association, if the localKey doesnt exists, it is created on the fly
   - Better HasOne, HasMany and BelongsTo.
+  - HasOneThrough, HasManyThrough
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

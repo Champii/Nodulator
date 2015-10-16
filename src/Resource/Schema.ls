@@ -187,27 +187,59 @@ class Schema
         # Debug.UnDepth!
         _done err, data
 
-      # console.log resource
       # debug-resource.Log "Assoc: Fetching #{resource.name}"
       # Debug.Depth!
       resource.Get blob, (err, instance) ->
         assocs[resource.name] = resource.default if resource.default?
-        # console.log blob
 
         # if err?
           # debug-resource.Error "Assoc: #{resource.name} #{JSON.stringify err}"
 
         if err? and resource.type is \distant => done!
-        # else if err? and @config?.schema? => done err
-        # else if err? and @config? and @config.schema?[resource.name]?.optional => done!
         else
           assocs[resource.name] = instance if instance?
           done!
       , _depth
     , (err) ->
-      # Debug.UnDepth!
       return done err if err?
 
       done null, _.extend blob, assocs
+
+  HasOneThrough: (res, through) ->
+    get = (blob, done, _depth) ~>
+      return done! if not _depth or not blob.id?
+
+      assoc = _(@assocs).findWhere name: capitalize through.lname
+      assoc.Get blob, (err, instance) ->
+        return done err if err?
+
+        done null, instance[capitalize res.lname]
+      , _depth + 1
+
+    toPush  =
+      type: 'distant'
+      name: capitalize res.lname
+      Get: get
+    @assocs.push toPush
+
+  HasManyThrough: (res, through) ->
+    get = (blob, done, _depth) ~>
+      return done! if not _depth or not blob.id?
+
+      assoc = _(@assocs).findWhere name: capitalize through.lname + \s
+      assoc.Get blob, (err, instance) ->
+        return done err if err?
+
+        res._ListUnwrapped instance[capitalize res.lname], (err, instances) ->
+          return done err if err?
+
+          done null, instances
+      , _depth
+
+    toPush  =
+      type: 'distant'
+      name: capitalize res.lname + \s
+      Get: get
+    @assocs.push toPush
 
 module.exports = Schema

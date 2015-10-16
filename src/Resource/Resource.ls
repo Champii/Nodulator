@@ -306,7 +306,7 @@ module.exports = (table, config, app, routes, name) ->
     @AttachRoute = (@_routes) ->
       @Init!
 
-    @_AddRelationship = (res, isArray, isDistant, isRequired) ->
+    @_AddRelationship = (res, isArray, isDistant, isRequired, prepare = true) ->
       @Init!
 
       obj = type: res
@@ -324,7 +324,8 @@ module.exports = (table, config, app, routes, name) ->
         @Field fieldName, \int #.Required isRequired
         obj.localKey = fieldName
 
-      @_schema.PrepareRelationship isArray, capitalize(res.lname + if isArray => 's' else ''), obj
+      if prepare
+        @_schema.PrepareRelationship isArray, capitalize(res.lname + if isArray => 's' else ''), obj
 
     @HasOne = (res, belongsTo = true) ->
       @_AddRelationship res, false, true, true
@@ -337,20 +338,44 @@ module.exports = (table, config, app, routes, name) ->
     @BelongsTo = (res) ->
       @_AddRelationship res, false, false, true
 
-    @MayHasOne = (res, belongsTo = true) ->
-      @_AddRelationship res, false, true, false
-      res.MayBelongsTo @ if belongsTo
+    # TO BE TESTED
 
-    @MayHasMany = (res, belongsTo = true) ->
-      @_AddRelationship res, true, true, false
-      res.MayBelongsTo @ if belongsTo
+    # @MayHasOne = (res, belongsTo = true) ->
+    #   @_AddRelationship res, false, true, false
+    #   res.MayBelongsTo @ if belongsTo
+    #
+    # @MayHasMany = (res, belongsTo = true) ->
+    #   @_AddRelationship res, true, true, false
+    #   res.MayBelongsTo @ if belongsTo
+    #
+    # @MayBelongsTo = (res) ->
+    #   @_AddRelationship res, false, false, false
 
-    @MayBelongsTo = (res) ->
-      @_AddRelationship res, false, false, false
+    @HasOneThrough = (res, through) ->
+      @HasOne through
+      through.HasOne res
+      @_schema.HasOneThrough res, through
+
+    @HasManyThrough = (res, through) ->
+      @HasMany through
+      res.HasMany through
+      @_schema.HasManyThrough res, through
+
+
+    # @HasAndBelongsToMany = (res) ->
+    #   # create association model
+    #   # Add fields on this assoc
+    #   Assoc = N @lname + \s_ + res.lname
+    #   @HasManyThrough res, Assoc
+    #   # @HasMany Assoc, false
+    #   # res.HasMany Assoc, false
+    #   # @_schema.
 
     @Field = (...args) ->
       @Init!
       @_schema.Field.apply @_schema, args
+
+    Add: (instance) ->
 
   #
   # Private
