@@ -362,42 +362,26 @@ module.exports = (table, config, app, routes, name) ->
       @_schema.HasManyThrough res, through
 
     @HasAndBelongsToMany = (res) ->
-      # create association model
-      # Add fields on this assoc
-      names =
-        * @lname
-        * res.lname
-      names = sort names
+      names = sort [@lname, res.lname]
       Assoc = N names.0 + \s_ + names.1
       @_schema.HasAndBelongsToMany res, Assoc
       res._schema.HasAndBelongsToMany @, Assoc
-      # @HasMany Assoc, false
-      # res.HasMany Assoc, false
-      # @_schema.
 
     @Field = (...args) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
     Add: @_WrapPromise (instance, done) ->
-      names =
-        * @_type
-        * instance._type
-      names = sort names
-      # console.log lname: names.0 + \s_ + names.1
+      names = sort [@_type, instance._type]
       res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
-      # console.log res
       res.Create {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
-        # console.log err, newRes
-        done err
+        done err, instance
       #
       #   done err
   #
   # Private
   # Class Methods
   #
-
-
 
     # Wrapper to allow simple variable or array as first argument
     @_HandleArrayArg = (arg, callback, done) ->
@@ -436,8 +420,7 @@ module.exports = (table, config, app, routes, name) ->
       @app = _app
       @INITED = false
       @lname = _name.toLowerCase()
-      @_schema = new Schema _config?.schema
-      @_schema.name = @lname
+      @_schema = new Schema @lname, _config?.schema
 
       @_routes = _routes
       @_parent = _parent

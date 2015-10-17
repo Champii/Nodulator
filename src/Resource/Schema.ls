@@ -2,6 +2,7 @@ require! {
   async
   underscore: _
   validator: Validator
+  \../Helpers/Debug
   \../../ : N
 }
 
@@ -43,10 +44,11 @@ class Schema
 
   mode: null
 
-  (@mode = 'free') ->
+  (@name, @mode = 'free') ->
     @properties = []
     @assocs = []
     @habtm = []
+    @debug = new Debug "N::Resource::#{@name}::Schema", Debug.colors.cyan
     # console.log 'Schema constructor', @assocs
 
   Process: (blob) ->
@@ -181,14 +183,14 @@ class Schema
   FetchAssoc: (blob, done, _depth) ->
     assocs = {}
 
-    # debug-resource.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
+    @debug.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
     # Debug.Depth!
     async.eachSeries @assocs, (resource, _done) ~>
       done = (err, data)->
         # Debug.UnDepth!
         _done err, data
 
-      # debug-resource.Log "Assoc: Fetching #{resource.name}"
+      @debug.Log "Assoc: Fetching #{resource.name}"
       # Debug.Depth!
       resource.Get blob, (err, instance) ->
         assocs[resource.name] = resource.default if resource.default?
@@ -256,7 +258,12 @@ class Schema
           return done err if err?
 
           # console.log results
-          done null, results
+          assocs =
+            | results.length => results
+            | _              => null
+
+          done null, assocs
+
       , _depth - 1
 
     toPush  =
