@@ -46,6 +46,7 @@ class Schema
   (@mode = 'free') ->
     @properties = []
     @assocs = []
+    @habtm = []
     # console.log 'Schema constructor', @assocs
 
   Process: (blob) ->
@@ -241,5 +242,30 @@ class Schema
       name: capitalize res.lname + \s
       Get: get
     @assocs.push toPush
+
+  HasAndBelongsToMany: (res, through) ->
+    get = (blob, done, _depth) ~>
+      return done! if not _depth or not blob.id?
+
+      through._ListUnwrapped "#{@name + \Id }": blob.id, (err, instances) ~>
+        return done err if err?
+
+        async.mapSeries instances, (instance, done) ~>
+          res._FetchUnwrapped instance[res.lname + \Id ], done, _depth - 1
+        , (err, results) ~>
+          return done err if err?
+
+          # console.log results
+          done null, results
+      , _depth - 1
+
+    toPush  =
+      type: 'distant'
+      name: capitalize res.lname + \s
+      Get: get
+    @assocs.push toPush
+    @habtm.push through
+    # console.log @habtm
+
 
 module.exports = Schema

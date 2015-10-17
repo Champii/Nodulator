@@ -361,22 +361,37 @@ module.exports = (table, config, app, routes, name) ->
       res.HasMany through
       @_schema.HasManyThrough res, through
 
-
-    # @HasAndBelongsToMany = (res) ->
-    #   # create association model
-    #   # Add fields on this assoc
-    #   Assoc = N @lname + \s_ + res.lname
-    #   @HasManyThrough res, Assoc
-    #   # @HasMany Assoc, false
-    #   # res.HasMany Assoc, false
-    #   # @_schema.
+    @HasAndBelongsToMany = (res) ->
+      # create association model
+      # Add fields on this assoc
+      names =
+        * @lname
+        * res.lname
+      names = sort names
+      Assoc = N names.0 + \s_ + names.1
+      @_schema.HasAndBelongsToMany res, Assoc
+      res._schema.HasAndBelongsToMany @, Assoc
+      # @HasMany Assoc, false
+      # res.HasMany Assoc, false
+      # @_schema.
 
     @Field = (...args) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
-    Add: (instance) ->
-
+    Add: @_WrapPromise (instance, done) ->
+      names =
+        * @_type
+        * instance._type
+      names = sort names
+      # console.log lname: names.0 + \s_ + names.1
+      res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
+      # console.log res
+      res.Create {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
+        # console.log err, newRes
+        done err
+      #
+      #   done err
   #
   # Private
   # Class Methods
