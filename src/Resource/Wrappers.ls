@@ -130,9 +130,9 @@ class Wrappers
           debug-cache.Warn 'Cache answered for ' + name
           cached = JSON.parse cached
           if is-type \Array cached
-            cached = cached |> map -> new Resource it
+            cached = cached |> map -> Resource.Hydrate it
           else
-            cached = new Resource cached
+            cached = Resource.Hydrate cached
           return oldDone null, cached
 
         return oldDone err if err?

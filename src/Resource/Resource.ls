@@ -159,10 +159,15 @@ module.exports = (table, config, app, routes, name) ->
   # Class Methods
   #
 
-    # @Hydrate: (blob) ->
-    #
-    #   @assocs |> each -> blob[it.name] =  if blob[it.name]?
-    #   new @ blob
+    @Hydrate: (blob) ->
+
+      res = new @ blob
+
+      @assocs |> each ->
+        if blob[it.name]?
+          res[it.name] = it.type.Hydrate blob[it.name]
+
+      res
 
     # _Deserialize and Save from a blob or an array of blob
     @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->

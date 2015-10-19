@@ -156,7 +156,7 @@ class Schema
     # debug-res.Log "Preparing Relationships with #{description.type.name}"
 
     if description.localKey?
-      type = \local
+      keyType = \local
       foreign = description.localKey
       get = (blob, done, _depth) ->
         if not _depth
@@ -173,7 +173,7 @@ class Schema
 
     else if description.distantKey?
       foreign = description.distantKey
-      type = \distant
+      keyType = \distant
       get = (blob, done, _depth) ->
         if not _depth or not blob.id?
           return done()
@@ -184,7 +184,8 @@ class Schema
           description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth - 1
 
     toPush  =
-      type: type
+      keyType: keyType
+      type: description.type
       name: field
       Get: get
       foreign: foreign
@@ -232,7 +233,8 @@ class Schema
       , _depth + 1
 
     toPush  =
-      type: 'distant'
+      keyType: 'distant'
+      type: res
       name: capitalize res.lname
       Get: get
     @assocs.push toPush
@@ -254,7 +256,8 @@ class Schema
       , _depth
 
     toPush  =
-      type: 'distant'
+      keyType: 'distant'
+      type: res
       name: capitalize res.lname + \s
       Get: get
     @assocs.push toPush
@@ -281,7 +284,8 @@ class Schema
       , _depth
 
     toPush  =
-      type: 'distant'
+      keyType: 'distant'
+      type: res
       name: capitalize res.lname + \s
       Get: get
     @assocs.push toPush
