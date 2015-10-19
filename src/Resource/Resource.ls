@@ -163,9 +163,12 @@ module.exports = (table, config, app, routes, name) ->
 
       res = new @ blob
 
-      @assocs |> each ->
+      @_schema.assocs |> each ->
         if blob[it.name]?
-          res[it.name] = it.type.Hydrate blob[it.name]
+          if is-type \Array blob[it.name]
+            res[it.name] = blob[it.name] |> map (it.type~Hydrate)
+          else
+            res[it.name] = it.type.Hydrate blob[it.name]
 
       res
 
