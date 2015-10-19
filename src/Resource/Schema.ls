@@ -6,6 +6,8 @@ require! {
   \../../ : N
 }
 
+global import require \prelude-ls
+
 validationError = (field, value, message) ->
   field: field
   value: value
@@ -57,7 +59,11 @@ class Schema
 
   Process: (blob) ->
 
+    if @mode is \free
+      blob = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
     res = blob
+    # else
+    #   res := {}
 
     @properties
       |> filter (-> it.name of blob)

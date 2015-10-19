@@ -32,7 +32,7 @@ class ChangeWatcher
 
   _ReWrap: ->
     @args[@doneIdx] = (err, res) ~>
-      return console.error err if err?
+      return if err?
 
       if (@res?.length? and res? and @res.length != res.length) or !_(@res).isEqual res
         @res = res

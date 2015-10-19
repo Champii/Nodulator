@@ -3,6 +3,11 @@ ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
 Debug = require \../Helpers/Debug
 polyparams = require \polyparams
+cache = require \./Cache
+
+debug-cache = new Debug 'N::Resource::Cache'
+
+watchers = []
 
 class Wrappers
 
@@ -94,5 +99,67 @@ class Wrappers
       _cb = polyparams.apply @, types
       _cb.apply @, args
 
+  @_WrapCache = (name, cb) ->
+
+    fullName = name
+    (...args) ->
+      Resource = @
+      name = @lname + fullName
+      doneIdx = @_FindDone args
+      _oldDone = args[doneIdx]
+      first = true
+      oldDone = (err, res) ->
+        if first
+          first := false
+          _oldDone err, res
+        else
+          0
+
+
+      if is-type \Array args[0] or is-type \Object args[0]
+        name += JSON.stringify args[0]
+      else if is-type \Number args[0]
+        name += args[0]
+      else
+        name += '{}'
+
+      cache.Get name, (err, cached) ~>
+        # console.log 'Got', name, err, cached, oldDone
+
+        if not err? and cached?
+          debug-cache.Warn 'Cache answered for ' + name
+          cached = JSON.parse cached
+          if is-type \Array cached
+            cached = cached |> map -> new Resource it
+          else
+            cached = new Resource cached
+          return oldDone null, cached
+
+        return oldDone err if err?
+
+        args[doneIdx] = (err, res) ~>
+          if err?
+            # return cache.Delete name, ->
+            #   debug-cache.Warn 'Cache deleted for ' + name
+            #   watcher?.Stop!
+            return oldDone err
+
+          if is-type \Array res
+            toStore = res
+          else
+            toStore = obj-to-pairs res |> filter (.0.0 isnt \_) |> pairs-to-obj
+          cache.Set name, JSON.stringify(toStore), (err, status) ~>
+            return oldDone err if err?
+
+            debug-cache.Log 'Cache updated for ' + name
+
+            oldDone null, res
+
+        watchers.push N.Watch ~>
+          cb.apply @, args
+
+  @Reset = ->
+    watchers |> each (.Stop!)
+    watchers := []
 
 module.exports = Wrappers

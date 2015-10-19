@@ -68,7 +68,7 @@ describe 'N Multi Route', ->
       N.client.Get '/api/1/tests/1', (err, res) ->
         return done() if err?
 
-        console.log 'Found', res
+        console.log 'Found', res.body
         throw new Error 'Has not deleted resource'
 
   test 'should override default get route (GET)', (done) ->

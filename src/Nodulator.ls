@@ -115,7 +115,9 @@ class N
   Reset: (done) ->
     debug-nodulator.Warn "Reset"
 
-    process.env.NODE_TEST = ''
+    require \./Resource/Cache .Reset!
+    require \./Resource/Wrappers .Reset!
+
     @inited = {}
     DB.Reset!
     @resources = {}
@@ -125,6 +127,7 @@ class N
       @app = null
       @server.close()
       @server = null
+
 
     @Init()
 

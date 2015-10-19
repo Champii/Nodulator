@@ -10,6 +10,7 @@ require! {
   \prelude-ls
   # \async-ls : {callbacks: {bindA}}
   \../Helpers/Debug
+  \./Cache : cache
   polyparams: ParamWraper
 }
 
@@ -141,13 +142,15 @@ module.exports = (table, config, app, routes, name) ->
         switch
           | err? => done err
           | _    =>
-            @id = undefined
-            N.bus.emit \delete_ + @name, @
-            ChangeWatcher.Invalidate()
+            cache.Delete @_type + 'Fetch' + @id, ~>
+              @id = undefined
+              N.bus.emit \delete_ + @name, @
 
-            debug-resource.Log "Deleted  {id: #{@id}}"
+              ChangeWatcher.Invalidate()
 
-            done null, @
+              debug-resource.Log "Deleted  {id: #{@id}}"
+
+              done null, @
 
       null
 
@@ -155,6 +158,11 @@ module.exports = (table, config, app, routes, name) ->
   # Public
   # Class Methods
   #
+
+    # @Hydrate: (blob) ->
+    #
+    #   @assocs |> each -> blob[it.name] =  if blob[it.name]?
+    #   new @ blob
 
     # _Deserialize and Save from a blob or an array of blob
     @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
@@ -206,7 +214,7 @@ module.exports = (table, config, app, routes, name) ->
         #   done.apply err, args
 
     # Fetch from id or id array
-    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
+    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_FetchUnwrapped ...
 
@@ -237,7 +245,7 @@ module.exports = (table, config, app, routes, name) ->
       , done
 
     # Get every records from DB
-    @List =  @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
+    @List = @_WrapFlipDone @_WrapPromise @_WrapCache 'List' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_ListUnwrapped ...
 
