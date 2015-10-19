@@ -159,7 +159,7 @@ module.exports = (table, config, app, routes, name) ->
   # Class Methods
   #
 
-    @Hydrate: (blob) ->
+    @Hydrate = (blob) ->
 
       res = new @ blob
 
