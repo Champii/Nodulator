@@ -37,6 +37,12 @@ class SqlMem
     tables := {}
     @
 
+  Drop: (table) ->
+    delete tables[table]
+
+  _LastId: (name, done) ->
+    done null, tables[name].length
+
 module.exports = (config) ->
   res = new SqlMem!
 

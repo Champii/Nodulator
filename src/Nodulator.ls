@@ -115,6 +115,7 @@ class N
   Reset: (done) ->
     debug-nodulator.Warn "Reset"
 
+    process.env.NODE_TEST = ''
     @inited = {}
     DB.Reset!
     @resources = {}

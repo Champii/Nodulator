@@ -12,7 +12,8 @@ class InternalDriver
   -> @Init!
 
   Init: ->
-    @driver = drivers.Mongo dbAuth: host: 'localhost' database: '_internal'
+
+    @driver = drivers[\Mongo] dbAuth: host: 'localhost' database: '_internal'
 
     # Ensure that the database exists
     @driver.Insert 'internal_ids', {id: 'a', test: true}, (err, res) ~>
@@ -49,6 +50,8 @@ class InternalDriver
 
   Reset: ->
     @driver.Drop 'internal_ids'
+    drivers[\SqlMem].AddTable 'internal_ids'
+    @driver = drivers[\SqlMem]()
 
 internalDriver = new InternalDriver
 
