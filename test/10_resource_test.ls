@@ -34,7 +34,7 @@ describe 'N Resource', ->
 
   test 'should fetch first resource', (done) ->
     Tests.Fetch 1, (err, test) ->
-      throw new Error 'Cannot Fetch first resource' if err?
+      throw new Error JSON.stringify err if err?
 
       assert.equal test.id, 1
       assert.equal test.test, 'test'
@@ -121,8 +121,7 @@ describe 'N Resource', ->
     blob = [{field1: 1, field2: 1}
             {field1: 2, field2: 2}]
 
-    Tests.Fetch [{field1: 1, field2: 1}
-            {field1: 2, field2: 2}], (err, tests) ->
+    Tests.Fetch [{field1: 1, field2: 1}, {field1: 2, field2: 2}], (err, tests) ->
       throw new Error err if err?
 
       assert.equal tests[0].field1, 1

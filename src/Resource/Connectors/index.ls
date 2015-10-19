@@ -1,10 +1,64 @@
-driver = null
+async = require \async
+global import require \prelude-ls
 
-class Table
+drivers = do
+  Mongo: require \./Mongo
+  Mysql: require \./Mysql
+  SqlMem: require \./SqlMem
 
-  name: null
 
-  (@name) ->
+class InternalDriver
+
+  -> @Init!
+
+  Init: ->
+    @driver = drivers.Mongo dbAuth: host: 'localhost' database: '_internal'
+
+    # Ensure that the database exists
+    @driver.Insert 'internal_ids', {id: 'a', test: true}, (err, res) ~>
+      return console.error err if err?
+
+      @driver.Delete 'internal_ids', {id: 'a'}, (err, res) ~>
+        return console.error err if err?
+
+  CreateIdEntry: (name, done) ->
+    @driver.Select 'internal_ids', \*, {}, {}, (err, nextIds) ~>
+      if err? or not find (.name is name), nextIds
+        @driver.Insert 'internal_ids', {name: name, nextId: 1, id: nextIds.length + 1}, (err, res) ~>
+
+          @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
+            @driver.Update 'internal_ids', res.0, {}, (err, res) ->
+              done! if done?
+      else
+        done!
+
+  NextId: (name, done) ->
+    @driver.Select 'internal_ids', \*, {name: name}, {}, (err, fields) ~>
+      return done err if err?
+
+      if not fields.length
+        @CreateIdEntry name, ~> @NextId name, done
+      else
+        fields.0.nextId++
+        @driver.Update 'internal_ids', {id: fields.0.id, nextId: fields.0.nextId, name: name}, {}, (err, res) ->
+          return done err if err?
+
+          done null, fields?.0?.nextId - 1
+
+
+  Reset: ->
+    @driver.Drop 'internal_ids'
+
+internalDriver = new InternalDriver
+
+class DB
+
+  tableName: null
+
+  (@tableName) ->
+    @drivers = {}
+    internalDriver.CreateIdEntry @tableName
+
 
   Find: (id, done) ->
     @FindWhere '*', {id: +id}, done
@@ -17,41 +71,59 @@ class Table
         return done do
           status: 'not_found'
           reason: JSON.stringify where
-          source: @name
+          source: @tableName
 
       done null, results[0]
 
-  Select: (fields, where, options, done) ->
-    driver.Select @name, fields, where, options, done
+  @_WrapDrivers = (cb) ->
+    (...args) ->
+      done = args.pop!
+      async.mapSeries values(@drivers), (it, done) ~>
+        cb.apply @, [it, ...args, done]
+      , (err, results) ->
+        return done err if err?
 
-  Save: (blob, done) ->
+        done null, flatten results
+
+  Select: @_WrapDrivers (driver, fields, where, options, done) ->
+    driver.Select @tableName, fields, where, options, done
+
+  Save: (blob, config, done) ->
     if blob.id?
       @Update blob, {id: blob.id}, done
     else
-      @Insert blob, done
+      @Insert blob, config, done
 
-  Insert: (blob, done) ->
-    driver.Insert @name, blob, done
+  Insert: (blob, config, done) ->
+    driver = @drivers[config.dbType]
+    internalDriver.NextId @tableName, (err, nextId) ~>
+      return done err if err?
 
-  Update: (blob, where, done) ->
-    driver.Update @name, blob, where, done
+      blob.id = nextId
+      driver.Insert @tableName, blob, done
 
-  Delete: (id, done) ->
-    driver.Delete @name, {id: id}, (err, affected) ->
+
+  Update: @_WrapDrivers (driver, blob, where, done) ->
+    driver.Update @tableName, blob, where, done
+
+  Delete: @_WrapDrivers (driver, id, done) ->
+    driver.Delete @tableName, {id: id}, (err, affected) ->
       return done err if err?
       return done {error: 'Error on Delete'} if !affected
 
       done null, affected
 
-module.exports = (config) ->
+  AddDriver: (config) ->
+    return if @drivers[config.dbType]?
 
-  file = require('./' + config.dbType)
-  driver := file(config)
-  # driver.Select \tata \* {} {} (err, res) -> console.log err, res
+    drivers[config.dbType].AddTable @tableName
+    @drivers[config.dbType] = drivers[config.dbType](config)
 
-  table: (name) ->
-    file.AddTable name, config
-    new Table name
+  @Reset = ->
+    values drivers |> each (._Reset?!)
+    internalDriver.Reset!
+
+module.exports = DB
 
 module.exports._reset = ->
-  driver._Reset() if driver?
+  # driver._Reset() if driver?

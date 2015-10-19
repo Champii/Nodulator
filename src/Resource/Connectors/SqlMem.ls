@@ -19,8 +19,8 @@ class SqlMem
   Insert: (table, fields, done) ->
     tables[table].push fields
 
-    fields.id = tables[table].length
-    done null, tables[table].length
+    # fields.id = tables[table].length
+    done null, fields.id
 
   Update: (table, fields, where, done) ->
     row = _(tables[table]).findWhere(where)
@@ -33,14 +33,15 @@ class SqlMem
     tables[table] = _(tables[table]).reject (item) -> item.id is where.id
     done null, 1
 
-  _Reset: ->
+  @Reset = ->
     tables := {}
     @
 
 module.exports = (config) ->
   res = new SqlMem!
-  res._Reset()
 
+module.exports._Reset = ->
+  SqlMem.Reset!
 module.exports.AddTable = (name) ->
   if !(tables[name]?)
     tables[name] = []

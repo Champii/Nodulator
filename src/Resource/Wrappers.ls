@@ -2,6 +2,7 @@ N = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
 Debug = require \../Helpers/Debug
+polyparams = require \polyparams
 
 class Wrappers
 
@@ -86,5 +87,12 @@ class Wrappers
         oldDone err, data
 
       cb.apply @, args
+
+  @_WrapParams = (...types) ->
+
+    (...args) ->
+      _cb = polyparams.apply @, types
+      _cb.apply @, args
+
 
 module.exports = Wrappers

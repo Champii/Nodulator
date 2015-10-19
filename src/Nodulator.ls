@@ -5,21 +5,15 @@ require! {
   hacktiv
   \prelude-ls : {each, obj-to-pairs}
   \./Helpers/Debug
+  \./Resource/Connectors : DB
 }
 
 debug-nodulator = new Debug 'N::Core'
 
 class N
 
-  app: null
-  express: null
-  server: null
   resources: {}
-  directives: {}
-  routes: {}
   config: null
-  table: null
-  authApp: false
   consoleMode: false
   defaultConfig:
     dbType: \SqlMem
@@ -34,7 +28,6 @@ class N
 
     @appRoot = path.resolve \.
 
-    @db = require \./Resource/Connectors
 
     debug-nodulator.Log 'Init ended'
 
@@ -56,23 +49,31 @@ class N
       config = routes
       routes = null
 
-    @Config() # config of N instance, not resource one
+    config = {} if not config?
+    config.dbType = @defaultConfig.dbType if not config.dbType?
+    config.dbAuth = @defaultConfig.dbAuth if not config.dbAuth?
 
-    # if not _parent? and (not routes? or routes.prototype not instanceof @Route)
-    #   routes = @Route
+    @Config() # config of N instance, not resource one
 
     if _parent?
       class ExtendedResource extends _parent
+
+      table = new DB name + \s
+      if config?.dbType or config?.dbAuth and not config?.abstract
+        table.AddDriver config
+      else if not config? or (config? and not config.abstract)
+        table.AddDriver @config
       @resources[name] = resource := ExtendedResource
-      @resources[name]._PrepareResource @table(name + \s), config, @app, routes, name, _parent
+      @resources[name]._PrepareResource table, config, @app, routes, name, _parent
     else
-      table = null
-      if not config? or (config? and not config.abstract)
-        table = @table(name + \s)
+      table = new DB name + \s
+      if config?.dbType or config?.dbAuth and not config?.abstract
+        table.AddDriver config
+      else if not config? or (config? and not config.abstract)
+        table.AddDriver @config
 
       @resources[name] = resource :=
-        require(\./Resource/Resource) table, config, @app, routes, name
-
+        require(\./Resource/Resource) table, config || @config, @app, routes, name
 
     debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
@@ -93,7 +94,6 @@ class N
       |> obj-to-pairs
       |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
-    @table = @db(@config).table
 
   Use: (module) ->
     debug-nodulator.Log "Loading module"
@@ -101,8 +101,7 @@ class N
     debug-nodulator.Log "Loaded module: #{m.name}"
     m
 
-  Console: ->
-    @consoleMode = true
+  Console: (@consoleMode = true) ->
 
   ExtendDefaultConfig: (config) ->
     @defaultConfig = _(@defaultConfig).extend config
@@ -117,8 +116,7 @@ class N
     debug-nodulator.Warn "Reset"
 
     @inited = {}
-    @db._reset() if @db?
-    @table = null
+    DB.Reset!
     @resources = {}
     @config = null
 
@@ -127,7 +125,6 @@ class N
       @server.close()
       @server = null
 
-    @db._reset() if @db?
     @Init()
 
     done() if done?

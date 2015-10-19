@@ -103,8 +103,6 @@ module.exports = (N) ->
     if res.config? and res.config.fields?
       res.userField = res.config.fields
 
-    console.log N.app
-
     res._InitPassport()
     res._InitLoginRoutes args[0]
 

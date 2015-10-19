@@ -3,7 +3,7 @@ mysql = require 'mysql'
 
 module.exports = (config) ->
 
-  connection = mysql.createConnection
+  connection = mysql.createConnection do
     host     : config.dbAuth.host || 'localhost'
     port     : config.dbAuth.port || 3306
     user     : config.dbAuth.user || ''

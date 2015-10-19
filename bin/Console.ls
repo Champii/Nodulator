@@ -105,7 +105,7 @@ module.exports = (configPath, resPath)->
   fetch-resources resPath
     |> obj-to-pairs
     |> map -> try require rootPath + \/ + it.1
-    |> each -> inst.context[capitalize it._table.name] = it if it?._table?
+    |> each -> inst.context[capitalize it._table.tableName] = it if it?._table?
   # N.resources
   #   |> each ->
 

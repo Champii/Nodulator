@@ -19,6 +19,7 @@
     "mysql": "*",
     "node-mysql": "*",
     "node-rest-client": "*",
+    "polyparams": "0.0.1",
     "prelude-ls": "1.1.2",
     "q": "1.4.1",
     "repl.history": "0.1.3",

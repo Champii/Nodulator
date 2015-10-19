@@ -142,6 +142,7 @@ ___
 - Schema-less/Schema-full models
 - Model validation
 - Model association and automatic retrieval
+- Models on different DB systems and associations
 - Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
 - Promises or Callbacks
 - Fliped callback parameters
@@ -1215,6 +1216,8 @@ XX/XX/XX: current (not released yet)
   - When in Association, if the localKey doesnt exists, it is created on the fly
   - Better HasOne, HasMany and BelongsTo.
   - HasOneThrough, HasManyThrough
+  - HasAndBelongsToMany
+  - Resources can override global db config to put different models on different db systems
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

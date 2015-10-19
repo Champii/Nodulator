@@ -31,8 +31,12 @@ class SchemaProperty
 
   (@name, @type, @optional) ->
     throw new Error 'SchemaProperty must have a name' if not @name?
+    # throw new Error 'SchemaProperty must have a type' if not @type?
 
-    @validation = typeCheck[@type] if @type?
+    if is-type \Array @type
+      @validation = typeCheck.arrayOf @type.0
+    else
+      @validation = typeCheck[@type]
 
   Default: (@default) ->  @
   Unique: (@unique = true) -> @
@@ -83,8 +87,10 @@ class Schema
     if @mode is \strict
       @properties |> filter (-> not it.virtual?) |> each -> res[it.name] = instance[it.name]
     else
-      each (~> res[it] = instance[it] if it[0] isnt \_ and typeof! instance[it] isnt 'Function' and it not in keys @assocs and not _(@properties).findWhere(name: it)?.virtual?), keys instance
-
+      each (~> res[it] = instance[it] if it[0] isnt \_ and typeof! instance[it] isnt 'Function' and
+                                         it not in keys @assocs and
+                                         not _(@properties).findWhere(name: it)?.virtual? and
+                                         typeof! instance[it] isnt 'Object'), keys instance
     res
 
     # switch
@@ -237,6 +243,8 @@ class Schema
           return done err if err?
 
           done null, instances
+        , depth - 1
+
       , _depth
 
     toPush  =
@@ -264,7 +272,7 @@ class Schema
 
           done null, assocs
 
-      , _depth - 1
+      , _depth
 
     toPush  =
       type: 'distant'
