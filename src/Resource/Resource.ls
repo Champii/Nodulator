@@ -172,7 +172,7 @@ module.exports = (table, config, app, routes, name) ->
         if args?
           debug-resource.Log "Creating from array: #{args.length} entries"
 
-        @_HandleArrayArg arg || args, (blob, done) ~>
+        @_HandleArrayArg arg || args || {}, (blob, done) ~>
 
           debug-resource.Log "Creating"
           @resource._Deserialize blob, (err, instance) ~>
