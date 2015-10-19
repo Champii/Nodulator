@@ -120,11 +120,11 @@ module.exports = (table, config, app, routes, name) ->
         switch
           | err? => done err
           | _    =>
-            @_table.Save serie, config, (err, id) ~>
+            @_table.Save serie, config, (err, instance) ~>
               | err?  =>  done err
               | _     =>
                 if !exists
-                  @id = id
+                  @id = instance.id
                   N.bus.emit \new_ + name, @
                 else
                   N.bus.emit \update_ + name, @
@@ -384,7 +384,7 @@ module.exports = (table, config, app, routes, name) ->
 
     @HasAndBelongsToMany = (res, reverse = true) ->
       names = sort [@lname, res.lname]
-      Assoc = N names.0 + \s_ + names.1 .Init!
+      Assoc = N names.0 + \s_ + names.1, @config .Init!
       @_schema.HasAndBelongsToMany res, Assoc
       res._schema.HasAndBelongsToMany @, Assoc if reverse
 
@@ -400,7 +400,7 @@ module.exports = (table, config, app, routes, name) ->
       #
       #   done err
 
-    @Remove = @_WrapPromise (instance, done) ->
+    Remove: @_WrapPromise (instance, done) ->
       names = sort [@_type, instance._type]
       res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
       res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->

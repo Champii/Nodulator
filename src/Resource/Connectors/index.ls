@@ -24,13 +24,14 @@ class InternalDriver
   CreateIdEntry: (name, done) ->
     @driver.Select 'internal_ids', \*, {}, {}, (err, nextIds) ~>
       if err? or not find (.name is name), nextIds
-        @driver.Insert 'internal_ids', {name: name, nextId: 1, id: nextIds.length + 1}, (err, res) ~>
+        @driver._LastId 'internal_ids', (err, id) ~>
+          @driver.Insert 'internal_ids', {name: name, nextId: 1, id: id}, (err, res) ~>
 
-          @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
-            @driver.Update 'internal_ids', res.0, {}, (err, res) ->
-              done! if done?
+            @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
+              @driver.Update 'internal_ids', res.0, {}, (err, res) ->
+                done! if done?
       else
-        done!
+        done! if done?
 
   NextId: (name, done) ->
     @driver.Select 'internal_ids', \*, {name: name}, {}, (err, fields) ~>
@@ -57,7 +58,7 @@ class DB
 
   (@tableName) ->
     @drivers = {}
-    internalDriver.CreateIdEntry @tableName
+    # internalDriver.CreateIdEntry @tableName
 
 
   Find: (id, done) ->

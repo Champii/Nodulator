@@ -50,8 +50,8 @@ class N
       routes = null
 
     config = {} if not config?
-    config.dbType = @defaultConfig.dbType if not config.dbType?
-    config.dbAuth = @defaultConfig.dbAuth if not config.dbAuth?
+    config.dbType = @config.dbType if not config.dbType?
+    config.dbAuth = @config.dbAuth if not config.dbAuth?
 
     @Config() # config of N instance, not resource one
 
@@ -67,10 +67,10 @@ class N
       @resources[name]._PrepareResource table, config, @app, routes, name, _parent
     else
       table = new DB name + \s
-      if config?.dbType or config?.dbAuth and not config?.abstract
+      if not config?.abstract
         table.AddDriver config
-      else if not config? or (config? and not config.abstract)
-        table.AddDriver @config
+      # else if not config? or (config? and not config.abstract)
+      #   table.AddDriver @config
 
       @resources[name] = resource :=
         require(\./Resource/Resource) table, config || @config, @app, routes, name

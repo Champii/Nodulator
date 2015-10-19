@@ -53,6 +53,11 @@ module.exports = (config) ->
     Drop: (table) ->
       db(config.dbAuth.database + '.$cmd').find({drop: table},1)
 
+    _LastId: (name, done) ->
+      db(config.dbAuth.database + '.' + name).find {}, {}, {sort: {id: -1}, lim: 1}, ->
+        done null, +it.documents[0]?.id + 1 || 1
+
+
   new Mongo()
 
 module.exports.AddTable = (name, config, done) ->

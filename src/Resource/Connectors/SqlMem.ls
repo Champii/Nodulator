@@ -20,7 +20,7 @@ class SqlMem
     tables[table].push fields
 
     # fields.id = tables[table].length
-    done null, fields.id
+    done null, fields
 
   Update: (table, fields, where, done) ->
     row = _(tables[table]).findWhere(where)
