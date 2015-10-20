@@ -62,88 +62,88 @@ describe 'N Reactive value', ->
       test.Save ->
         done!
 
-  # test 'should watch changes for Fetch', (done) ->
-  #   times = 0
-  #   # console.log
-  #   handler = N.Watch ->
-  #     times++
-  #     if times >= 2
-  #       done!
-  #     Tests.Fetch 1
-  #
-  #   Tests.Fetch 1
-  #   .then (test) ->
-  #     test.test++
-  #     test.Save ->
-  #       handler.Stop!
+  test 'should watch changes for Fetch', (done) ->
+    times = 0
+    # console.log
+    handler = N.Watch ->
+      times++
+      if times >= 2
+        done!
+      Tests.Fetch 1
 
-  # test 'should not watch changes for Fetch ', (done) ->
-  #   times = 0
-  #   # console.log
-  #   handler = N.Watch ->
-  #     times++
-  #     if times >= 2
-  #       done!
-  #     Tests.Fetch 1
-  #
-  #   Tests.Fetch 2
-  #   .then (test) ->
-  #     test.test++
-  #     test.Save!
-  #
-  #   setTimeout ->
-  #     handler.Stop!
-  #     done! if times is 1
-  #   , 100
-  #
-  # test 'should watch changes for List I', (done) ->
-  #   times = 0
-  #   # console.log
-  #   handler = N.Watch ->
-  #     times++
-  #     if times is 2
-  #       done!
-  #     Tests.List!
-  #
-  #   Tests.Fetch 1
-  #   .then (test) ->
-  #     test.test++
-  #     test.Save ->
-  #       handler.Stop!
-  #
-  # test 'should not watch changes for List I', (done) ->
-  #   times = 0
-  #   # console.log
-  #   handler = N.Watch ->
-  #     times++
-  #     if times is 2
-  #       done!
-  #     Tests.List {test: 1}
-  #
-  #   Tests.Fetch 6
-  #   .then (test) ->
-  #     test.test = 42
-  #     test.Save!
-  #
-  #   setTimeout ->
-  #     handler.Stop!
-  #     done! if times is 1
-  #   , 100
-  #
-  # test 'should watch changes for List II', (done) ->
-  #   times = 0
-  #   # console.log
-  #   handler = N.Watch ->
-  #     times++
-  #     if times is 2
-  #       handler.Stop!
-  #       done!
-  #     Tests.List {test: 1}
-  #
-  #   Tests.Fetch 3
-  #   .then (test) ->
-  #     test.test++
-  #     test.Save ->
+    Tests.Fetch 1
+    .then (test) ->
+      test.test++
+      test.Save ->
+        handler.Stop!
+
+  test 'should not watch changes for Fetch ', (done) ->
+    times = 0
+    # console.log
+    handler = N.Watch ->
+      times++
+      if times >= 2
+        done!
+      Tests.Fetch 1
+
+    Tests.Fetch 2
+    .then (test) ->
+      test.test++
+      test.Save!
+
+    setTimeout ->
+      handler.Stop!
+      done! if times is 1
+    , 100
+
+  test 'should watch changes for List I', (done) ->
+    times = 0
+    # console.log
+    handler = N.Watch ->
+      times++
+      if times is 2
+        done!
+      Tests.List!
+
+    Tests.Fetch 1
+    .then (test) ->
+      test.test++
+      test.Save ->
+        handler.Stop!
+
+  test 'should not watch changes for List I', (done) ->
+    times = 0
+    # console.log
+    handler = N.Watch ->
+      times++
+      if times is 2
+        done!
+      Tests.List {test: 1}
+
+    Tests.Fetch 6
+    .then (test) ->
+      test.test = 42
+      test.Save!
+
+    setTimeout ->
+      handler.Stop!
+      done! if times is 1
+    , 100
+
+  test 'should watch changes for List II', (done) ->
+    times = 0
+    # console.log
+    handler = N.Watch ->
+      times++
+      if times is 2
+        handler.Stop!
+        done!
+      Tests.List {test: 1}
+
+    Tests.Fetch 3
+    .then (test) ->
+      test.test++
+      test.Save ->
 
   # test 'should watch changes for List III', (done) ->
   #   times = 0

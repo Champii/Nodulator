@@ -1,11 +1,10 @@
 N = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
-Debug = require \../Helpers/Debug
+
 polyparams = require \polyparams
 cache = require \./Cache
 
-debug-cache = new Debug 'N::Resource::Cache'
 
 watchers = []
 
@@ -128,10 +127,8 @@ class Wrappers
         name += '{}'
 
       cache.Get name, (err, cached) ~>
-        # console.log 'Got', name, err, cached, oldDone
 
         if not err? and cached?
-          debug-cache.Warn 'Cache answered for ' + name
           cached = JSON.parse cached
           if is-type \Array cached
             cached = cached |> map -> Resource.Hydrate it
@@ -143,9 +140,6 @@ class Wrappers
 
         args[doneIdx] = (err, res) ~>
           if err?
-            # return cache.Delete name, ->
-            #   debug-cache.Warn 'Cache deleted for ' + name
-            #   watcher?.Stop!
             return oldDone err
 
           if is-type \Array res
@@ -154,8 +148,6 @@ class Wrappers
             toStore = obj-to-pairs res |> filter (.0.0 isnt \_) |> pairs-to-obj
           cache.Set name, JSON.stringify(toStore), (err, status) ~>
             return oldDone err if err?
-
-            debug-cache.Log 'Cache updated for ' + name
 
             oldDone null, res
 

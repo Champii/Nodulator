@@ -1,5 +1,8 @@
 N = require '../..'
 redis = require \redis
+Debug = require '../Helpers/Debug'
+
+debug-cache = new Debug 'N::Resource::Cache'
 
 class RedisCache
 
@@ -69,6 +72,7 @@ class Cache
     @client.Get name, (err, reply) ->
       return done! done err if err?
 
+      debug-cache.Warn 'Cache answered for ' + name
       done null, reply
 
   Set: (name, value, done) ->
@@ -76,6 +80,7 @@ class Cache
     @client.Set name, value, (err, reply) ~>
       return done! done err if err?
 
+      debug-cache.Warn 'Cache updated for ' + name
       done null, reply
 
   Delete: (name, done) ->
@@ -83,6 +88,7 @@ class Cache
     @client.Del name, (err, reply) ~>
       return done! done err if err?
 
+      debug-cache.Warn 'Cache deleted for ' + name
       done null, reply
 
   Reset: ->
