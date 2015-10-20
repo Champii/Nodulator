@@ -10,9 +10,11 @@ require! {
   \prelude-ls
   # \async-ls : {callbacks: {bindA}}
   \../Helpers/Debug
-  \./Cache : cache
+  # \./Cache : cache
   polyparams: ParamWraper
 }
+
+cache = null
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
@@ -24,6 +26,9 @@ N.Validator = Validator
 N.inited = {}
 
 module.exports = (table, config, app, routes, name) ->
+
+  if not cache?
+    cache := require './Cache'
 
   debug-resource = new Debug "N::Resource::#name"
 
@@ -63,8 +68,6 @@ module.exports = (table, config, app, routes, name) ->
 
     # Get what to send to the database
     Serialize: ->
-      # res = if @id? then id: @id else {}
-
       @_schema.Filter @
 
     # Get what to send to client
@@ -195,7 +198,7 @@ module.exports = (table, config, app, routes, name) ->
             | err? => done err
             | _    =>
               c = {}
-              if config?.dbType or config?.dbAuth
+              if config?.db
                 @_table.AddDriver config
                 c = config
               else
@@ -217,9 +220,6 @@ module.exports = (table, config, app, routes, name) ->
 
           , _depth
         , done
-        # , (...args) ->
-        #   # Debug.UnDepth()
-        #   done.apply err, args
 
     # Fetch from id or id array
     @Fetch = @_WrapFlipDone @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
@@ -413,8 +413,6 @@ module.exports = (table, config, app, routes, name) ->
       res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
       res.Create {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
         done err, instance
-      #
-      #   done err
 
     Remove: @_WrapPromise (instance, done) ->
       names = sort [@_type, instance._type]
@@ -471,59 +469,12 @@ module.exports = (table, config, app, routes, name) ->
 
       @
 
-    # Prepare Relationships
-
-    # Setup Schema
-    # @_PrepareSchema = ->
-    #   debug-res.Log "Preparing Schema for #{name}"
-    #
-    #   for field, description of @config.schema
-    #
-    #     isArray = false
-    #     if description.type? and Array.isArray description.type
-    #       isArray = true
-    #       description.type = description.type[0]
-    #     else if Array.isArray description
-    #       isArray = true
-    #       description = description[0]
-    #
-    #     if typeof(description) is 'function'
-    #       @Field field, null .Virtual description
-    #
-    #     else if description.type? and typeof description.type is 'function'
-    #       if description.localKey? and not @config.schema[description.localKey]?
-    #         if isArray
-    #           @Field description.localKey, [\int]
-    #         else
-    #           @Field description.localKey, \int
-    #
-    #       # @_PrepareRelationship isArray, field, description
-    #
-    #     else if description.type?
-    #       if description.default?
-    #         if typeof(description.default) is 'function'
-    #           @::[field] = description.default()
-    #         else
-    #           @::[field] = description.default
-    #
-    #       @Field field, description.type
-    #
-    #       if isArray
-    #         @Field field, [description.type]
-    #
-    #     else if typeof(description) is 'string'
-    #       if isArray
-    #         @Field field, [description]
-    #       else
-    #         @Field field, description
 
     # Setup inheritance
-    # @_PrepareAbstract = ->
     @Extend = (name, routes, config) ->
       @Init!
 
       config = __(config || {}).extend @config
-      # config = config with @config
 
       if config and config.abstract
         deleteAbstract = true
@@ -537,7 +488,6 @@ module.exports = (table, config, app, routes, name) ->
     @Init = (@config = @config, extendArgs) ->
       if @INITED
         return @
-
 
       if N.inited[@lname]?
         return @
@@ -555,11 +505,6 @@ module.exports = (table, config, app, routes, name) ->
 
       if @_routes?
         @routes = new @_routes(@, @config)
-
-      # if @config? and @config.schema
-      #   @_PrepareSchema()
-
-      # @_PrepareAbstract()
 
       #FIXME
       N[capitalize @lname + \s] = @

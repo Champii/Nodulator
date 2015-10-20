@@ -1,10 +1,12 @@
+N = require '../..'
 redis = require \redis
 
-class Cache
+class RedisCache
 
-  ->
-    @client = redis.createClient!
-    @client.select 15
+  ({host = '127.0.0.1', post = 6370, database = 0}) ->
+
+    @client = redis.createClient {host, port}
+    @client.select database
     @client.flushdb()
 
   Get: (name, done) ->
@@ -28,5 +30,63 @@ class Cache
 
   Reset: ->
     @client.flushdb()
+
+class MemCache
+
+  ->
+    @client = {}
+
+  Get: (name, done) ->
+    if @client[name]?
+      return done null, reply
+
+    done!
+
+  Set: (name, value, done) ->
+    @client[name] = value
+
+    done!
+
+  Delete: (name, done) ->
+    delete @client[name]
+
+    done!
+
+  Reset: ->
+    @client = {}
+
+
+class Cache
+
+  ->
+    if N.config?.cache?.type is \Redis
+      @client = new RedisCache N.config.cache
+    else if N.config?.cache?.type is \Mem
+      @client = new MemCache
+
+  Get: (name, done) ->
+    return done! if not @client?
+    @client.Get name, (err, reply) ->
+      return done! done err if err?
+
+      done null, reply
+
+  Set: (name, value, done) ->
+    return done! if not @client?
+    @client.Set name, value, (err, reply) ~>
+      return done! done err if err?
+
+      done null, reply
+
+  Delete: (name, done) ->
+    return done! if not @client?
+    @client.Del name, (err, reply) ~>
+      return done! done err if err?
+
+      done null, reply
+
+  Reset: ->
+    return if not @client?
+    @client.Reset!
 
 module.exports = new Cache

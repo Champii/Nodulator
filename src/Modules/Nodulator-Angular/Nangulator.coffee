@@ -28,7 +28,7 @@ module.exports = (N) ->
 
       for site, obj of N.config.assets
         o = {}
-        o["/js/#{site}.js"] = [
+        o["#{N.config.assets[site].path}/public/#{site}.min.js"] = [
           '/node_modules/nodulator-angular/assets'
           obj.path + N.config.servicesPath
           obj.path + N.config.directivesPath

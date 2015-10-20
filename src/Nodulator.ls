@@ -16,7 +16,8 @@ class N
   config: null
   consoleMode: false
   defaultConfig:
-    dbType: \SqlMem
+    db: type: \SqlMem
+    cache: false
     flipDone: false
 
   ->
@@ -49,17 +50,21 @@ class N
       config = routes
       routes = null
 
-    config = {} if not config?
-    config.dbType = @config.dbType if not config.dbType?
-    config.dbAuth = @config.dbAuth if not config.dbAuth?
-
     @Config() # config of N instance, not resource one
+
+    if config?
+      config.db = {} if not config.db?
+
+      obj-to-pairs @config.db |> each ->
+        | not config.db[it.0]? => config.db[it.0] = it.1
+
+    config = @config if not config?
 
     if _parent?
       class ExtendedResource extends _parent
 
       table = new DB name + \s
-      if config?.dbType or config?.dbAuth and not config?.abstract
+      if config?.db?.type or config?.db?.host? or config?.db?.user? or config?.db?.port? and not config?.abstract
         table.AddDriver config
       else if not config? or (config? and not config.abstract)
         table.AddDriver @config
@@ -69,11 +74,11 @@ class N
       table = new DB name + \s
       if not config?.abstract
         table.AddDriver config
-      # else if not config? or (config? and not config.abstract)
-      #   table.AddDriver @config
+      else if not config? or (config? and not config.abstract)
+        table.AddDriver @config
 
       @resources[name] = resource :=
-        require(\./Resource/Resource) table, config || @config, @app, routes, name
+        require(\./Resource/Resource) table, config, @app, routes, name
 
     debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
@@ -115,7 +120,9 @@ class N
   Reset: (done) ->
     debug-nodulator.Warn "Reset"
 
-    require \./Resource/Cache .Reset!
+    cache = require \./Resource/Cache
+    if cache.client?
+      cache.Reset!
     require \./Resource/Wrappers .Reset!
 
     @inited = {}

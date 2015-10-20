@@ -13,7 +13,7 @@ class InternalDriver
 
   Init: ->
 
-    @driver = drivers[\Mongo] dbAuth: host: 'localhost' database: '_internal'
+    @driver = drivers[\Mongo] db: host: 'localhost' database: '_internal'
 
     # Ensure that the database exists
     @driver.Insert 'internal_ids', {id: 'a', test: true}, (err, res) ~>
@@ -61,8 +61,6 @@ class DB
 
   (@tableName) ->
     @drivers = {}
-    # internalDriver.CreateIdEntry @tableName
-
 
   Find: (id, done) ->
     @FindWhere '*', {id: +id}, done
@@ -99,7 +97,7 @@ class DB
       @Insert blob, config, done
 
   Insert: (blob, config, done) ->
-    driver = @drivers[config.dbType]
+    driver = @drivers[config.db.type]
     internalDriver.NextId @tableName, (err, nextId) ~>
       return done err if err?
 
@@ -118,10 +116,10 @@ class DB
       done null, affected
 
   AddDriver: (config) ->
-    return if @drivers[config.dbType]?
+    return if @drivers[config.db?.type?]?
 
-    drivers[config.dbType].AddTable @tableName
-    @drivers[config.dbType] = drivers[config.dbType](config)
+    drivers[config.db?.type].AddTable @tableName
+    @drivers[config.db?.type] = drivers[config.db?.type](config)
 
   @Reset = ->
     values drivers |> each (._Reset?!)

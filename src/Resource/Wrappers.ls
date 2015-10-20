@@ -101,6 +101,10 @@ class Wrappers
 
   @_WrapCache = (name, cb) ->
 
+    if not N.config?.cache
+      return (...args) ->
+        cb.apply @, args
+
     fullName = name
     (...args) ->
       Resource = @

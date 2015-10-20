@@ -17,6 +17,8 @@
     "test": "test"
   },
   "devDependencies": {
+    "grunt": "0.4.5",
+    "grunt-contrib-coffee": "0.13.0",
     "mocha": "~2.0.1"
   },
   "scripts": {

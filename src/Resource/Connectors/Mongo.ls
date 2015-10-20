@@ -8,15 +8,15 @@ module.exports = (config) ->
   class Mongo
 
     ->
-      db().open config.dbAuth.host || 'localhost', config.dbAuth.port || 27017
+      db().open config.db.host || 'localhost', config.db.port || 27017
       # console.log config
-      if config.dbAuth.user
-        db(config.dbAuth.database + '.$cmd').auth config.dbAuth.user, config.dbAuth.pass, (res) ->
+      if config.db.user
+        db(config.db.database + '.$cmd').auth config.db.user, config.db.pass, (res) ->
           # console.log 'Mongo auth: ', res
 
     Select: (table, fields, where, options, done) ->
       # console.log 'Select', table, fields, where, options, done
-      db(config.dbAuth.database + '.' + table).find where, (rows) ->
+      db(config.db.database + '.' + table).find where, (rows) ->
         # console.log 'rows', rows.documents
         done null, rows.documents
 
@@ -24,7 +24,7 @@ module.exports = (config) ->
       #FIXME
       # callback = ->
         # fields.id = ids[table]++
-      db(config.dbAuth.database + '.' + table).insert fields
+      db(config.db.database + '.' + table).insert fields
       done null, fields
 
       # if not ids[table]?
@@ -33,17 +33,17 @@ module.exports = (config) ->
       #   callback!
 
     Update: (table, fields, where, done) ->
-      db(config.dbAuth.database + '.' + table).update {id: fields.id}, fields
+      db(config.db.database + '.' + table).update {id: fields.id}, fields
       done()
 
     Delete: (table, where, done) ->
-      db(config.dbAuth.database + '.' + table).remove {id: where.id}
+      db(config.db.database + '.' + table).remove {id: where.id}
       done null, 1
 
     # _SetIds: (name, done) ->
     #   # done!
     #   if !(ids[name]?)
-    #     db(config.dbAuth.database + '.' + name).find {}, {}, {sort: {id: -1}, lim: 1}, ->
+    #     db(config.db.database + '.' + name).find {}, {}, {sort: {id: -1}, lim: 1}, ->
     #       ids[name] := +it.documents[0]?.id || 0
     #       ids[name]++
     #       done! if done?
@@ -51,10 +51,10 @@ module.exports = (config) ->
     #     done! if done?
 
     Drop: (table) ->
-      db(config.dbAuth.database + '.$cmd').find({drop: table},1)
+      db(config.db.database + '.$cmd').find({drop: table},1)
 
     _LastId: (name, done) ->
-      db(config.dbAuth.database + '.' + name).find {}, {}, {sort: {id: -1}, lim: 1}, ->
+      db(config.db.database + '.' + name).find {}, {}, {sort: {id: -1}, lim: 1}, ->
         done null, +it.documents[0]?.id + 1 || 1
 
 

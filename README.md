@@ -133,16 +133,18 @@ Check the [Jump To](#jump-to) section !
 ___
 ## Features
 
+- [LiveScript](http://livescript.net/)
 - Integrated ORM
 - Integrated Routing system (with express, and highly linked with ORM)
 - Multiple DB Systems
 - Complex inheritance system
 - Modulable
 - Project generation
+- Cache
 - Schema-less/Schema-full models
 - Model validation
-- Model association and automatic retrieval
-- Models on different DB systems and associations
+- Model association (rails style) and automatic retrieval
+- Models and associations over different DB systems
 - Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
 - Promises or Callbacks
 - Fliped callback parameters
@@ -1171,13 +1173,9 @@ By order of priority
 - Persistant sessions in Console
 - Watch a specific field
 - Relations not only based on id but on every property types
-- Schema 'strict' mode that disallow any other properties
-- Schema 'cool' mode that only performs validation check
 - Internal property that isnt sent to the client by default
-- Schema and SchemaProperty classes (with .Internal() or .Default() or ...) to clarify the code
 - Decentralize modules config
 - 'Unique' field
-- Cache
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
 - Scaling (cluster, distributed bus)
@@ -1186,7 +1184,6 @@ By order of priority
   - Validation
 - Remove an existing route easely
 - Better error management
-- Auto add localKey or distantKey field when attached Resource
 - Type inference in schema for default field
 - Abstract class can retrieve every child `Resource`
 - Extend Array ?
@@ -1213,11 +1210,17 @@ XX/XX/XX: current (not released yet)
   - Fixed validation fails
   - Added _CreateUnwrapped
   - Added a instance.Watch() call, to make the instance to auto-update when part of it change
+  - Schema 'strict' or 'free'
   - When in Association, if the localKey doesnt exists, it is created on the fly
   - Better HasOne, HasMany and BelongsTo.
   - HasOneThrough, HasManyThrough
   - HasAndBelongsToMany
   - Resources can override global db config to put different models on different db systems
+  - Resource instance can be created on different db than default
+  - Added Cache over Redis
+  - Added @Hydrate() function to populate properties and associations from cache
+  - Added configuration for cache
+  - Better configuration for db
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
