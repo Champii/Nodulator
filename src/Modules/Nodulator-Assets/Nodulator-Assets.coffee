@@ -28,9 +28,12 @@ module.exports = (N) ->
         assets:
           app:
             path: '/client'
+            public:
+              '/img': '/client/public/img'
             js: ['/client/public/js/', '/client/']
-            css: ['/client/public/public/css/']
+            css: ['/client/public/css/']
         viewRoot: 'client'
+
         engine: 'jade' #FIXME: no other possible engine
         minified: false
 
@@ -125,7 +128,6 @@ module.exports = (N) ->
       grunt.loadNpmTasks('grunt-contrib-coffee');
       grunt.loadNpmTasks('grunt-contrib-uglify');
       grunt.loadNpmTasks('grunt-contrib-cssmin');
-      grunt.loadNpmTasks('grunt-ngmin');
 
     _RunGrunt: ->
       grunt.tasks ['coffee', 'uglify', 'cssmin'], {}, ->
@@ -221,17 +223,27 @@ module.exports = (N) ->
 
       # N.app.use minify()
       N.app.use require('connect-cachify').setup @list,
-        # root: path.join N.appRoot, '.'
-        root: path.resolve N.appRoot
-        # url_to_paths: url_to_paths
+        root: path.join N.appRoot, '.'
+        # root:  N.appRoot
+        # url_to_paths: {'/img/': '/client/public/img'}
         production: N.config.minified
         # debug: true
 
+      for site, config of N.config.assets
+        for destPath, origPath of N.config.assets[site].public
+          if origPath[0] is '/'
+            origPath = '.' + origPath
+          N.app.use "#{destPath}",  N.express.static path.resolve N.appRoot, origPath
 
+      if not N.config.minified
+        N.app.use N.express.static path.resolve N.appRoot
+      else
+        for name, paths of @list
+          siteName = name.split('/')[name.split('/').length - 1]
+          site = '/' + siteName.split('.')[0] + '/' + siteName.split('.')[siteName.split('.').length - 1] + name
+          N.app.use name,  N.express.static path.resolve N.appRoot, name[1..]
 
       N.app.use cookieParser 'nodulator'
-
-      N.app.use N.express.static N.appRoot
 
       N.app.set 'views', path.resolve N.appRoot, N.config.viewRoot
       N.app.engine '.' + N.config.engine, jade.__express

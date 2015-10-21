@@ -6,7 +6,7 @@ debug-cache = new Debug 'N::Resource::Cache'
 
 class RedisCache
 
-  ({host = '127.0.0.1', post = 6370, database = 0}) ->
+  ({host = '127.0.0.1', port = 6379, database = 0}) ->
 
     @client = redis.createClient {host, port}
     @client.select database
@@ -85,7 +85,7 @@ class Cache
 
   Delete: (name, done) ->
     return done! if not @client?
-    @client.Del name, (err, reply) ~>
+    @client.Delete name, (err, reply) ~>
       return done! done err if err?
 
       debug-cache.Warn 'Cache deleted for ' + name
