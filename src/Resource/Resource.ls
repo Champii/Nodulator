@@ -461,10 +461,10 @@ module.exports = (config, routes, name) ->
       @lname = _name.toLowerCase()
 
       @_table = new DB @lname + \s
-      if not config?.abstract
-        @_table.AddDriver config
-      else if not config? or (config? and not config.abstract)
-        @_table.AddDriver @config
+      if not _config?.abstract
+        @_table.AddDriver _config.db
+      else if not _config? or (_config? and not _config.abstract)
+        @_table.AddDriver @config.db
 
       @config = _config
       @INITED = false
@@ -480,7 +480,7 @@ module.exports = (config, routes, name) ->
     @Extend = (name, routes, config) ->
       @Init!
 
-      config = __(config || {}).extend @config
+      config = config || @config
 
       if config and config.abstract
         deleteAbstract = true

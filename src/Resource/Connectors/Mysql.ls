@@ -4,11 +4,11 @@ mysql = require 'mysql'
 module.exports = (config) ->
 
   connection = mysql.createConnection do
-    host     : config.db.host || 'localhost'
-    port     : config.db.port || 3306
-    user     : config.db.user || ''
-    password : config.db.pass || ''
-    database : config.db.database || ''
+    host     : config.host || 'localhost'
+    port     : config.port || 3306
+    user     : config.user || ''
+    password : config.pass || ''
+    database : config.database || ''
     typeCast: (field, next) ->
       if field.type is 'TINY' and field.length is 1
         return field.string() is '1'

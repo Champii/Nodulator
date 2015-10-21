@@ -57,7 +57,7 @@ class N
       obj-to-pairs @config.db |> each ->
         | not config.db[it.0]? => config.db[it.0] = it.1
 
-    config = @config if not config?
+    config = {db: @config.db} if not config?
 
     if _parent?
       class ExtendedResource extends _parent

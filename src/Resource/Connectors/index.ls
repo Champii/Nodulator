@@ -14,7 +14,7 @@ class InternalDriver
 
   Init: ->
 
-    @driver = drivers[N.config.db.type] N.config
+    @driver = drivers[N.config.db.type] N.config.db
 
     # Ensure that the database exists
     if N.config.db.type is \Mongo
@@ -122,10 +122,10 @@ class DB
       done null, affected
 
   AddDriver: (config) ->
-    return if @drivers[config.db?.type?]?
+    return if @drivers[config.type?]?
 
-    drivers[config.db?.type].AddTable @tableName
-    @drivers[config.db?.type] = drivers[config.db?.type](config)
+    drivers[config.type].AddTable @tableName
+    @drivers[config.type] = drivers[config.type](config)
 
   @Reset = ->
     values drivers |> each (._Reset?!)
