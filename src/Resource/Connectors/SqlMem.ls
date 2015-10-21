@@ -41,7 +41,11 @@ class SqlMem
     delete tables[table]
 
   _NextId: (name, done) ->
-    done null, _(tables[name]).max((item) -> item.id) + 1
+    id = 0
+    if tables[name]?.length
+      id = _(tables[name]).max((item) -> item.id)
+
+    done null, id + 1
 
 module.exports = (config) ->
   res = new SqlMem!
