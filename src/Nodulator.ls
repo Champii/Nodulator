@@ -5,7 +5,6 @@ require! {
   hacktiv
   \prelude-ls : {each, obj-to-pairs}
   \./Helpers/Debug
-  \./Resource/Connectors : DB
 }
 
 debug-nodulator = new Debug 'N::Core'
@@ -62,23 +61,11 @@ class N
 
     if _parent?
       class ExtendedResource extends _parent
-
-      table = new DB name + \s
-      if config?.db?.type or config?.db?.host? or config?.db?.user? or config?.db?.port? and not config?.abstract
-        table.AddDriver config
-      else if not config? or (config? and not config.abstract)
-        table.AddDriver @config
       @resources[name] = resource := ExtendedResource
-      @resources[name]._PrepareResource table, config, @app, routes, name, _parent
+      @resources[name]._PrepareResource config, routes, name, _parent
     else
-      table = new DB name + \s
-      if not config?.abstract
-        table.AddDriver config
-      else if not config? or (config? and not config.abstract)
-        table.AddDriver @config
-
       @resources[name] = resource :=
-        require(\./Resource/Resource) table, config, @app, routes, name
+        require(\./Resource/Resource) config, routes, name
 
     debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
@@ -123,10 +110,11 @@ class N
     cache = require \./Resource/Cache
     if cache.client?
       cache.Reset!
+
     require \./Resource/Wrappers .Reset!
+    require \./Resource/Connectors .Reset!
 
     @inited = {}
-    DB.Reset!
     @resources = {}
     @config = null
 

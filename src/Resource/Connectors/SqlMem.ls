@@ -40,8 +40,8 @@ class SqlMem
   Drop: (table) ->
     delete tables[table]
 
-  _LastId: (name, done) ->
-    done null, tables[name].length
+  _NextId: (name, done) ->
+    done null, _(tables[name]).max((item) -> item.id) + 1
 
 module.exports = (config) ->
   res = new SqlMem!

@@ -10,6 +10,7 @@ require! {
   \prelude-ls
   # \async-ls : {callbacks: {bindA}}
   \../Helpers/Debug
+  \./Connectors : DB
   # \./Cache : cache
   polyparams: ParamWraper
 }
@@ -25,7 +26,7 @@ N.Validator = Validator
 
 N.inited = {}
 
-module.exports = (table, config, app, routes, name) ->
+module.exports = (config, routes, name) ->
 
   if not cache?
     cache := require './Cache'
@@ -454,14 +455,19 @@ module.exports = (table, config, app, routes, name) ->
   #
 
     # Prepare the core of the Resource
-    @_PrepareResource = (_table, _config, _app, _routes, _name, _parent = null) ->
+    @_PrepareResource = (_config, _routes, _name, _parent = null) ->
       debug-res.Log 'Preparing resource'
-      @_table = _table
+
+      @lname = _name.toLowerCase()
+
+      @_table = new DB @lname + \s
+      if not config?.abstract
+        @_table.AddDriver config
+      else if not config? or (config? and not config.abstract)
+        @_table.AddDriver @config
 
       @config = _config
-      @app = _app
       @INITED = false
-      @lname = _name.toLowerCase()
       @_schema = new Schema @lname, _config?.schema
 
       @_routes = _routes
@@ -511,4 +517,4 @@ module.exports = (table, config, app, routes, name) ->
 
       @
 
-  Resource._PrepareResource(table, config, app, routes, name)
+  Resource._PrepareResource(config, routes, name)

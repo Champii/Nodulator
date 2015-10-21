@@ -1221,6 +1221,9 @@ XX/XX/XX: current (not released yet)
   - Added @Hydrate() function to populate properties and associations from cache
   - Added configuration for cache
   - Better configuration for db
+  - Internal driver is now fixed to be the default Nodulator driver.
+  - Globalized ids management by external table
+  - internal_ids are now stored on default driver and are automaticaly updated with last Ids values
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

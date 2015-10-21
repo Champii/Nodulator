@@ -91,6 +91,14 @@ module.exports = (config) ->
       op = if value.sup then ' > ' else ' < '
       return safeKey + op + mysql.escape value.val
 
+    _NextId: (name, done) ->
+      query = "select id from #{name} order by id desc limit 1;"
+
+      connection.query query, where, (err, rows) ->
+        return done err if err?
+
+        done null, rows.0.id + 1 || 1
+
   new Mysql
 
 module.exports.AddTable = (name) ->

@@ -1,5 +1,6 @@
 async = require \async
 global import require \prelude-ls
+N = require '../../..'
 
 drivers = do
   Mongo: require \./Mongo
@@ -13,24 +14,28 @@ class InternalDriver
 
   Init: ->
 
-    @driver = drivers[\Mongo] db: host: 'localhost' database: '_internal'
+    @driver = drivers[N.config.db.type] N.config
 
     # Ensure that the database exists
-    @driver.Insert 'internal_ids', {id: 'a', test: true}, (err, res) ~>
-      return console.error err if err?
-
-      @driver.Delete 'internal_ids', {id: 'a'}, (err, res) ~>
+    if N.config.db.type is \Mongo
+      @driver.Insert 'internal_ids', {id: 'a', test: true}, (err, res) ~>
         return console.error err if err?
+
+        @driver.Delete 'internal_ids', {id: 'a'}, (err, res) ~>
+          return console.error err if err?
+    if N.config.db.type is \SqlMem
+      drivers[N.config.db.type].AddTable 'internal_ids'
 
   CreateIdEntry: (name, done) ->
     @driver.Select 'internal_ids', \*, {}, {}, (err, nextIds) ~>
       if err? or not find (.name is name), nextIds
-        @driver._LastId 'internal_ids', (err, id) ~>
-          @driver.Insert 'internal_ids', {name: name, nextId: 1, id: id}, (err, res) ~>
+        @driver._NextId 'internal_ids', (err, entryId) ~>
+          @driver._NextId name, (err, nextId) ~>
+            @driver.Insert 'internal_ids', {name: name, nextId: nextId, id: entryId}, (err, res) ~>
 
-            @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
-              @driver.Update 'internal_ids', res.0, {}, (err, res) ->
-                done! if done?
+              @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
+                @driver.Update 'internal_ids', res.0, {}, (err, res) ->
+                  done! if done?
       else
         done! if done?
 
@@ -50,16 +55,17 @@ class InternalDriver
 
   Reset: ->
     @driver.Drop 'internal_ids'
-    drivers[\SqlMem].AddTable 'internal_ids'
-    @driver = drivers[\SqlMem]()
+    @Init!
 
-internalDriver = new InternalDriver
+
+internalDriver = null
 
 class DB
 
   tableName: null
 
   (@tableName) ->
+    internalDriver := new InternalDriver if not internalDriver?
     @drivers = {}
 
   Find: (id, done) ->
@@ -123,7 +129,7 @@ class DB
 
   @Reset = ->
     values drivers |> each (._Reset?!)
-    internalDriver.Reset!
+    internalDriver.Reset! if internalDriver?
 
 module.exports = DB
 
