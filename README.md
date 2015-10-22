@@ -1169,23 +1169,21 @@ ___
 
 By order of priority
 
+- Remove an existing route easely
+- Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - Migration system
-- Persistant sessions in Console
+- Auto wrap new methods in `Resource`
+- Association Polymorphism
 - Watch a specific field
 - Relations not only based on id but on every property types
 - Internal property that isnt sent to the client by default
-- Decentralize modules config
+- Persistant sessions in Console
 - 'Unique' field
-- Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
+- Decentralize modules config
 - Scaling (cluster, distributed bus)
-- Auto wrap new methods in `Resource`
 - Better tests
   - Validation
-- Remove an existing route easely
-- Better error management
-- Type inference in schema for default field
-- Abstract class can retrieve every child `Resource`
 - Extend Array ?
 
 ___

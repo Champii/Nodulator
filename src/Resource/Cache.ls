@@ -62,10 +62,15 @@ class MemCache
 class Cache
 
   ->
-    if N.config?.cache?.type is \Redis
-      @client = new RedisCache N.config.cache
-    else if N.config?.cache?.type is \Mem
+    if N.config?.cache?.type is \Redis or N.config?.cache is \Redis
+      debug-cache.Warn 'Redis cache init'
+      @client = new RedisCache N.config.cache if not is-type \String N.config.cache
+      @client = new RedisCache {} if is-type \String N.config.cache
+    else if N.config?.cache?.type is \Mem or N.config?.cache is \Mem
+      debug-cache.Warn 'Mem cache init'
       @client = new MemCache
+    else
+      debug-cache.Warn 'No cache activated'
 
   Get: (name, done) ->
     return done! if not @client?

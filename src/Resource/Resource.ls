@@ -5,7 +5,6 @@ require! {
   validator: Validator
   hacktiv: Hacktiv
   \./ChangeWatcher
-  \./Wrappers
   \./Schema
   \prelude-ls
   # \async-ls : {callbacks: {bindA}}
@@ -16,6 +15,7 @@ require! {
 }
 
 cache = null
+Wrappers = null
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
@@ -29,7 +29,9 @@ N.inited = {}
 module.exports = (config, routes, name) ->
 
   if not cache?
-    cache := require './Cache'
+    cache := require \./Cache
+  if not Wrappers?
+    Wrappers := require \./Wrappers
 
   debug-resource = new Debug "N::Resource::#name"
 
@@ -366,6 +368,7 @@ module.exports = (config, routes, name) ->
       * \String : optional: true
       * \String : optional: true
       (res, belongsTo, fieldName, key) ->
+        console.log 'BelongsTo?', belongsTo, key
         @_AddRelationship res, true, true, true, key || @lname + \Id , fieldName || res.lname
         res.BelongsTo @, @lname, key || @lname + \Id if belongsTo
 

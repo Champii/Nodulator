@@ -4,10 +4,8 @@ require! {
   "repl.history": rhistory
   path
   \prelude-ls
-  '\../' : N
   livescript
   util
-  \../src/Modules/Nodulator-Account : N-Account
 }
 
 module.exports = (configPath, resPath)->
@@ -81,6 +79,9 @@ module.exports = (configPath, resPath)->
 
   try config = require rootPath + \/ + configPath
 
+  N = require \../
+  N-Account = require \../src/Modules/Nodulator-Account
+
   N.Console()
   N.Config config || {}
   N.Use N-Account
@@ -102,7 +103,7 @@ module.exports = (configPath, resPath)->
 
     res
 
-  fetch-resources resPath
+  try fetch-resources resPath
     |> obj-to-pairs
     |> map -> try require rootPath + \/ + it.1
     |> each -> inst.context[capitalize it._table.tableName] = it if it?._table?

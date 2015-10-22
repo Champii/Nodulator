@@ -28,11 +28,9 @@ capitalize = (str) ->
 
 exists = (path, done) ->
   fs.realpath path, (err, realPath) ->
-    console.log err if err?
     return done false if err?
 
     fs.lstat realPath, (err, stat) ->
-      console.log err if err?
       return done false if err?
 
       if stat.isDirectory! or stat.isSymbolicLink! or stat.isFile()
@@ -98,7 +96,8 @@ if not args[0]? or args[0] in ['console', 'c']
   if not args[2]?
     args[2] := './server/resources'
 
-  cons =  require "#{appRoot}/node_modules/nodulator/bin/Console"
+  # cons =  require "#{appRoot}/node_modules/nodulator/bin/Console"
+  cons = require \./Console
   cons args[1], args[2]
 
 if args[0] is 'init'
@@ -167,7 +166,7 @@ else if args[0] in ['install', 'remove', 'install-dev']
     exists 'node_modules/nodulator', (exist) ->
       if not exist
         console.log 'Installing nodulator'
-        npm(args[0], '../Nodulator')
+        npm(args[0], 'nodulator')
       else
         console.log 'Already installed: nodulator'
 

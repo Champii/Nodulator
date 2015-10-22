@@ -5,7 +5,6 @@ Q = require 'q'
 polyparams = require \polyparams
 cache = require \./Cache
 
-
 watchers = []
 
 class Wrappers

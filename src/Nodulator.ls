@@ -75,10 +75,9 @@ class N
 
   Config: (config) ->
     if @config?
-      debug-nodulator.Warn "Aleady configured"
       return
 
-    debug-nodulator.Warn "Start main config"
+    debug-nodulator.Warn "Main config"
 
     @config = config || @defaultConfig
 

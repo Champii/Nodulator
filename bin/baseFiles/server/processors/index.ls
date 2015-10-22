@@ -1,11 +1,11 @@
-fs = require 'fs'
-path = require 'path'
+fs = require \fs
+path = require \path
 
 exports.Init = ->
   basePath = __dirname
 
   fs.readdirSync(basePath).forEach (fileName) ->
-    return 0 if fileName is 'index.coffee'
+    return 0 if fileName is \index.ls
 
     filePath = path.join basePath, fileName
     fileStat = fs.statSync filePath

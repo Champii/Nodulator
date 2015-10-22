@@ -118,7 +118,7 @@ module.exports = (N) ->
         uglify:
           assets:
             options:
-              beautify: true
+              # beautify: true
               mangle: false
             files: minifiedJs
         cssmin:
