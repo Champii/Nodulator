@@ -59,6 +59,7 @@ module.exports = (config, routes, name) ->
       @_type = @.__proto__.constructor.lname
       @_config = @.__proto__.constructor.config
 
+
       if blob.promise?
         debug-resource.Log "Defered instanciation"
         @_promise = blob.promise
@@ -217,34 +218,46 @@ module.exports = (config, routes, name) ->
 
         @_HandleArrayArg arg || args || {}, (blob, done) ~>
 
-          debug-resource.Log "Creating"
-          @resource._Deserialize blob, (err, instance) ~>
-            | err? => done err
-            | _    =>
-              c = {}
-              if config?.db
-                @_table.AddDriver config
-                c = config
-              else
-                c = @config
-              instance._SaveUnwrapped c, (err, instance) ~>
-                | err? => done err
-                | _    =>
-                  if instance._schema.assocs.length
-                    @_schema.FetchAssoc instance, (err, blob) ~>
-                      | err? => done err
-                      | _    =>
-                        instance import blob
-                        debug-resource.Log "Created {id: #{instance.id}}"
-                        done null instance
-                    , _depth
-                  else
-                    debug-resource.Log "Created {id: #{instance.id}}"
-                    done null instance
+          async.mapSeries obj-to-pairs(blob), (pair, done) ~>
+            if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1._promise
+              console.log 'Found', pair
+              pair.1.Then -> done null [pair.0, it.id]
+              pair.1.Catch done
+            else
+              console.log 'Not found', pair
+              done null, pair
+          , (err, results) ~>
+            return done err if err?
 
-          , _depth
+            blob = pairs-to-obj results
+
+            debug-resource.Log "Creating"
+            @resource._Deserialize blob, (err, instance) ~>
+              | err? => done err
+              | _    =>
+                c = {}
+                if config?.db?
+                  @_table.AddDriver config
+                  c = config
+                else
+                  c = @config
+                instance._SaveUnwrapped c, (err, instance) ~>
+                  | err? => done err
+                  | _    =>
+                    if instance._schema.assocs.length
+                      @_schema.FetchAssoc instance, (err, blob) ~>
+                        | err? => done err
+                        | _    =>
+                          instance import blob
+                          debug-resource.Log "Created {id: #{instance.id}}"
+                          done null instance
+                      , _depth
+                    else
+                      debug-resource.Log "Created {id: #{instance.id}}"
+                      done null instance
+
+            , _depth
         , done
-
 
     # Fetch from id or id array
     @Fetch = @_WrapFlipDone @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
@@ -366,6 +379,7 @@ module.exports = (config, routes, name) ->
 
       obj = type: res
 
+      console.log 'Add Relationship', @lname, res.lname, fieldName
       if isDistant
         res.Field key, \int .Required isRequired
         obj.distantKey = key
@@ -449,15 +463,24 @@ module.exports = (config, routes, name) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
-    Fetch: @_WrapPromise ->
-      N[capitalize @_type + \s ]._FetchUnwrapped @id, it
+    Fetch: @_WrapPromise (done) ->
+      N[capitalize @_type + \s ]._FetchUnwrapped @id, ~>
+        return done it if it?
+
+        @ <<<< &1
+        done null, @
+
 
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
       names = sort [@_type, instance._type]
       res = @_schema.habtm |> find (.lname is names.0 + \s_ + names.1)
+      console.log 'HABTM?' res
       if res?
-        return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
-          done err, instance
+        console.log 'HABTM'
+        return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ~>
+          console.log 'HABTM CREATED' err, newRes
+          return done err if err?
+          @Save!Then (.Fetch done) .Catch done
 
       res = @_schema.assocs |> find (.name is capitalize instance._type or it.name is capitalize instance._type + \s)
       if res?
@@ -490,9 +513,6 @@ module.exports = (config, routes, name) ->
       console.log @ToJSON!
       it null @
 
-    Error: @_WrapPromise @_WrapResolvePromise (fn, done) ->
-      @_promise = @_promise.catch fn if @_promise?
-      done null @
   #
   # Private
   # Class Methods
@@ -535,9 +555,9 @@ module.exports = (config, routes, name) ->
 
       @_table = new DB @lname + \s
       if not _config?.abstract
-        @_table.AddDriver _config.db
+        @_table.AddDriver _config
       else if not _config? or (_config? and not _config.abstract)
-        @_table.AddDriver @config.db
+        @_table.AddDriver @config
 
       @config = _config
       @INITED = false

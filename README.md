@@ -1184,8 +1184,33 @@ By order of priority
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
 - Decentralize modules config
 - Scaling (cluster, distributed bus)
+- Split Resource into smaller Classes
+- List return a resource that can act on each item (Set, Add, ...)
 - Better tests
-  - Validation
+  - Db
+    - SqlMem
+    - Mysql
+    - Mongo
+    - Ids
+    - HABTM tables
+  - Cache
+  - Request
+  - Watch
+  - Catch
+  - Schema
+    - virtual
+    - Default
+    - Required
+    - Strict/Free
+    - Type and validation
+     - HaOne
+     - HasMany
+     - HasOneThrough
+     - HasManyThrough
+     - HasAndBelongsToMany
+  - Config oveloading
+  - Multi Driver fetch/list
+
 - Extend Array ?
 
 ___

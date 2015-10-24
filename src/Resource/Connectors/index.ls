@@ -122,10 +122,10 @@ class DB
       done null, affected
 
   AddDriver: (config) ->
-    return if @drivers[config.type?]?
+    return if @drivers[config.db.type?]?
 
-    drivers[config.type].AddTable @tableName
-    @drivers[config.type] = drivers[config.type](config)
+    drivers[config.db.type].AddTable @tableName
+    @drivers[config.db.type] = drivers[config.db.type](config.db)
 
   @Reset = ->
     values drivers |> each (._Reset?!)

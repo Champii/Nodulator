@@ -59,11 +59,7 @@ class Schema
 
   Process: (blob) ->
 
-    if @mode is \free
-      blob = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
-    res = blob
-    # else
-    #   res := {}
+    res = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
 
     @properties
       |> filter (-> it.name of blob)
@@ -72,7 +68,7 @@ class Schema
         | it.default?     => that
         | _               => void)
 
-    @assocs |> each -> res[it.name] = blob[it.name] if blob[it.name]?
+    @assocs |> each -> res[it.name] = that if blob[it.name]?
 
     @properties
       |> filter (.virtual?)

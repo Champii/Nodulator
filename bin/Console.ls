@@ -34,6 +34,8 @@ module.exports = (configPath, resPath)->
     res = eval livescript.compile cmd, bare: true, header: false colors: true
 
     if res?
+      if res?.Init?
+        res.inspect = -> "[Resource #{res.lname}]"
       if res._promise?
 
         res
@@ -43,10 +45,11 @@ module.exports = (configPath, resPath)->
               # it.inspect = -> _(@).invoke('ToJSON')
               @[varName] = it
               done null, it
-            else
+            else if it?
               it.inspect = -> @ToJSON!
               @[varName] = it
               done null, it
+            else
           .Catch ~>
             @[varName] = it
             done null, it
