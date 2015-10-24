@@ -21,7 +21,7 @@ describe 'N Reactive value', ->
         {test: 1}
         {test: 1}
         {test: 2}]
-      .then ->
+      .Then ->
         assert it.length, 6
         done!
 
@@ -50,14 +50,14 @@ describe 'N Reactive value', ->
       Tests.Fetch 1
 
     Tests.Fetch 1
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save!
 
     handler.Stop!
 
     Tests.Fetch 1
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save ->
         done!
@@ -72,7 +72,7 @@ describe 'N Reactive value', ->
       Tests.Fetch 1
 
     Tests.Fetch 1
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save ->
         handler.Stop!
@@ -87,7 +87,7 @@ describe 'N Reactive value', ->
       Tests.Fetch 1
 
     Tests.Fetch 2
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save!
 
@@ -106,7 +106,7 @@ describe 'N Reactive value', ->
       Tests.List!
 
     Tests.Fetch 1
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save ->
         handler.Stop!
@@ -121,7 +121,7 @@ describe 'N Reactive value', ->
       Tests.List {test: 1}
 
     Tests.Fetch 6
-    .then (test) ->
+    .Then (test) ->
       test.test = 42
       test.Save!
 
@@ -141,7 +141,7 @@ describe 'N Reactive value', ->
       Tests.List {test: 1}
 
     Tests.Fetch 3
-    .then (test) ->
+    .Then (test) ->
       test.test++
       test.Save ->
 
@@ -155,7 +155,7 @@ describe 'N Reactive value', ->
   #     Tests.List [{test: 1}, {test: 2}]
   #
   #   Tests.Fetch 6
-  #   .then (test) ->
+  #   .Then (test) ->
   #     test.test = 1
   #     test.Save ->
   #       handler.Stop!

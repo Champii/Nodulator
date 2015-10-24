@@ -28,7 +28,6 @@ class N
 
     @appRoot = path.resolve \.
 
-
     debug-nodulator.Log 'Init ended'
 
   Resource: (name, routes, config, _parent) ->
@@ -85,7 +84,6 @@ class N
       |> obj-to-pairs
       |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
-
   Use: (module) ->
     debug-nodulator.Log "Loading module"
     m = module @
@@ -121,7 +119,6 @@ class N
       @app = null
       @server.close()
       @server = null
-
 
     @Init()
 

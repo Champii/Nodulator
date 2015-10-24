@@ -19,39 +19,39 @@ describe 'N Promises', ->
 
   test 'Create should return promise', (done) ->
     Tests.Create test: 1
-    .fail (err) -> throw new Error err
-    .then (test) ->
+    .Catch (err) -> throw new Error err
+    .Then (test) ->
       assert.equal test.test, 1
       done()
 
 
   test 'Fetch should return promise', (done) ->
     Tests.Fetch 1
-    .fail (err) -> throw new Error err
-    .then (test) ->
+    .Catch (err) -> throw new Error err
+    .Then (test) ->
       assert.equal test.test, 1
       done()
 
 
   test 'List should return promise', (done) ->
     Tests.List()
-    .fail (err) -> throw new Error err
-    .then (tests) ->
+    .Catch (err) -> throw new Error err
+    .Then (tests) ->
       assert.equal tests[0].test, 1
       done()
 
   test 'Save should return promise', (done) ->
     Tests.Fetch 1
-    .fail (err)  -> throw new Error err
-    .then (test) ->
+    .Catch (err)  -> throw new Error err
+    .Then (test) ->
       test.test++
       test.Save()
-    .then (test) ->
+    .Then (test) ->
       assert.equal test.test, 2
       done()
 
   test 'Delete should return promise', (done) ->
     Tests.Delete 1
-    .fail (err) -> throw new Error err
-    .then ->
+    .Catch (err) -> throw new Error err
+    .Then ->
       done()

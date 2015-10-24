@@ -1,20 +1,18 @@
 N = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
+async = require 'async'
 
 polyparams = require \polyparams
 cache = require \./Cache
 
 watchers = []
 
+global import require \prelude-ls
+
 class Wrappers
 
-  @_FindDone = (args) ->
-    for arg, i in args
-      if typeof(arg) is 'function'
-        return i
-
-    -1
+  @_FindDone = -> it |> find-index is-type \Function
 
   @_WrapFlipDone = (cb) ->
     if not N.config.flipDone
@@ -25,7 +23,7 @@ class Wrappers
     (...args) ->
 
       doneIdx = resource._FindDone args
-      if doneIdx is -1
+      if not doneIdx?
         return cb.apply @, args
 
       oldDone = args[doneIdx]
@@ -46,10 +44,12 @@ class Wrappers
 
     _FindDone = @_FindDone
 
+    resource = @
+
     (...args) ->
       idx = _FindDone args
 
-      if idx is -1
+      if not idx?
         d = Q.defer()
 
         args.push (err, data) ->
@@ -58,7 +58,51 @@ class Wrappers
           d.resolve data
 
       ret = cb.apply @, args
-      d?.promise || ret
+
+      # console.log 'Wrap Promise', d, @
+      if d? and @Init?
+        @Init!
+        new @ d
+      else if d? and @_promise?
+        @_promise = d.promise
+        @
+      else if not d? and ret.state? and @_type?
+        console.log 'NON PROMISE', d, ret, @_type
+        @_promise = ret
+        @
+      else
+        ret
+
+  @_WrapResolvePromise = (cb) ->
+    findDone = @_FindDone
+    (...args) ->
+      doneIdx = findDone args
+      oldDone = args[doneIdx]
+      if @_promise?
+        # console.log 'WrapResolvePromise', @
+        @
+          .Then ~> cb.apply it, args
+          .Catch oldDone
+      else
+        cb.apply @, args
+
+  @_WrapResolveArgPromise = (cb) ->
+    findDone = @_FindDone
+    (...args) ->
+      doneIdx = findDone args
+      oldDone = args[doneIdx]
+      async.map args, (arg, done) ->
+        if arg?._promise?
+          arg
+            .Then -> done null it
+            .Catch done
+        else
+          done null arg
+      , (err, results) ~>
+        return oldDone err if oldDone? and err?
+
+        cb.apply @, results
+      @
 
   @_WrapWatchArgs = (cb) ->
     (...args) ->
@@ -76,7 +120,7 @@ class Wrappers
     (...args) ->
 
       doneIdx = resource._FindDone args
-      if doneIdx is -1
+      if not doneIdx?
         return cb.apply @, args
 
       oldDone = args[doneIdx]
@@ -117,7 +161,6 @@ class Wrappers
         else
           0
 
-
       if is-type \Array args[0] or is-type \Object args[0]
         name += JSON.stringify args[0]
       else if is-type \Number args[0]
@@ -152,6 +195,7 @@ class Wrappers
 
         watchers.push N.Watch ~>
           cb.apply @, args
+
 
   @Reset = ->
     watchers |> each (.Stop!)

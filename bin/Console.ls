@@ -34,22 +34,24 @@ module.exports = (configPath, resPath)->
     res = eval livescript.compile cmd, bare: true, header: false colors: true
 
     if res?
-      if res.then?
+      if res._promise?
 
-        res.fail ~>
-          @[varName] = it
-          done null, it
-
-        res.then ~>
-          if is-type \Array it
-            it |> each (.inspect = -> @ToJSON!)
-            # it.inspect = -> _(@).invoke('ToJSON')
+        res._promise
+          .fail ~>
             @[varName] = it
             done null, it
-          else
-            it.inspect = -> @ToJSON!
-            @[varName] = it
-            done null, it
+
+
+          .then ~>
+            if is-type \Array it
+              it |> each (.inspect = -> @ToJSON!)
+              # it.inspect = -> _(@).invoke('ToJSON')
+              @[varName] = it
+              done null, it
+            else
+              it.inspect = -> @ToJSON!
+              @[varName] = it
+              done null, it
 
       else
         @[varName] = res

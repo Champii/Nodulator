@@ -22,71 +22,48 @@ describe 'N Associations', ->
       done!
 
   test 'should fetch one child Resource', (done) ->
-    Tests.HasOne Childs
-    Tests.Create name: \test
-      .fail !-> throw new Error it
-
-      .then ->
-        Childs.Create name: \child1 testId: 1
-
-      .fail !-> throw new Error it
-
-      .then ->
-        assert.equal it.Test.name, \test
-
-      .then ->
-        Tests.Fetch 1
-
-      .then ->
+    Tests.MayHasOne Childs, false
+    Tests.Create name: \test .Add Childs.Create(name: \child1 )  
+      .Then ->
         assert.equal it.Child.name, \child1
-        assert.equal it.Child.testId, 1
-        done!
 
-      .fail !-> throw new Error it
+      .Then ->
+
+        Tests.Fetch 1
+        .Then ->
+          assert.equal it.Child.name, \child1
+          assert.equal it.Child.testId, 1
+          done!
+
+        .Catch -> throw new Error it
 
   test 'should fetch many child Resource', (done) ->
-    Tests.HasMany Childs
+    Tests.MayHasMany Childs
     Tests.Create name: \test
-      .fail !-> throw new Error it
+      .Add Childs.Create name: \child1
+      .Add Childs.Create name: \child2
 
-      .then ->
-        Childs.Create name: \child1 testId: 1
+      .Fail -> console.error it; throw new Error it
 
-      .then ->
-        Childs.Create name: \child2 testId: 1
-
-      .fail !-> throw new Error it
-
-      .then ->
-        assert.equal it.Test.name, \test
-
-      .then ->
-        Tests.Fetch 1
-
-      .then ->
+      .Then ->
         assert.equal it.Childs.0.name, \child1
         assert.equal it.Childs.1.name, \child2
         assert.equal it.Childs.0.testId, 1
         assert.equal it.Childs.1.testId, 1
         done!
 
-      .fail !-> throw new Error it
+      .Catch !-> throw new Error it
 
   test 'should fetch belonging parent', (done) ->
-    Childs.BelongsTo Tests
-    Tests.Create name: \test
-      .fail !-> throw new Error it
+    Childs.MayBelongsTo Tests
+    Childs.Create name: \child .Add Tests.Create name: \test
+      .Then ->
+        Childs.Fetch 1
+          .Then ->
+            assert.equal it.Test.name, \test
+            done!
 
-      .then ->
-        Childs.Create testId: 1
-
-      .fail !-> throw new Error it
-
-      .then ->
-        assert.equal it.Test.name, \test
-        done!
-
-      .fail !-> throw new Error it
+      .Catch !-> throw new Error it
 
   # test 'should create another resource with array of association', (done) ->
   #   err, res <- Childs.Create do
@@ -130,9 +107,9 @@ describe 'N Associations', ->
   #   class Tests extends N 'test2', testConfig
   #
   #   Childs.Create testId: 1 field: 'child'
-  #   .fail -> throw new Error it
-  #   .then -> Tests.Create test: \test
-  #   .then ->
+  #   .Catch -> throw new Error it
+  #   .Then -> Tests.Create test: \test
+  #   .Then ->
   #     assert.equal it.child.field, 'child'
   #     done!
   #
@@ -148,8 +125,8 @@ describe 'N Associations', ->
   #   Tests = N 'test3', testConfig
   #
   #   Childs.Create testId: 1 field: 'child'
-  #   .fail -> throw new Error it
-  #   .then -> Tests.Create test: \test
-  #   .then ->
+  #   .Catch -> throw new Error it
+  #   .Then -> Tests.Create test: \test
+  #   .Then ->
   #     assert.equal it.children.0.field, 'child'
   #     done!

@@ -33,12 +33,13 @@ class Request
     @sent = true
 
   SetInstance: ->
-    if it.then?
-      it.fail ~> @SendError it
-      it.then ~>
-        @req._instance = it
-        @instance = it
-        @next()
+    if it._promise?
+      it
+        .Then ~>
+          @req._instance = it
+          @instance = it
+          @next()
+        .Catch ~> @SendError it
     else
       @req._instance = it
       @instance = it

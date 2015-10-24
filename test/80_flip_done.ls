@@ -29,8 +29,8 @@ describe 'N Flip Done', ->
 
   test 'It should still return promise', (done) ->
     Tests.Create test: 1
-    .then (test) ->
-      assert test?
-      assert not err?
-      assert.equal test.test, 1
-      done()
+      .Then (test) ->
+        assert test?
+        assert not err?
+        assert.equal test.test, 1
+        done()

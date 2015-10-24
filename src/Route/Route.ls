@@ -101,10 +101,11 @@ class Route
     Req = new Request args
     ret = @[fName] Req
     if ret?
-      switch true
-        | ret.then? =>
-          ret.fail -> Req.SendError it
-          ret.then -> Req.Send it
+      switch
+        | ret._promise? =>
+          ret
+            .Then -> Req.Send it
+            .Catch -> Req.SendError it
         | _         => Req.Send ret
 
   _Add: (type, url, ...middle, done) ->

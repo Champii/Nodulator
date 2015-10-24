@@ -54,20 +54,39 @@ module.exports = (config, routes, name) ->
     # Constructor
     (blob) ->
 
-      debug-resource.Log "Instantiate with {id: #{blob.id}}"
-
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
       @_type = @.__proto__.constructor.lname
       @_config = @.__proto__.constructor.config
 
+      if blob.promise?
+        debug-resource.Log "Defered instanciation"
+        @_promise = blob.promise
+        return
+
+      debug-resource.Log "Instantiate with {id: #{blob.id}}"
+
       import @_schema.Process blob
 
+    Then: ->
+      # console.log 'Then', it, @
+      @_promise = @_promise.then it if @_promise?
+      # console.log 'Then2', @
+      @
+    #
+    Catch: ->
+      @_promise = @_promise.catch it if @_promise?
+      @
+
+    Fail: ->
+      @_promise = @_promise.fail it if @_promise?
+      @
+
     # Wrap the _SaveUnwrapped() call
-    Save: @_WrapFlipDone @_WrapPromise @_WrapDebugError debug-resource~Error, -> @_SaveUnwrapped ...
+    Save: @_WrapFlipDone @_WrapPromise @_WrapResolvePromise @_WrapDebugError debug-resource~Error, -> @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
-    Delete: @_WrapFlipDone @_WrapPromise @_WrapDebugError debug-resource~Error, -> @_DeleteUnwrapped ...
+    Delete: @_WrapFlipDone @_WrapPromise @_WrapResolvePromise @_WrapDebugError debug-resource~Error, -> @_DeleteUnwrapped ...
 
     # Get what to send to the database
     Serialize: ->
@@ -76,7 +95,6 @@ module.exports = (config, routes, name) ->
     # Get what to send to client
     ToJSON: ->
       res = @Serialize()
-
 
       @_schema.GetVirtuals! |> each ~> res[it.name] = @[it.name]
       each ~>
@@ -96,6 +114,7 @@ module.exports = (config, routes, name) ->
 
       __(@).extend newBlob
 
+    # Watch the instance refetch itself
     Watch: (done) ->
       N.Watch ~>
         N[capitalize name + \s ].Fetch @id, (err, res) ~>
@@ -158,13 +177,14 @@ module.exports = (config, routes, name) ->
 
               done null, @
 
-      null
+      @
 
   #
   # Public
   # Class Methods
   #
 
+    # Populate an existing instance with a new blob
     @Hydrate = (blob) ->
 
       res = new @ blob
@@ -183,6 +203,7 @@ module.exports = (config, routes, name) ->
       @Init!
       @_CreateUnwrapped ...
 
+    # Create without wraps
     @_CreateUnwrapped = @_WrapParams do
       * \Object : optional: true
       * \Array : optional: true
@@ -224,6 +245,7 @@ module.exports = (config, routes, name) ->
           , _depth
         , done
 
+
     # Fetch from id or id array
     @Fetch = @_WrapFlipDone @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
@@ -255,12 +277,12 @@ module.exports = (config, routes, name) ->
           @_table.Find constraints, cb done
       , done
 
-    # Get every records from DB
+    # Get a list of records from DB
     @List = @_WrapFlipDone @_WrapPromise @_WrapCache 'List' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
       @Init!
       @_ListUnwrapped ...
 
-    # Get every records from DB
+    # Get a list of records from DB
     @_ListUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
 
       if typeof(arg) is 'function'
@@ -311,6 +333,7 @@ module.exports = (config, routes, name) ->
 
       , done
 
+    # Watch the Resource for a particular event or any changes
     @Watch = (...args) ->
 
       @Init!
@@ -331,7 +354,7 @@ module.exports = (config, routes, name) ->
       for type in types
         switch type
           | type in <[new updated deleted]> => N.bus.on type + '_' + name, (item) -> done item.Watch!
-          | \all                            => N.Watch ~> @List query .fail done .then done
+          | \all                            => N.Watch ~> @List query .catch done .then done
 
       @
 
@@ -358,39 +381,53 @@ module.exports = (config, routes, name) ->
       * \Boolean : default: true
       * \String : optional: true
       * \String : optional: true
-      (res, belongsTo, fieldName, key) ->
-        @_AddRelationship res, false, true, true, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, @lname, key || @lname + \Id if belongsTo
+      * \Boolean : default: true
+      (res, belongsTo, fieldName, key, may) ->
+        @_AddRelationship res, false, true, may, key || @lname + \Id , fieldName || res.lname
+        res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
 
     @HasMany = @_WrapParams do
       * \Function
       * \Boolean : default: true
       * \String : optional: true
       * \String : optional: true
-      (res, belongsTo, fieldName, key) ->
-        console.log 'BelongsTo?', belongsTo, key
-        @_AddRelationship res, true, true, true, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, @lname, key || @lname + \Id if belongsTo
+      * \Boolean : default: true
+      (res, belongsTo, fieldName, key, may) ->
+        @_AddRelationship res, true, true, may, key || @lname + \Id , fieldName || res.lname
+        res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
 
     @BelongsTo = @_WrapParams do
       * \Function
       * \String : optional: true
       * \String : optional: true
-      (res, fieldName, key) ->
-        @_AddRelationship res, false, false, true, key || res.lname + \Id , fieldName || res.lname
+      * \Boolean : default: true
+      (res, fieldName, key, may) ->
+        @_AddRelationship res, false, false, may, key || res.lname + \Id , fieldName || res.lname
 
     # TO BE TESTED
 
-    # @MayHasOne = (res, belongsTo = true) ->
-    #   @_AddRelationship res, false, true, false
-    #   res.MayBelongsTo @ if belongsTo
-    #
-    # @MayHasMany = (res, belongsTo = true) ->
-    #   @_AddRelationship res, true, true, false
-    #   res.MayBelongsTo @ if belongsTo
-    #
-    # @MayBelongsTo = (res) ->
-    #   @_AddRelationship res, false, false, false
+    @MayHasOne = @_WrapParams do
+      * \Function
+      * \Boolean : default: true
+      * \String : optional: true
+      * \String : optional: true
+      * \Boolean : default: false
+      (...args) -> @HasOne.apply @, args
+
+    @MayHasMany = @_WrapParams do
+      * \Function
+      * \Boolean : default: true
+      * \String : optional: true
+      * \String : optional: true
+      * \Boolean : default: false
+      (...args) -> @HasMany.apply @, args
+
+    @MayBelongsTo = @_WrapParams do
+      * \Function
+      * \String : optional: true
+      * \String : optional: true
+      * \Boolean : default: false
+      (...args) -> @BelongsTo.apply @, args
 
     @HasOneThrough = (res, through) ->
       @HasOne through
@@ -412,17 +449,50 @@ module.exports = (config, routes, name) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
-    Add: @_WrapPromise (instance, done) ->
-      names = sort [@_type, instance._type]
-      res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
-      res.Create {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
-        done err, instance
+    Fetch: @_WrapPromise ->
+      N[capitalize @_type + \s ]._FetchUnwrapped @id, it
 
-    Remove: @_WrapPromise (instance, done) ->
+    Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
+      names = sort [@_type, instance._type]
+      res = @_schema.habtm |> find (.lname is names.0 + \s_ + names.1)
+      if res?
+        return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
+          done err, instance
+
+      res = @_schema.assocs |> find (.name is capitalize instance._type or it.name is capitalize instance._type + \s)
+      if res?
+        if res.keyType is \distant
+          instance[res.foreign] = @id
+          instance._SaveUnwrapped ~>
+            return done it if it?
+            @Fetch done
+        else if res.keyType is \local
+          @[res.foreign] = @id
+          @_SaveUnwrapped ~>
+            return done it if it?
+            @Fetch done
+      else
+        done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
+
+
+    Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]
       res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
       res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
         done err, instance
+
+    # Change properties and save
+    Set: @_WrapPromise @_WrapResolvePromise (obj, done) ->
+      @ExtendSafe obj
+      @Save done
+
+    Log: @_WrapPromise @_WrapResolvePromise ->
+      console.log @ToJSON!
+      it null @
+
+    Error: @_WrapPromise @_WrapResolvePromise (fn, done) ->
+      @_promise = @_promise.catch fn if @_promise?
+      done null @
   #
   # Private
   # Class Methods
@@ -477,7 +547,6 @@ module.exports = (config, routes, name) ->
       @_parent = _parent
 
       @
-
 
     # Setup inheritance
     @Extend = (name, routes, config) ->

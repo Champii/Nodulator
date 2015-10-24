@@ -1,2 +1,2 @@
-require \nodulator
+N = require \nodulator
 require \./server .Init!

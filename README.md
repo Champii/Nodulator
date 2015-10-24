@@ -138,6 +138,7 @@ ___
 - Integrated Routing system (with express, and highly linked with ORM)
 - Multiple DB Systems
 - Complex inheritance system
+- Chainable async calls
 - Modulable
 - Project generation
 - Cache
@@ -1169,6 +1170,7 @@ ___
 
 By order of priority
 
+- When cache expire, remove correspondant Watcher /!\
 - Remove an existing route easely
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - Migration system
@@ -1222,6 +1224,7 @@ XX/XX/XX: current (not released yet)
   - Internal driver is now fixed to be the default Nodulator driver.
   - Globalized ids management by external table
   - internal_ids are now stored on default driver and are automaticaly updated with last Ids values
+  - Chainable calls !
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
