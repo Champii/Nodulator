@@ -36,13 +36,8 @@ module.exports = (configPath, resPath)->
     if res?
       if res._promise?
 
-        res._promise
-          .fail ~>
-            @[varName] = it
-            done null, it
-
-
-          .then ~>
+        res
+          .Then ~>
             if is-type \Array it
               it |> each (.inspect = -> @ToJSON!)
               # it.inspect = -> _(@).invoke('ToJSON')
@@ -52,6 +47,9 @@ module.exports = (configPath, resPath)->
               it.inspect = -> @ToJSON!
               @[varName] = it
               done null, it
+          .Catch ~>
+            @[varName] = it
+            done null, it
 
       else
         @[varName] = res
