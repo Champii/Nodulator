@@ -1187,16 +1187,19 @@ By order of priority
 - Split Resource into smaller Classes
 - List return a resource that can act on each item (Set, Add, ...)
 - Better tests
+  - Promise instead of Id in Create()
+  - Cache
+  - Request
+  - Watch
+  - Catch/Then
+  - Config oveloading
+  - Multi Driver fetch/list
   - Db
     - SqlMem
     - Mysql
     - Mongo
     - Ids
     - HABTM tables
-  - Cache
-  - Request
-  - Watch
-  - Catch
   - Schema
     - virtual
     - Default
@@ -1208,8 +1211,6 @@ By order of priority
      - HasOneThrough
      - HasManyThrough
      - HasAndBelongsToMany
-  - Config oveloading
-  - Multi Driver fetch/list
 
 - Extend Array ?
 
@@ -1250,6 +1251,7 @@ XX/XX/XX: current (not released yet)
   - Globalized ids management by external table
   - internal_ids are now stored on default driver and are automaticaly updated with last Ids values
   - Chainable calls !
+  - Create can now take a promise instead of an id
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

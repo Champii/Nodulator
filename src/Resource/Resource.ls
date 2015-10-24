@@ -220,11 +220,9 @@ module.exports = (config, routes, name) ->
 
           async.mapSeries obj-to-pairs(blob), (pair, done) ~>
             if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1._promise
-              console.log 'Found', pair
               pair.1.Then -> done null [pair.0, it.id]
               pair.1.Catch done
             else
-              console.log 'Not found', pair
               done null, pair
           , (err, results) ~>
             return done err if err?
@@ -379,7 +377,6 @@ module.exports = (config, routes, name) ->
 
       obj = type: res
 
-      console.log 'Add Relationship', @lname, res.lname, fieldName
       if isDistant
         res.Field key, \int .Required isRequired
         obj.distantKey = key
@@ -462,6 +459,7 @@ module.exports = (config, routes, name) ->
     @Field = (...args) ->
       @Init!
       @_schema.Field.apply @_schema, args
+      @
 
     Fetch: @_WrapPromise (done) ->
       N[capitalize @_type + \s ]._FetchUnwrapped @id, ~>
@@ -474,11 +472,8 @@ module.exports = (config, routes, name) ->
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
       names = sort [@_type, instance._type]
       res = @_schema.habtm |> find (.lname is names.0 + \s_ + names.1)
-      console.log 'HABTM?' res
       if res?
-        console.log 'HABTM'
         return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ~>
-          console.log 'HABTM CREATED' err, newRes
           return done err if err?
           @Save!Then (.Fetch done) .Catch done
 
@@ -506,7 +501,10 @@ module.exports = (config, routes, name) ->
 
     # Change properties and save
     Set: @_WrapPromise @_WrapResolvePromise (obj, done) ->
-      @ExtendSafe obj
+      if is-type \Function obj
+        @ExtendSafe obj @
+      else
+        @ExtendSafe obj
       @Save done
 
     Log: @_WrapPromise @_WrapResolvePromise ->
