@@ -42,7 +42,6 @@ module.exports = (configPath, resPath)->
           .Then ~>
             if is-type \Array it
               it |> each (.inspect = -> @ToJSON!)
-              # it.inspect = -> _(@).invoke('ToJSON')
               @[varName] = it
               done null, it
             else if it?
@@ -83,11 +82,9 @@ module.exports = (configPath, resPath)->
   try config = require rootPath + \/ + configPath
 
   N = require \../
-  N-Account = require \../src/Modules/Nodulator-Account
 
   N.Console()
   N.Config config || {}
-  N.Use N-Account
   # N.AccountResource = N~Resource
 
   inst.context.N = N
@@ -106,10 +103,15 @@ module.exports = (configPath, resPath)->
 
     res
 
-  try fetch-resources resPath
-    |> obj-to-pairs
-    |> map -> try require rootPath + \/ + it.1
-    |> each -> inst.context[capitalize it._table.tableName] = it if it?._table?
+  resources = try fetch-resources resPath
+
+  if resources?
+    N.Use require __dirname + \../src/Modules/Nodulator-Account
+
+    resources
+      |> obj-to-pairs
+      |> map -> try require rootPath + \/ + it.1
+      |> each -> inst.context[capitalize it._table.tableName] = it if it?._table?
   # N.resources
   #   |> each ->
 

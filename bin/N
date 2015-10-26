@@ -97,7 +97,7 @@ if not args[0]? or args[0] in ['console', 'c']
     args[2] := './server/resources'
 
   # cons =  require "#{appRoot}/node_modules/nodulator/bin/Console"
-  cons = require \./Console
+  cons = require __dirname + \/Console
   cons args[1], args[2]
 
 if args[0] is 'init'

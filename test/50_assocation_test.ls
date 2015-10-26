@@ -23,17 +23,14 @@ describe 'N Associations', ->
 
   test 'should fetch one child Resource', (done) ->
     Tests.MayHasOne Childs, false
-    Tests.Create name: \test .Add Childs.Create(name: \child1 )  
+    Tests.Create name: \test .Add Childs.Create name: \child1
+      .Then -> assert.equal it.Child.name, \child1
       .Then ->
-        assert.equal it.Child.name, \child1
-
-      .Then ->
-
         Tests.Fetch 1
-        .Then ->
-          assert.equal it.Child.name, \child1
-          assert.equal it.Child.testId, 1
-          done!
+          .Then ->
+            assert.equal it.Child.name, \child1
+            assert.equal it.Child.testId, 1
+            done!
 
         .Catch -> throw new Error it
 
@@ -43,7 +40,7 @@ describe 'N Associations', ->
       .Add Childs.Create name: \child1
       .Add Childs.Create name: \child2
 
-      .Fail -> console.error it; throw new Error it
+      # .Catch -> console.error it; throw new Error it
 
       .Then ->
         assert.equal it.Childs.0.name, \child1

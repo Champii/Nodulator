@@ -19,6 +19,7 @@ Wrappers = null
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
+
 global import prelude-ls
 
 
@@ -123,7 +124,7 @@ module.exports = (config, routes, name) ->
           return console.error err if err?
 
           @ <<<< res
-          done res if done?
+          done @ if done?
       @
 
   #
@@ -365,7 +366,7 @@ module.exports = (config, routes, name) ->
       for type in types
         switch type
           | type in <[new updated deleted]> => N.bus.on type + '_' + name, (item) -> done item.Watch!
-          | \all                            => N.Watch ~> @List query .catch done .then done
+          | \all                            => N.Watch ~> @List query .Then done .Catch done
 
       @
 
@@ -383,6 +384,7 @@ module.exports = (config, routes, name) ->
       else
         @Field key, \int .Required isRequired
         obj.localKey = key
+
 
       if prepare
         @_schema.PrepareRelationship isArray, capitalize(fieldName + if isArray => 's' else ''), obj
@@ -459,7 +461,6 @@ module.exports = (config, routes, name) ->
     @Field = (...args) ->
       @Init!
       @_schema.Field.apply @_schema, args
-      @
 
     Fetch: @_WrapPromise (done) ->
       N[capitalize @_type + \s ]._FetchUnwrapped @id, ~>
@@ -468,14 +469,18 @@ module.exports = (config, routes, name) ->
         @ <<<< &1
         done null, @
 
-
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
+
       names = sort [@_type, instance._type]
       res = @_schema.habtm |> find (.lname is names.0 + \s_ + names.1)
       if res?
         return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ~>
           return done err if err?
-          @Save!Then (.Fetch done) .Catch done
+
+          @_SaveUnwrapped ~>
+            return done it if it?
+
+            @Fetch done
 
       res = @_schema.assocs |> find (.name is capitalize instance._type or it.name is capitalize instance._type + \s)
       if res?
@@ -483,15 +488,17 @@ module.exports = (config, routes, name) ->
           instance[res.foreign] = @id
           instance._SaveUnwrapped ~>
             return done it if it?
+
+
             @Fetch done
         else if res.keyType is \local
           @[res.foreign] = @id
           @_SaveUnwrapped ~>
             return done it if it?
+
             @Fetch done
       else
         done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
-
 
     Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]

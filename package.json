@@ -33,7 +33,8 @@
   "description": "Complete NodeJS Framework for Restfull APIs",
   "main": "index.js",
   "bin": {
-    "N": "./bin/N"
+    "N": "./bin/N",
+    "Console": "./bin/Console.ls"
   },
   "directories": {
     "test": "test"
