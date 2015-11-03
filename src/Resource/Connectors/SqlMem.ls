@@ -8,7 +8,7 @@ class SqlMem
     if where.id? and typeof where.id is 'string'
       where.id = parseInt where.id
 
-    res = _(tables[table]).where(where)
+    res = map (-> _({}).extend it), _(tables[table]).where(where)
 
     if options.limit?
       offset = options.offset || 0
@@ -17,17 +17,14 @@ class SqlMem
     done null, res
 
   Insert: (table, fields, done) ->
-    tables[table].push fields
+    tables[table].push _({}).extend fields
 
-    # fields.id = tables[table].length
     done null, fields
 
   Update: (table, fields, where, done) ->
-    row = _(tables[table]).findWhere(where)
+    a = _(tables[table]).chain().findWhere(where).extend fields .value()
 
-    _(row).extend fields
-
-    done()
+    done null a
 
   Delete: (table, where, done) ->
     tables[table] = _(tables[table]).reject (item) -> item.id is where.id
@@ -43,7 +40,7 @@ class SqlMem
   _NextId: (name, done) ->
     id = 0
     if tables[name]?.length
-      id = _(tables[name]).max((item) -> item.id)
+      id = _(tables[name]).max((item) -> item.id).id
 
     done null, id + 1
 

@@ -67,7 +67,6 @@ class Wrappers
         @_promise = d.promise
         @
       else if not d? and ret.state? and @_type?
-        console.log 'NON PROMISE', d, ret, @_type
         @_promise = ret
         @
       else
@@ -195,7 +194,6 @@ class Wrappers
 
         watchers.push N.Watch ~>
           cb.apply @, args
-
 
   @Reset = ->
     watchers |> each (.Stop!)

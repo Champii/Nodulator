@@ -28,14 +28,26 @@ class InternalDriver
 
   CreateIdEntry: (name, done) ->
     @driver.Select 'internal_ids', \*, {}, {}, (err, nextIds) ~>
-      if err? or not find (.name is name), nextIds
-        @driver._NextId 'internal_ids', (err, entryId) ~>
-          @driver._NextId name, (err, nextId) ~>
-            @driver.Insert 'internal_ids', {name: name, nextId: nextId, id: entryId}, (err, res) ~>
 
-              @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
-                @driver.Update 'internal_ids', res.0, {}, (err, res) ->
-                  done! if done?
+      if err? or not find (.name is name), nextIds
+
+        @driver._NextId 'internal_ids', (err, entryId) ~>
+          return done err if err?
+
+          @driver._NextId name, (err, nextId) ~>
+            return done err if err?
+
+            @driver.Insert 'internal_ids', {name: name, nextId: nextId, id: entryId}, (err, res) ~>
+              return done err if err?
+
+              # @driver.Select 'internal_ids', \*, {name: name}, {}, (err, res) ~>
+              #   return done err if err?
+              #
+              #   @driver.Update 'internal_ids', res.0, {id: res.0.id}, (err, res) ->
+              #     return done err if err?
+              #
+
+              done! if done?
       else
         done! if done?
 
@@ -47,7 +59,7 @@ class InternalDriver
         @CreateIdEntry name, ~> @NextId name, done
       else
         fields.0.nextId++
-        @driver.Update 'internal_ids', {id: fields.0.id, nextId: fields.0.nextId, name: name}, {}, (err, res) ->
+        @driver.Update 'internal_ids', {id: fields.0.id, nextId: fields.0.nextId, name: name}, {id: fields.0.id}, (err, res) ->
           return done err if err?
 
           done null, fields?.0?.nextId - 1

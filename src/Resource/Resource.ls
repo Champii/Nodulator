@@ -61,27 +61,37 @@ module.exports = (config, routes, name) ->
       @_config = @.__proto__.constructor.config
 
 
+      # console.log 'Blob' blob
+      # if is-type \Array blob?.promise?.value
+      #   @_array = blob?.promise?.value
+      #   console.log 'Array', @_array
+      #   return
+
       if blob.promise?
         debug-resource.Log "Defered instanciation"
         @_promise = blob.promise
         return
 
+
       debug-resource.Log "Instantiate with {id: #{blob.id}}"
 
       import @_schema.Process blob
 
+    _WrapReturnThis: (done) ->
+      (arg) ~>
+        res = done arg
+        res?._promise || res || arg
+
     Then: ->
-      # console.log 'Then', it, @
-      @_promise = @_promise.then it if @_promise?
-      # console.log 'Then2', @
+      @_promise = @_promise.then @_WrapReturnThis it if @_promise?
       @
     #
     Catch: ->
-      @_promise = @_promise.catch it if @_promise?
+      @_promise = @_promise.catch @_WrapReturnThis it if @_promise?
       @
 
     Fail: ->
-      @_promise = @_promise.fail it if @_promise?
+      @_promise = @_promise.fail @_WrapReturnThis it if @_promise?
       @
 
     # Wrap the _SaveUnwrapped() call
@@ -212,7 +222,7 @@ module.exports = (config, routes, name) ->
       * \Object : optional: true
       * \Function
       * \Number : optional: true
-      (arg, args, config, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+      (arg, args, config, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
 
         if args?
           debug-resource.Log "Creating from array: #{args.length} entries"
@@ -264,7 +274,7 @@ module.exports = (config, routes, name) ->
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
-    @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @_FetchUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
 
       if is-type \Array arg
         debug-resource.Log "Fetching from array: #{arg.length} entries"
@@ -274,10 +284,7 @@ module.exports = (config, routes, name) ->
         | _     =>
           debug-resource.Log "Fetched {id: #{blob.id}}"
           Debug.Depth!
-          @resource._Deserialize blob, (err, data)->
-            Debug.UnDepth!
-            done err, data
-          , _depth
+          @resource._Deserialize blob, done, _depth
 
       @_HandleArrayArg arg, (constraints, done) ~>
 
@@ -295,7 +302,7 @@ module.exports = (config, routes, name) ->
       @_ListUnwrapped ...
 
     # Get a list of records from DB
-    @_ListUnwrapped = (arg, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @_ListUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
 
       if typeof(arg) is 'function'
         if typeof(done) is 'number'
@@ -385,7 +392,6 @@ module.exports = (config, routes, name) ->
         @Field key, \int .Required isRequired
         obj.localKey = key
 
-
       if prepare
         @_schema.PrepareRelationship isArray, capitalize(fieldName + if isArray => 's' else ''), obj
 
@@ -398,6 +404,7 @@ module.exports = (config, routes, name) ->
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, false, true, may, key || @lname + \Id , fieldName || res.lname
         res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
+        @
 
     @HasMany = @_WrapParams do
       * \Function
@@ -408,6 +415,7 @@ module.exports = (config, routes, name) ->
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, true, true, may, key || @lname + \Id , fieldName || res.lname
         res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
+        @
 
     @BelongsTo = @_WrapParams do
       * \Function
@@ -416,6 +424,7 @@ module.exports = (config, routes, name) ->
       * \Boolean : default: true
       (res, fieldName, key, may) ->
         @_AddRelationship res, false, false, may, key || res.lname + \Id , fieldName || res.lname
+        @
 
     # TO BE TESTED
 
@@ -482,15 +491,15 @@ module.exports = (config, routes, name) ->
 
             @Fetch done
 
-      res = @_schema.assocs |> find (.name is capitalize instance._type or it.name is capitalize instance._type + \s)
+      res = @_schema.assocs |> find (.type.lname is instance._type)
       if res?
         if res.keyType is \distant
           instance[res.foreign] = @id
           instance._SaveUnwrapped ~>
             return done it if it?
 
-
             @Fetch done
+
         else if res.keyType is \local
           @[res.foreign] = @id
           @_SaveUnwrapped ~>
@@ -503,8 +512,28 @@ module.exports = (config, routes, name) ->
     Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]
       res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
-      res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
-        done err, instance
+      if res?
+        return res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
+          done err, instance
+
+      res = @_schema.assocs |> find (.type.lname is instance._type)
+      if res?
+        if res.keyType is \distant
+          instance[res.foreign] = null
+          instance._SaveUnwrapped ~>
+            return done it if it?
+
+            @Fetch done
+
+        else if res.keyType is \local
+          @[res.foreign] = null
+          @_SaveUnwrapped ~>
+            return done it if it?
+
+            @Fetch done
+      else
+        done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
+
 
     # Change properties and save
     Set: @_WrapPromise @_WrapResolvePromise (obj, done) ->
@@ -515,6 +544,10 @@ module.exports = (config, routes, name) ->
       @Save done
 
     Log: @_WrapPromise @_WrapResolvePromise ->
+      # if @_array?
+      #   console.log map (.ToJSON!)
+      #   return it null @
+      #
       console.log @ToJSON!
       it null @
 
@@ -532,7 +565,7 @@ module.exports = (config, routes, name) ->
       @
 
     # Pre-Instanciation and associated model retrival
-    @_Deserialize = (blob, done, _depth = @config?.maxDepth || @@DEFAULT_DEPTH) ->
+    @_Deserialize = (blob, done, _depth) ->
       @_schema.Validate blob, (err) ~>
         return done err if err?
 
@@ -543,7 +576,7 @@ module.exports = (config, routes, name) ->
             return done err if err?
 
             done null, new res blob
-          , _depth
+          , _depth - 1
         else
           done null, new res blob
 

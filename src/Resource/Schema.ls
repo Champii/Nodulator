@@ -55,14 +55,13 @@ class Schema
     @assocs = []
     @habtm = []
     @debug = new Debug "N::Resource::#{@name}::Schema", Debug.colors.cyan
-    # console.log 'Schema constructor', @assocs
 
   Process: (blob) ->
 
     res = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
 
     @properties
-      |> filter (-> it.name of blob)
+      |> filter (.name of blob)
       |> each (-> res[it.name] =
         | blob[it.name]?  => that
         | it.default?     => that
@@ -80,6 +79,7 @@ class Schema
         if res?
           res[it.name] = res
 
+
     res
 
   Filter: (instance) ->
@@ -89,17 +89,17 @@ class Schema
     if @mode is \strict
       @properties |> filter (-> not it.virtual?) |> each -> res[it.name] = instance[it.name]
     else
-      each (~> res[it] = instance[it] if it[0] isnt \_ and typeof! instance[it] isnt 'Function' and
-                                         it not in keys @assocs and
-                                         not _(@properties).findWhere(name: it)?.virtual? and
-                                         typeof! instance[it] isnt 'Object'), keys instance
-    res
+      each (~>
+        if it[0] isnt \_ and typeof! instance[it] isnt 'Function' and
+             it not in map (.name), @assocs and
+             not _(@properties).findWhere(name: it)?.virtual? and
+             (typeof! instance[it]) isnt 'Object' and
+             (typeof! instance[it]) isnt 'Array'
 
-    # switch
-    #   | @_schema? =>  keys @_schema |> each ~>
-    #     if not (it in <[_assoc _virt]>) and (it not in map (.name), @_schema._assoc) and (it not in map (.name), @_schema._virt)
-    #       res[it] = @[it]
-    #   | _         =>  each (~> res[it] = @[it] if it[0] isnt \_ and typeof! @[it] isnt 'Function'), keys @
+           res[it] = instance[it]), keys instance
+
+
+    res
 
   Field: (name, type) ->
     return that if _(@properties).findWhere name: name
@@ -155,7 +155,7 @@ class Schema
       keyType = \local
       foreign = description.localKey
       get = (blob, done, _depth) ->
-        if not _depth
+        if _depth < 0
           return done()
 
         if !isArray
@@ -165,19 +165,19 @@ class Schema
           if not typeCheck.array blob[description.localKey]
             return done new Error 'Model association needs array of integer as ids and localKeys'
 
-        description.type._FetchUnwrapped blob[description.localKey], done, _depth - 1
+        description.type._FetchUnwrapped blob[description.localKey], done, _depth
 
     else if description.distantKey?
       foreign = description.distantKey
       keyType = \distant
       get = (blob, done, _depth) ->
-        if not _depth or not blob.id?
+        if _depth < 0 or not blob.id?
           return done()
 
         if !isArray
-          description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth - 1
+          description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth
         else
-          description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth - 1
+          description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth
 
     toPush  =
       keyType: keyType
@@ -247,7 +247,7 @@ class Schema
           return done err if err?
 
           done null, instances
-        , depth - 1
+        , depth
 
       , _depth
 

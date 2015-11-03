@@ -1188,11 +1188,9 @@ By order of priority
 - List return a resource that can act on each item (Set, Add, ...)
 - Better tests
   - Promise instead of Id in Create()
-  - Cache
   - Request
   - Watch
   - Catch/Then
-  - Config oveloading
   - Multi Driver fetch/list
   - Db
     - SqlMem
@@ -1200,13 +1198,15 @@ By order of priority
     - Mongo
     - Ids
     - HABTM tables
+  - Cache
+  - Config oveloading
   - Schema
     - virtual
     - Default
     - Required
     - Strict/Free
     - Type and validation
-     - HaOne
+     - HasOne
      - HasMany
      - HasOneThrough
      - HasManyThrough
@@ -1252,6 +1252,7 @@ XX/XX/XX: current (not released yet)
   - internal_ids are now stored on default driver and are automaticaly updated with last Ids values
   - Chainable calls !
   - Create can now take a promise instead of an id
+  - Better Remove() for MayHas*() associations
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`
