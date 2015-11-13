@@ -73,12 +73,16 @@ describe 'N Associations MayHasOne', ->
     Tests.Create name: \test .Add Childs.Create name: \child1
       .Then ->
         Tests.Fetch 1 .Remove Childs.Fetch 1
-          .Then -> done!
-      .Catch -> done new Error 'Has not deleted'
+          .Then ->
+            assert.equal it.Child, undefined
+            done!
+      .Catch -> done new Error it
 
   test 'should remove child with instance', (done) ->
     Childs.Create name: \child1 .Add Tests.Create name: \test
       .Then ->
         Tests.Fetch 1 .Remove it
-          .Then -> done!
-      .Catch -> done new Error 'Has not deleted' + it
+          .Then ->
+            assert.equal it.Child, undefined
+            done!
+      .Catch -> done new Error it

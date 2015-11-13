@@ -473,8 +473,7 @@ module.exports = (config, routes, name) ->
       N[capitalize @_type]._FetchUnwrapped @id, ~>
         return done it if it?
 
-        @ <<<< &1
-        done null, @
+        done null, &1
 
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
 
