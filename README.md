@@ -1175,6 +1175,7 @@ By order of priority
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - Migration system
 - Auto wrap new methods in `Resource`
+- SchemaProperty type optional to just check the presence
 - Association Polymorphism
 - Watch a specific field
 - Relations not only based on id but on every property types

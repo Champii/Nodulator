@@ -121,7 +121,7 @@ describe 'N Resource', ->
     blob = [{field1: 1, field2: 1}
             {field1: 2, field2: 2}]
 
-    Tests.Fetch [{field1: 1, field2: 1}, {field1: 2, field2: 2}], (err, tests) ->
+    Tests.Fetch blob, (err, tests) ->
       throw new Error err if err?
 
       assert.equal tests[0].field1, 1

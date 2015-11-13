@@ -19,9 +19,7 @@ Wrappers = null
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
-
 global import prelude-ls
-
 
 N.Validator = Validator
 
@@ -181,7 +179,7 @@ module.exports = (config, routes, name) ->
           | _    =>
             cache.Delete @_type + 'Fetch' + @id, ~>
               @id = undefined
-              N.bus.emit \delete_ + @name, @
+              N.bus.emit \delete_ + name, @
 
               ChangeWatcher.Invalidate()
 
@@ -371,8 +369,8 @@ module.exports = (config, routes, name) ->
         types.push \all
 
       for type in types
-        switch type
-          | type in <[new updated deleted]> => N.bus.on type + '_' + name, (item) -> done item.Watch!
+        switch
+          | type in <[new update delete]>   => N.bus.on type + '_' + @lname, done
           | \all                            => N.Watch ~> @List query .Then done .Catch done
 
       @
@@ -472,7 +470,7 @@ module.exports = (config, routes, name) ->
       @_schema.Field.apply @_schema, args
 
     Fetch: @_WrapPromise (done) ->
-      N[capitalize @_type + \s ]._FetchUnwrapped @id, ~>
+      N[capitalize @_type]._FetchUnwrapped @id, ~>
         return done it if it?
 
         @ <<<< &1
@@ -544,10 +542,7 @@ module.exports = (config, routes, name) ->
       @Save done
 
     Log: @_WrapPromise @_WrapResolvePromise ->
-      # if @_array?
-      #   console.log map (.ToJSON!)
-      #   return it null @
-      #
+
       console.log @ToJSON!
       it null @
 
@@ -601,6 +596,7 @@ module.exports = (config, routes, name) ->
       @INITED = false
       @_schema = new Schema @lname, _config?.schema
 
+      @Route = _routes
       @_routes = _routes
       @_parent = _parent
 
@@ -643,7 +639,7 @@ module.exports = (config, routes, name) ->
         @routes = new @_routes(@, @config)
 
       #FIXME
-      N[capitalize @lname + \s] = @
+      N[capitalize @lname] = @
 
       @
 

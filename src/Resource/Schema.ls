@@ -61,7 +61,6 @@ class Schema
     res = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
 
     @properties
-      |> filter (.name of blob)
       |> each (-> res[it.name] =
         | blob[it.name]?  => that
         | it.default?     => that
@@ -79,7 +78,6 @@ class Schema
         if res?
           res[it.name] = res
 
-
     res
 
   Filter: (instance) ->
@@ -87,6 +85,7 @@ class Schema
     res = {}
 
     if @mode is \strict
+      res.id = instance.id
       @properties |> filter (-> not it.virtual?) |> each -> res[it.name] = instance[it.name]
     else
       each (~>
