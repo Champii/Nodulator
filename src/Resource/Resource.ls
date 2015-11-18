@@ -1,16 +1,14 @@
 require! {
-  underscore: __
-  async
   '../../': N
-  validator: Validator
-  hacktiv: Hacktiv
   \./ChangeWatcher
   \./Schema
   \prelude-ls
-  # \async-ls : {callbacks: {bindA}}
   \../Helpers/Debug
   \./Connectors : DB
-  # \./Cache : cache
+  async
+  underscore: __
+  validator: Validator
+  hacktiv: Hacktiv
   polyparams: ParamWraper
 }
 
@@ -58,13 +56,6 @@ module.exports = (config, routes, name) ->
       @_type = @.__proto__.constructor.lname
       @_config = @.__proto__.constructor.config
 
-
-      # console.log 'Blob' blob
-      # if is-type \Array blob?.promise?.value
-      #   @_array = blob?.promise?.value
-      #   console.log 'Array', @_array
-      #   return
-
       if blob.promise?
         debug-resource.Log "Defered instanciation"
         @_promise = blob.promise
@@ -73,7 +64,7 @@ module.exports = (config, routes, name) ->
 
       debug-resource.Log "Instantiate with {id: #{blob.id}}"
 
-      import @_schema.Process blob
+      import @_schema.Populate @, blob
 
     _WrapReturnThis: (done) ->
       (arg) ~>
@@ -106,7 +97,8 @@ module.exports = (config, routes, name) ->
     ToJSON: ->
       res = @Serialize()
 
-      @_schema.GetVirtuals! |> each ~> res[it.name] = @[it.name]
+      res = @_schema.RemoveInternals res
+      res <<< @_schema.GetVirtuals @
       each ~>
         if @[it.name]?
           switch
@@ -370,7 +362,7 @@ module.exports = (config, routes, name) ->
 
       for type in types
         switch
-          | type in <[new update delete]>   => N.bus.on type + '_' + @lname, done
+          | type in <[new update delete]>   => N.bus.on type + '_' + name, done
           | \all                            => N.Watch ~> @List query .Then done .Catch done
 
       @
@@ -424,8 +416,6 @@ module.exports = (config, routes, name) ->
         @_AddRelationship res, false, false, may, key || res.lname + \Id , fieldName || res.lname
         @
 
-    # TO BE TESTED
-
     @MayHasOne = @_WrapParams do
       * \Function
       * \Boolean : default: true
@@ -469,11 +459,8 @@ module.exports = (config, routes, name) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
-    Fetch: @_WrapPromise (done) ->
-      N[capitalize @_type]._FetchUnwrapped @id, ~>
-        return done it if it?
-
-        done null, &1
+    Fetch: @_WrapPromise @_WrapResolveArgPromise (done) ->
+      N[capitalize @_type].Fetch @id, done
 
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
 
@@ -531,11 +518,14 @@ module.exports = (config, routes, name) ->
       else
         done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
 
-
     # Change properties and save
     Set: @_WrapPromise @_WrapResolvePromise (obj, done) ->
       if is-type \Function obj
-        @ExtendSafe obj @
+        fun = ~>
+          obj.call @, @
+          @
+
+        @ExtendSafe fun!
       else
         @ExtendSafe obj
       @Save done
@@ -593,11 +583,14 @@ module.exports = (config, routes, name) ->
 
       @config = _config
       @INITED = false
+
       @_schema = new Schema @lname, _config?.schema
+      @_parent = _parent
+      if @_parent?
+        @_schema.properties = @_parent._schema.Inherit!
 
       @Route = _routes
       @_routes = _routes
-      @_parent = _parent
 
       @
 
@@ -633,6 +626,8 @@ module.exports = (config, routes, name) ->
       N.inited[@lname] = true
 
       @INITED = true
+
+
 
       if @_routes?
         @routes = new @_routes(@, @config)

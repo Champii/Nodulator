@@ -63,7 +63,7 @@ class Wrappers
       if d? and @Init?
         @Init!
         new @ d
-      else if d? and @_promise?
+      else if d? #and @_promise?
         @_promise = d.promise
         @
       else if not d? and ret.state? and @_type?

@@ -1254,6 +1254,8 @@ XX/XX/XX: current (not released yet)
   - Chainable calls !
   - Create can now take a promise instead of an id
   - Better Remove() for MayHas*() associations
+  - Schema is now inherited by copy
+  - Internal() Field property that is not put in the JSON produced by ToJSON(), so not sent to any client but saved to DB anyway
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

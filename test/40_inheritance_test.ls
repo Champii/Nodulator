@@ -110,3 +110,30 @@ describe 'N Inheritance', ->
     assert body.level, 2
     done2!
     # console.log err, body
+
+  test 'should have inherited fields', (done) ->
+    P = N \p
+
+    P.Field \a \int .Default 0
+
+    C = P.Extend \c
+
+    C.Create!
+      .Then -> assert.equal it.a, 0
+      .Then -> done!
+      .Catch done
+
+  test 'should not have inherited fields', (done) ->
+    P2 = N \p2
+
+    P2.Field \a \int .Default 0
+
+    C2 = P2.Extend \c2
+
+    C2.Field \b \int .Default 1
+
+    P2.Create!
+      .Then -> assert.equal it.a, 0
+      .Then -> assert.equal it.b, undefined
+      .Then -> done!
+      .Catch done

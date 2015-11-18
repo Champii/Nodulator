@@ -29,7 +29,9 @@ class Request
 
     status = errors[it.status] || 500
 
-    @res.status(status).send it
+    it = that if it.message?
+
+    @res.status(status).send err: it
     @sent = true
 
   SetInstance: ->

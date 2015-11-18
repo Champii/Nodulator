@@ -60,6 +60,8 @@ class N
 
     if _parent?
       class ExtendedResource extends _parent
+        Ntm: -> 0
+
       @resources[name] = resource := ExtendedResource
       @resources[name]._PrepareResource config, routes, name, _parent
     else

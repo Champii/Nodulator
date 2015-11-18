@@ -29,6 +29,14 @@ describe 'N Fields free', ->
       | it.field is \lol => done!
       | _                => done new Error 'Didnt set the default field'
 
+  test 'should set default field with function', (done) ->
+    Tests = N \test
+      ..Field \field \string .Default -> \lol
+
+    Tests.Create!Then ->
+      | it.field is \lol => done!
+      | _                => done new Error 'Didnt set the default field'
+
   test 'should be optional', (done) ->
     Tests = N \test
       ..Field \field \string
@@ -44,4 +52,30 @@ describe 'N Fields free', ->
     Tests.Create!
       .Then ->
         done new Error 'Wasnt required'
-      .Catch -> done!
+      .Catch ->
+        Tests.Create field: \lol
+          .Then -> done!
+          .Catch ->
+            done new Error it
+
+  test 'should be virtual', (done) ->
+    Tests = N \test
+      ..Field \field \string .Virtual -> it.field2
+
+    Tests.Create field2: \lol
+      .Then ->
+        assert.equal it.field, \lol
+        done!
+      .Catch ->
+        done new Error it
+
+  test 'should be virtual with this as resource', (done) ->
+    Tests = N \test
+      ..Field \field \string .Virtual -> @field2
+
+    Tests.Create field2: \lol
+      .Then ->
+        assert.equal it.field, \lol
+        done!
+      .Catch ->
+        done new Error it
