@@ -1209,6 +1209,9 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  -
+
+28/11/15: 0.1.0
   - LiveScript ! \o/
   - Lib Folder reorganisation
   - Added benchmarks folder
