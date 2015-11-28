@@ -54,7 +54,6 @@ describe 'N Inheritance', ->
         @Save done
 
       @ListUsernames = @_WrapPromise (done) ->
-        # @List fmapA (-> __(it).pluck \username), done
         @List (err, list) ->
           return done err if err?
 

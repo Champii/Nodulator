@@ -34,7 +34,7 @@ class Request
     @res.status(status).send err: it
     @sent = true
 
-  SetInstance: ->
+  SetInstance: !->
     if it._promise?
       it
         .Then ~>

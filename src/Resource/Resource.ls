@@ -220,7 +220,7 @@ module.exports = (config, routes, name) ->
         @_HandleArrayArg arg || args || {}, (blob, done) ~>
 
           async.mapSeries obj-to-pairs(blob), (pair, done) ~>
-            if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1._promise
+            if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1?._promise
               pair.1.Then -> done null [pair.0, it.id]
               pair.1.Catch done
             else
@@ -230,7 +230,7 @@ module.exports = (config, routes, name) ->
 
             blob = pairs-to-obj results
 
-            debug-resource.Log "Creating"
+            debug-resource.Log "Creating #{JSON.stringify blob}"
             @resource._Deserialize blob, (err, instance) ~>
               | err? => done err
               | _    =>
@@ -393,7 +393,7 @@ module.exports = (config, routes, name) ->
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, false, true, may, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
+        res.BelongsTo @, fieldName || @lname, key || @lname + \Id , may if belongsTo
         @
 
     @HasMany = @_WrapParams do
@@ -404,7 +404,7 @@ module.exports = (config, routes, name) ->
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, true, true, may, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, @lname, key || @lname + \Id , may if belongsTo
+        res.BelongsTo @, fieldName || @lname, key || @lname + \Id , may if belongsTo
         @
 
     @BelongsTo = @_WrapParams do

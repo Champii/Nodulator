@@ -1170,28 +1170,25 @@ ___
 
 By order of priority
 
+- Paginated Resource
 - When cache expire, remove correspondant Watcher /!\
+- Inherit associations (care for abstract Resources)
 - Remove an existing route easely
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - Migration system
 - Auto wrap new methods in `Resource`
-- SchemaProperty type optional to just check the presence
 - Association Polymorphism
 - Watch a specific field
 - Relations not only based on id but on every property types
-- Internal property that isnt sent to the client by default
 - Persistant sessions in Console
 - 'Unique' field
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
 - Decentralize modules config
 - Scaling (cluster, distributed bus)
 - Split Resource into smaller Classes
-- List return a resource that can act on each item (Set, Add, ...)
+- List return a resource that can act on each item (Set, Add, ...) ( Extend Array ? )
 - Better tests
-  - Promise instead of Id in Create()
   - Request
-  - Watch
-  - Catch/Then
   - Multi Driver fetch/list
   - Db
     - SqlMem
@@ -1202,18 +1199,12 @@ By order of priority
   - Cache
   - Config oveloading
   - Schema
-    - virtual
-    - Default
-    - Required
-    - Strict/Free
-    - Type and validation
-     - HasOne
-     - HasMany
-     - HasOneThrough
-     - HasManyThrough
-     - HasAndBelongsToMany
+    - HasOne
+    - HasMany
+    - HasOneThrough
+    - HasManyThrough
+    - HasAndBelongsToMany
 
-- Extend Array ?
 
 ___
 ## ChangeLog
@@ -1256,6 +1247,9 @@ XX/XX/XX: current (not released yet)
   - Better Remove() for MayHas*() associations
   - Schema is now inherited by copy
   - Internal() Field property that is not put in the JSON produced by ToJSON(), so not sent to any client but saved to DB anyway
+  - JSON and object validation type
+  - Each resource is available through N.Resourcename (exemple for 'player' : N.Player)
+  - When a route is attached to a Resource, it is now available as Resource.Route
 
 21/07/15: v0.0.19
   - Added `SingleRoute` object, for manipulating Singleton `Resource`

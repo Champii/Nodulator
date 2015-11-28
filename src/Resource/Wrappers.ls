@@ -66,7 +66,7 @@ class Wrappers
       else if d? #and @_promise?
         @_promise = d.promise
         @
-      else if not d? and ret.state? and @_type?
+      else if not d? and ret?.state? and @_type?
         @_promise = ret
         @
       else

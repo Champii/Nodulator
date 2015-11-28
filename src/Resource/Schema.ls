@@ -30,6 +30,7 @@ class SchemaProperty
   unique: false
   optional: true
   internal: false
+  unique: false
   type: null
   validation: null
 
@@ -47,6 +48,7 @@ class SchemaProperty
   Required: (required = true) -> @optional = !required; @
   Virtual: (@virtual = null) -> @
   Internal: (@internal = true) -> @
+  Unique: (@unique = true) -> ...
 
 class Schema
 
@@ -77,7 +79,6 @@ class Schema
     @properties
       |> filter (.virtual?)
       |> each ~>
-        # return if instance[it.name]?
         try
           result = it.virtual.call instance, instance, (val) ~>
             instance[it.name] = val
@@ -87,7 +88,6 @@ class Schema
         catch e
           instance[it.name] = undefined
 
-    # console.log instance
     instance
 
   Filter: (instance) ->

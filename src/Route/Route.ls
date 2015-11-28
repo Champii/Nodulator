@@ -111,11 +111,15 @@ class Route
   _Add: (type, url, ...middle, done) ->
     if not done?
       done = url
-      url = '/'
+      url = switch type
+        | \all  => \*
+        | _     => \/
 
     if not middle.length and typeof(url) is 'function'
       middle.push url
-      url = '/'
+      url = switch type
+        | \all  => \*
+        | _     => \/
 
     @debug.Log "Declaring Route: #{type} => #{url} "
 
