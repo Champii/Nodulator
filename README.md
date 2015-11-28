@@ -82,16 +82,16 @@ N = require 'nodulator'
 ___
 ### Compatible modules
 
-- [Nodulator-Assets](https://github.com/Champii/Nodulator-Assets):
+- [Nodulator-Assets](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Assets):
   - Automatic assets management
-- [Nodulator-Socket](https://github.com/Champii/Nodulator-Socket):
+- [Nodulator-Socket](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Socket):
   - Socket.io implementation for Nodulator
-- [Nodulator-Angular](https://github.com/Champii/Nodulator-Angular):
+- [Nodulator-Angular](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Angular):
   - Angular implementation for Nodulator
   - Inheritance system
   - Integrated and linked SocketIO
   - Assets management
-- [Nodulator-Account](https://github.com/Champii/Nodulator-Account):
+- [Nodulator-Account](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Account):
   - Authentication with passport
   - Permissions management
   - Sessions
