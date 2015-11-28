@@ -17,8 +17,8 @@
 ___
 ## Concept
 
-`Nodulator` is designed to make it more easy to create highly modulable
-applications, built with REST APIs and with integrated ORM in CoffeeScript.
+`Nodulator` is designed to make it more easy to build highly modulable
+applications with REST APIs and with integrated ORM.
 
 You must understand [express](https://github.com/strongloop/express) basics for routing
 
@@ -26,6 +26,8 @@ Open [exemples](https://github.com/Champii/Nodulator/blob/master/exemples)
 folder to see a full working exemple in JavaScript, CoffeeScript and LiveScript.
 
 Released under [GPLv2](https://github.com/Champii/Nodulator/blob/master/LICENSE.txt)
+
+Written in [LiveScript](http://livescript.net/)
 
 #### Documentation at [http://nodulator.champii.io](http://nodulator.champii.io)
 
@@ -62,7 +64,6 @@ ___
 - Fliped callback parameters
 - Log and Debug system
 - Console mode
-
 ___
 ## Installation
 
