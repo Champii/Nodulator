@@ -21,7 +21,7 @@ module.exports = (done) ->
       exec 'cp -ran ' + (path.resolve moduleRoot, 'bin/assets/server/') + '/* ' + appRoot + '/server', (err, stdout, stderr) ->
         # return done err if err?
 
-        process.stdout.write 'Error\n' if err?
+        process.stdout.write 'Error ' + err + '\n' if err?
         process.stdout.write 'Ok\n' if not err?
         done()
 
