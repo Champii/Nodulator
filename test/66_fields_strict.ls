@@ -69,3 +69,11 @@ describe 'N Fields strict', ->
         done!
       .Catch ->
         done new Error it
+
+  test 'should be unique', (done) ->
+    Tests = N \test schema: \strict
+      ..Field \field \string .Unique!
+
+    Tests.Create field: \lol
+      .Then -> Tests.Create field: \lol .Then (-> done new Error 'Not unique') .Catch -> done!
+      .Catch -> done new Error it

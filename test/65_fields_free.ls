@@ -50,13 +50,11 @@ describe 'N Fields free', ->
       ..Field \field \string .Required!
 
     Tests.Create!
-      .Then ->
-        done new Error 'Wasnt required'
+      .Then -> done new Error 'Wasnt required'
       .Catch ->
         Tests.Create field: \lol
           .Then -> done!
-          .Catch ->
-            done new Error it
+          .Catch -> done new Error it
 
   test 'should be virtual', (done) ->
     Tests = N \test
@@ -66,8 +64,7 @@ describe 'N Fields free', ->
       .Then ->
         assert.equal it.field, \lol
         done!
-      .Catch ->
-        done new Error it
+      .Catch -> done new Error it
 
   test 'should be virtual with this as resource', (done) ->
     Tests = N \test
@@ -77,5 +74,12 @@ describe 'N Fields free', ->
       .Then ->
         assert.equal it.field, \lol
         done!
-      .Catch ->
-        done new Error it
+      .Catch -> done new Error it
+
+  test 'should be unique', (done) ->
+    Tests = N \test
+      ..Field \field \string .Unique!
+
+    Tests.Create field: \lol
+      .Then -> Tests.Create field: \lol .Then (-> done new Error 'Not unique') .Catch -> done!
+      .Catch -> done new Error it

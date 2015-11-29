@@ -550,19 +550,16 @@ module.exports = (config, routes, name) ->
 
     # Pre-Instanciation and associated model retrival
     @_Deserialize = (blob, done, _depth) ->
-      @_schema.Validate blob, (err) ~>
-        return done err if err?
+      res = @
 
-        res = @
+      if @_schema.assocs.length
+        @_schema.FetchAssoc blob, (err, blob) ->
+          return done err if err?
 
-        if @_schema.assocs.length
-          @_schema.FetchAssoc blob, (err, blob) ->
-            return done err if err?
-
-            done null, new res blob
-          , _depth - 1
-        else
           done null, new res blob
+        , _depth - 1
+      else
+        done null, new res blob
 
   #
   # Private
@@ -588,6 +585,8 @@ module.exports = (config, routes, name) ->
       @_parent = _parent
       if @_parent?
         @_schema <<< @_parent._schema.Inherit!
+
+      @_schema.Resource = @
 
       @Route = _routes
       @_routes = _routes

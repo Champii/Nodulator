@@ -48,7 +48,7 @@ class SchemaProperty
   Required: (required = true) -> @optional = !required; @
   Virtual: (@virtual = null) -> @
   Internal: (@internal = true) -> @
-  Unique: (@unique = true) -> ...
+  Unique: (@unique = true) -> @
 
 class Schema
 
@@ -61,7 +61,6 @@ class Schema
     @debug = new Debug "N::Resource::#{@name}::Schema", Debug.colors.cyan
 
   Populate: (instance, blob) ->
-
 
     res = obj-to-pairs blob |> filter (.0.0 isnt \_) |> pairs-to-obj
     instance <<< res
@@ -135,8 +134,11 @@ class Schema
         errors := errors.concat @_CheckValid blob, it
 
     errors = errors.concat @_CheckNotInSchema blob
+    @_CheckUnique blob, @Resource, (err, results) ->
+      if err?
+        errors := errors.concat results
+      done(if errors.length => {errors} else null)
 
-    done(if errors.length => {errors} else null)
 
   GetVirtuals: (instance, blob) ->
     res = {}
@@ -164,6 +166,16 @@ class Schema
 
     for field, value of blob when not _(@properties).findWhere name: field and field isnt \id
       validationError field, blob[field], ' is not in schema'
+
+  _CheckUnique: (blob, Resource, done) ->
+    res = []
+    async.eachSeries filter((.unique), @properties), (property, done) ->
+      Resource.Fetch (property.name): blob[property.name]
+        .Then ->
+          res.push validationError property.name, blob[property.name], ' must be unique'
+          done {err: 'not unique'}
+        .Catch -> done!
+    , (err, results) -> done err, res
 
   PrepareRelationship: (isArray, field, description) ->
     type = null
