@@ -106,7 +106,7 @@ module.exports = (configPath, resPath)->
   resources = try fetch-resources resPath
 
   if resources?
-    N.Use require __dirname + \../src/Modules/Nodulator-Account
+    try N.Use require fs.realpathSync(path.resolve(__dirname, __filename)) + \/../../src/Modules/Nodulator-Account
 
     resources
       |> obj-to-pairs

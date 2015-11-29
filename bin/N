@@ -15,7 +15,7 @@ coffee-script = require 'coffee-script/register'
 
 args = process.argv[2 to]
 
-NodulatorRoot = path.resolve __dirname, '..'
+NodulatorRoot = path.resolve fs.realpathSync(path.resolve __dirname, __filename), '../..'
 appRoot = path.resolve '.'
 
 moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular', 'nodulator-account']
@@ -81,10 +81,10 @@ generateMain = (modules) ->
     mainBefore += '\n' + capitalize(name) + ' = require \'' + module + '\''
     mainAfter += 'N.Use ' + capitalize(name) + '\n'
 
-  mainAfter += '\nServer.Init()\n'
-  mainAfter += 'N.Run()\n' if 'nodulator-assets' in modules
+  mainAfter += '\nServer.Init!\n'
+  mainAfter += 'N.Run!\n' if 'nodulator-assets' in modules
 
-  fs.writeFileSync appRoot + '/main.coffee', mainBefore + mainAfter
+  fs.writeFileSync appRoot + '/index.ls', mainBefore + mainAfter
 
 if args.length is 1 and args[0] not in ['init', 'install', 'remove', 'install-dev', 'console', 'c']
   return usage()
@@ -148,6 +148,9 @@ if args[0] is 'init'
 
                 process.stdout.write '\n[' + i++ + ']Processing ' + binName.split('.')[0] + ': \n'
                 (require binPath)(done)
+
+            binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to]*'' + '.coffee'
+            binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
             process.stdout.write '\n[' + i++ + ']Processing ' + binName.split('.')[0] + ': \n'
             (require binPath)(done)
         , done

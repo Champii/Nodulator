@@ -2,7 +2,7 @@
     | \ | | ___   __| |_   _| | __ _| |_ ___  _ __
     |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
-    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.1
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.2
 
 [![Build Status](https://travis-ci.org/Champii/N.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
@@ -169,8 +169,14 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  -
+
+30/11/15: 0.1.2
   - Fixed a bug for Add() on 'local' association
   - Updated exemples
+  - package.json is cleaner
+  - Fixed a bug with symlink on N
+  - Fixed init and console
 
 28/11/15: 0.1.0
   - LiveScript ! \o/
