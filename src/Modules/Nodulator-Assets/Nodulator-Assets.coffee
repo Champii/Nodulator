@@ -5,8 +5,6 @@ jade = require 'jade'
 cookieParser = require 'cookie-parser'
 coffeeMiddleware = require 'coffee-middleware'
 livescriptMiddleware = require 'livescript-middleware'
-compressor = require 'node-minify'
-minify = require 'express-minify'
 grunt = require 'grunt'
 
 module.exports = (N) ->
