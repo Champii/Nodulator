@@ -485,13 +485,13 @@ module.exports = (config, routes, name) ->
             @Fetch done
 
         else if res.keyType is \local
-          @[res.foreign] = @id
+          @[res.foreign] = instance.id
           @_SaveUnwrapped ~>
             return done it if it?
 
             @Fetch done
       else
-        done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
+        done new Error "#{capitalize @_type}: Add: No assocs found for #{capitalize instance._type}"
 
     Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]
@@ -587,7 +587,7 @@ module.exports = (config, routes, name) ->
       @_schema = new Schema @lname, _config?.schema
       @_parent = _parent
       if @_parent?
-        @_schema.properties = @_parent._schema.Inherit!
+        @_schema <<< @_parent._schema.Inherit!
 
       @Route = _routes
       @_routes = _routes

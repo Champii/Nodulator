@@ -1,160 +1,77 @@
-var _ = require('underscore');
-var Nodulator = require('../');
-var request = require('superagent');
-var async = require('async');
+var N = require('..')
 
-var weaponConfig = {
-  schema: {
-    hitPoints: 'int'
-  }
+var WeaponRoute = N.Route.Extend();
+
+WeaponRoute.prototype.Config = function () {
+  var thus = this;
+  this.Get(function () {
+    return thus.resource.List();
+  });
 };
 
-var Weapons = Nodulator.Resource('weapon', Nodulator.Route.MultiRoute, weaponConfig);
+var Weapon = N('weapon', WeaponRoute, {schema: 'strict'});
+Weapon.Field('power', 'int').Default(10);
 
-var unitConfig = {
-  abstract: true,
-  schema: {
-    level: 'int',
-    life:  'int',
-    weapon: {
-      type: Weapons,
-      localKey: 'weaponId',
-      optional: true
-    },
-    weaponId: {
-      type: 'int',
-      optional: true
-    }
-  }
+var Unit = N('unit', {abstract: true, schema: 'strict'});
+
+Unit.prototype.LevelUp = function () {
+  return this.Set({level: this.level + 1});
 };
 
-var Units = Nodulator.Resource('unit', unitConfig);
+Unit.prototype.Attack = function (targetId) {
+  var thus = this;
+  if (!this.Weapon)
+    throw('No weapon');
 
-Units.prototype.Attack = Units._WrapPromise(function (target, done) {
-  target.life -= this.weapon.hitPoints;
-  target.Save(done);
-});
+  var Target;
+  if (this._type === 'player')
+    Target = Monster;
+  else if (this._type === 'monster')
+    Target = Player;
 
-Units.prototype.LevelUp = Units._WrapPromise(function (done) {
-  this.level++;
-  this.Save(done);
-});
+  return Target.Fetch(targetId).Set(function (target) {target.life -= thus.Weapon.power});
+};
 
-Units.Init();
+Unit.Field('level', 'int') .Default(1);
+Unit.Field('life', 'int')  .Default(100);
+Unit.MayBelongsTo(Weapon)
 
-var UnitRoute = Nodulator.Route.MultiRoute.Extend();
+var UnitRoute = N.Route.MultiRoute.Extend();
 
 UnitRoute.prototype.Config = function () {
-  Nodulator.Route.MultiRoute.prototype.Config.apply(this);
+  N.Route.MultiRoute.prototype.Config.apply(this, arguments);
 
-  this.Put('/:id/levelUp', function (Req) {
-    Req.instance.LevelUp();
+  this.Put('/:id/levelup', function (req) {
+    return req.instance.LevelUp();
   });
 
-  this.Put('/:id/attack/:targetId', function (Req) {
-    // Hack to stay generic between children
-    var TargetResource;
-    if (this.name === 'players')
-      TargetResource = Monsters;
-    else if (this.name === 'monsters')
-      TargetResource = Players;
-
-    var watcher = Nodulator.Watch(function () {
-      if (TargetResource.error() !== undefined)
-        Req.Send(TargetResource.error());
-    });
-
-    TargetResource.Fetch(parseInt(Req.params.targetId), function (err, target) {
-      Req.instance.Attack(target, function (err) {
-        Req.Send(target);
-        watcher.Stop();
-      });
-    });
+  this.Put('/:id/attack/:targetId', function (req) {
+    return req.instance.Attack(parseInt(req.params.targetId));
   });
 };
 
-var Players = Units.Extend('player', UnitRoute);
-var Monsters = Units.Extend('monster', UnitRoute);
+var Player =  Unit.Extend('player',  UnitRoute);
+var Monster = Unit.Extend('monster', UnitRoute);
 
+// Exemple seed:
+Player.Create().Add(Weapon.Create({power: 25}));
+Monster.Create().Add(Weapon.Create());
+
+// Created routes :
+//  - GET    /api/1/players                       => Get all players
+//  - GET    /api/1/players/:id                   => Get player with given id
+//  - POST   /api/1/players                       => Create a player
+//  - PUT    /api/1/players/:id                   => Modify the player with given id
+//  - DELETE /api/1/players/:id                   => Delete the given player
+//  - PUT    /api/1/players/:id/levelup           => LevelUp the given player
+//  - PUT    /api/1/players/:id/attack/:targetId  => Attack the given monster
 //
-//  Here stops the exemple,
-//  And Here start the tests.
+//  - GET    /api/1/monsters                      => Get all monsters
+//  - GET    /api/1/monsters/:id                  => Get monster with given id
+//  - POST   /api/1/monsters                      => Create a monster
+//  - PUT    /api/1/monsters/:id                  => Modify the monster with given id
+//  - DELETE /api/1/monsters/:id                  => Delete the given monster
+//  - PUT    /api/1/monsters/:id/levelup          => LevelUp the given monster
+//  - PUT    /api/1/monsters/:id/attack/:targetId => Attack the given player
 //
-// Hack for keep track of weapon
-weaponId = [];
-
-async.series({
-  addWeapon: function (done) {
-    Nodulator.client.Post('/api/1/weapons', {hitPoints: 2}, function (err, res) {
-      weaponId.push(res.body.id);
-      done(err, res.body);
-    });
-  },
-
-  addWeapon2: function (done) {
-    Nodulator.client.Post('/api/1/weapons', {hitPoints: 1}, function (err, res) {
-      weaponId.push(res.body.id);
-      done(err, res.body);
-    });
-  },
-
-  addPlayer: function (done) {
-    Nodulator.client.Post('/api/1/players', {level: 1, life: 100, weaponId: weaponId[0]}, function (err, res) { done(err, res.body); });
-  },
-
-  testGet: function (done) {
-    Nodulator.client.Get('/api/1/players', function (err, res) { done(err, res.body); });
-  },
-
-  levelUp: function (done) {
-    Nodulator.client.Put('/api/1/players/1/levelUp', {}, function (err, res) { done(err, res.body); });
-  },
-
-  levelUp2: function (done) {
-    Nodulator.client.Put('/api/1/players/1/levelUp', {}, function (err, res) { done(err, res.body); });
-  },
-
-  addMonster: function (done) {
-    Nodulator.client.Post('/api/1/monsters', {level: 1, life: 20, weaponId: weaponId[1]}, function (err, res) { done(err, res.body); });
-  },
-
-  testGetMonster: function (done) {
-    Nodulator.client.Get('/api/1/monsters', function (err, res) { done(err, res.body); });
-  },
-
-  levelUpMonster: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/levelUp', {}, function (err, res) { done(err, res.body); });
-  },
-
-  levelUpMonster2: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/levelUp', {}, function (err, res) { done(err, res.body); });
-  },
-
-  playerAttack: function (done) {
-    Nodulator.client.Put('/api/1/players/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  },
-
-  monsterAttack: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  },
-
-  monsterAttack1: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  },
-
-  monsterAttack2: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  },
-
-  monsterAttack3: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  },
-
-  monsterAttack4: function (done) {
-    Nodulator.client.Put('/api/1/monsters/1/attack/1', {}, function (err, res) { done(err, res.body); });
-  }
-}, function (err, results) {
-  util = require('util');
-  util.debug(util.inspect(err, {depth: null}));
-  util.debug(util.inspect(results, {depth: null}));
-});
+//  - GET    /api/1/weapons                       => Get all weapons

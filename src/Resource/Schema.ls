@@ -304,9 +304,12 @@ class Schema
     # console.log @habtm
 
   Inherit: ->
-    @properties
-      |> map ->
-        sp = new SchemaProperty it.name, it.type, it.optional
-        sp <<< it
+    properties: @properties
+                  |> map ->
+                    sp = new SchemaProperty it.name, it.type, it.optional
+                    sp <<< it
+    assocs: map (-> _ {} .extend it), @assocs
+    habtm: map (-> _ {} .extend it), @habtm
+
 
 module.exports = Schema

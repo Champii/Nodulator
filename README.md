@@ -169,7 +169,8 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
-  -
+  - Fixed a bug for Add() on 'local' association
+  - Updated exemples
 
 28/11/15: 0.1.0
   - LiveScript ! \o/

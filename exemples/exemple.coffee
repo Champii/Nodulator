@@ -1,124 +1,53 @@
-_ = require 'underscore'
-N = require '../'
-request = require 'superagent'
-async = require 'async'
+N = require '..'
 
-weaponConfig =
-  schema:
-    hitPoints: 'int'
+class WeaponRoute extends N.Route
+  Config: ->
+    @Get => @resource.List()
 
-Weapons = N.Resource 'weapon', N.Route.MultiRoute, weaponConfig
+Weapon = N 'weapon', WeaponRoute, schema: 'strict'
+Weapon.Field('power', 'int').Default 10
 
-unitConfig =
-  abstract: true
-  schema:
-    level: 'int'
-    life:  'int'
-    weapon:
-      type: Weapons
-      localKey: 'weaponId'
-      optional: true
-    weaponId:
-      type: 'int'
-      optional: true
+class Unit extends N 'unit', {abstract: true, schema: 'strict'}
 
-class Units extends N.Resource 'unit', unitConfig
+  LevelUp: -> @Set level: @level + 1
 
-  Attack: @_WrapPromise (target, done) ->
-    target.life -= @weapon.hitPoints
-    target.Save done
+  Attack: (targetId) ->
+    throw 'No weapon' if not @Weapon?
+    Target = if @_type is 'player' then Monster else if @_type is 'monster' then Player
+    Target.Fetch(targetId).Set (target) => target.life -= @Weapon.power
 
-  LevelUp: @_WrapPromise (done) ->
-    @level++
-    @Save done
-
-Units.Init()
+Unit.Field('level', 'int') .Default 1
+Unit.Field('life', 'int')  .Default 100
+Unit.MayBelongsTo Weapon
 
 class UnitRoute extends N.Route.MultiRoute
   Config: ->
     super()
+    @Put '/:id/levelup',          (req) -> req.instance.LevelUp()
+    @Put '/:id/attack/:targetId', (req) -> req.instance.Attack +req.params.targetId
 
-    @Put '/:id/levelUp', (Req) ->
-      Req.instance.LevelUp()
+Player =  Unit.Extend 'player',  UnitRoute
+Monster = Unit.Extend 'monster', UnitRoute
 
-    @Put '/:id/attack/:targetId', (Req) =>
-      # Hack to stay generic between children
-      TargetResource = Monsters if @name is 'players'
-      TargetResource = Players if @name is 'monsters'
+# Exemple seed:
+Player.Create().Add Weapon.Create power: 25
+Monster.Create().Add Weapon.Create()
 
-      watcher = N.Watch ->
-        Req.Send TargetResource.error() if TargetResource.error()?
-
-      TargetResource.Fetch +Req.params.targetId, (err, target) ->
-        Req.instance.Attack target, (err) ->
-          Req.Send target
-          watcher.Stop()
-
-Players = Units.Extend 'player', UnitRoute
-Monsters = Units.Extend 'monster', UnitRoute
-
+# Created routes :
+#  - GET    /api/1/players                       => Get all players
+#  - GET    /api/1/players/:id                   => Get player with given id
+#  - POST   /api/1/players                       => Create a player
+#  - PUT    /api/1/players/:id                   => Modify the player with given id
+#  - DELETE /api/1/players/:id                   => Delete the given player
+#  - PUT    /api/1/players/:id/levelup           => LevelUp the given player
+#  - PUT    /api/1/players/:id/attack/:targetId  => Attack the given monster
 #
-#  Here stops the exemple,
-#  And Here start the tests.
+#  - GET    /api/1/monsters                      => Get all monsters
+#  - GET    /api/1/monsters/:id                  => Get monster with given id
+#  - POST   /api/1/monsters                      => Create a monster
+#  - PUT    /api/1/monsters/:id                  => Modify the monster with given id
+#  - DELETE /api/1/monsters/:id                  => Delete the given monster
+#  - PUT    /api/1/monsters/:id/levelup          => LevelUp the given monster
+#  - PUT    /api/1/monsters/:id/attack/:targetId => Attack the given player
 #
-
-# Hack for keep track of weapon
-weaponId = []
-
-async.series
-  addWeapon: (done) ->
-    N.client.Post '/api/1/weapons', {hitPoints: 2}, (err, res) ->
-      weaponId.push res.body.id
-      done err, res.body
-
-  addWeapon2: (done) ->
-    N.client.Post '/api/1/weapons', {hitPoints: 1}, (err, res) ->
-      weaponId.push res.body.id
-      done err, res.body
-
-  addPlayer: (done) ->
-    N.client.Post '/api/1/players', {level: 1, life: 100, weaponId: weaponId[0]}, (err, res) -> done err, res.body
-
-  testGet: (done) ->
-    N.client.Get '/api/1/players', (err, res) -> done err, res.body
-
-  levelUp: (done) ->
-    N.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
-
-  levelUp2: (done) ->
-    N.client.Put '/api/1/players/1/levelUp', {}, (err, res) -> done err, res.body
-
-  addMonster: (done) ->
-    N.client.Post '/api/1/monsters', {level: 1, life: 20, weaponId: weaponId[1]}, (err, res) -> done err, res.body
-
-  testGetMonster: (done) ->
-    N.client.Get '/api/1/monsters', (err, res) -> done err, res.body
-
-  levelUpMonster: (done) ->
-    N.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
-
-  levelUpMonster2: (done) ->
-    N.client.Put '/api/1/monsters/1/levelUp', {}, (err, res) -> done err, res.body
-
-  playerAttack: (done) ->
-    N.client.Put '/api/1/players/1/attack/1', {}, (err, res) -> done err, res.body
-
-  monsterAttack: (done) ->
-    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-  monsterAttack1: (done) ->
-    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-  monsterAttack2: (done) ->
-    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-  monsterAttack3: (done) ->
-    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-  monsterAttack4: (done) ->
-    N.client.Put '/api/1/monsters/1/attack/1', {}, (err, res) -> done err, res.body
-
-, (err, results) ->
-  util = require 'util'
-  util.debug util.inspect err, {depth: null}
-  util.debug util.inspect results, {depth: null}
+#  - GET    /api/1/weapons                       => Get all weapons
