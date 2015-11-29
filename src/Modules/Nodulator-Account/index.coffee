@@ -85,7 +85,7 @@ module.exports = (N) ->
     N.ExtendBeforeRender AccountResource._InjectUser
 
     N.ExtendAfterRender (req, res) =>
-      rend = 'auth'
+      rend = 'auth-index'
       if req.user?
         rend = 'index'
 

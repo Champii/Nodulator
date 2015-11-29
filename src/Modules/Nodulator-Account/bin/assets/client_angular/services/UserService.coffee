@@ -1,4 +1,4 @@
-class UserService extends N.Service 'user', '$http', '$window', 'socket'
+class UserService extends Nodulator.Service 'user', '$http', '$window', 'socket'
 
   current: null
 
@@ -7,7 +7,7 @@ class UserService extends N.Service 'user', '$http', '$window', 'socket'
       @current = __user
 
   Logout: ->
-    @$http.post('/api/1/clients/logout')
+    @$http.post('/api/1/users/logout')
       .success (data) ->
         @$window.location.href = '/'
 

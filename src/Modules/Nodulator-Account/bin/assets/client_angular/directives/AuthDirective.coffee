@@ -1,12 +1,12 @@
-class AuthDirective extends N.Directive 'auth', '$window', '$http', 'userService'
+class AuthDirective extends Nodulator.Directive 'auth', '$window', '$http', 'userService'
 
   state: 'login'
   ident:
-    username: 'test'
-    password: 'test'
+    username: ''
+    password: ''
 
   Auth: ->
-    @$http.post('/api/1/clients/login', @ident)
+    @$http.post('/api/1/users/login', @ident)
       .success =>
         @$window.location.href = '/'
       .error (data) =>
@@ -24,7 +24,7 @@ class AuthDirective extends N.Directive 'auth', '$window', '$http', 'userService
           @error = ''
       , 10000
 
-    @$http.post('/api/1/clients', @ident)
+    @$http.post('/api/1/users', @ident)
       .success =>
         @Auth()
       .error (data) =>

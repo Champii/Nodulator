@@ -45,7 +45,7 @@ class _N
     controller
 
   CreateEmptyTemplateDirective: ->
-    for template in _views when template not in _(@directives).keys()
+    for template in _views when template not in (key for key, val of @directives)
       class _EmptyDirective extends @Directive template
       _EmptyDirective.Init()
 

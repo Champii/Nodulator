@@ -140,7 +140,6 @@ if args[0] is 'init'
           test = binPath
           exists binPath, (exist) ->
             if not exist
-              console.log test, 2
               binName = 'Nodulator-' + file.split('-')[1][0].toUpperCase() + file.split('-')[1][1 to]*'' + '.ls'
               binPath = appRoot + '/node_modules/' + file + '/bin/' + binName
               return exists binPath, (exist) ->
