@@ -4,9 +4,9 @@
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
     |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.5
 
-[![Build Status](https://travis-ci.org/Champii/N.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
-[![Build Status](https://travis-ci.org/Champii/N.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
+[![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
 
 [![NPM](https://nodei.co/npm/nodulator.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/nodulator/)
 
