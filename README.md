@@ -2,7 +2,7 @@
     | \ | | ___   __| |_   _| | __ _| |_ ___  _ __
     |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
-    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.4
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.5
 
 [![Build Status](https://travis-ci.org/Champii/N.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
@@ -167,6 +167,9 @@ By order of priority
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
+  -
+
+01/12/15: 0.1.5
   - Added Unique() property
   - Now you can throw inside a route to send an error
   - You can remove an existing route by declaring the same Verb + Url and returning null.
