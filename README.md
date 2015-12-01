@@ -131,10 +131,9 @@ ___
 
 By order of priority
 
+- Customise error codes in Route
 - Paginated Resource
 - When cache expire, remove correspondant Watcher /!\
-- Inherit associations (care for abstract Resources)
-- Remove an existing route easely
 - Better query on Resource (gt, gte, lt, lte, not, range, ...)
 - Migration system
 - Auto wrap new methods in `Resource`
@@ -142,7 +141,6 @@ By order of priority
 - Watch a specific field
 - Relations not only based on id but on every property types
 - Persistant sessions in Console
-- 'Unique' field
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
 - Decentralize modules config
 - Scaling (cluster, distributed bus)
@@ -166,11 +164,13 @@ By order of priority
     - HasManyThrough
     - HasAndBelongsToMany
 
-
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
-  -
+  - Added Unique() property
+  - Now you can throw inside a route to send an error
+  - You can remove an existing route by declaring the same Verb + Url and returning null.
+  - Renamed 'MultiRoute' into 'Collection'
 
 30/11/15: 0.1.2
   - Fixed a bug for Add() on 'local' association
@@ -227,7 +227,7 @@ XX/XX/XX: current (not released yet)
   - Removed `req.instances` from every `Route`
   - Added tests for `SingleRoute`
   - Route proxy methods for `@_All()` are now generated at runtime
-  - Renamed `DefaultRoute` to `MultiRoute`
+  - Renamed `DefaultRoute` to `Collection`
   - Added a `default` field to config schema
   - `Resource.Init()` now returns the `Resource` itself, for chaining purpose.
   - Added tests for resource association
@@ -254,9 +254,9 @@ XX/XX/XX: current (not released yet)
   - Fixed a bug in model association: no field in schema if array with no 'type'
   - Improved 'arrayOf' type check
   - Added function to default schema value (is that a possible virtual field ?)
-  - MultiRoute::Get() now can take query arguments
+  - Collection::Get() now can take query arguments
   - Added Resource::ExtendSafe() method to preserve associated models while extending a Resource
-  - Modified Route::MultiRoute and Route::SingleRoute to use Resource::ExtendSafe()
+  - Modified Route::Collection and Route::SingleRoute to use Resource::ExtendSafe()
   - Removed app parameter from Route constructor
   - Route classes can now be instanciated without any Resources
   - Removed ListBy and FetchBy for simplicity

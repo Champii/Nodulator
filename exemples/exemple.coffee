@@ -20,7 +20,7 @@ Unit.Field('level', 'int') .Default 1
 Unit.Field('life', 'int')  .Default 100
 Unit.MayBelongsTo Weapon
 
-class UnitRoute extends N.Route.MultiRoute
+class UnitRoute extends N.Route.Collection
   Config: ->
     super()
     @Put '/:id/levelup',          (req) -> req.instance.LevelUp()

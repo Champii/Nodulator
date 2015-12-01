@@ -60,13 +60,11 @@ class Route
 
     N.express = express
 
-    N.app = express()
+    N.app = express!
 
-    N.app.use bodyParser.urlencoded do
-      extended: true
+    N.app.use bodyParser.urlencoded  extended: true
 
-    N.app.use bodyParser.json do
-      extended: true
+    N.app.use bodyParser.json  extended: true
 
     sessions =
       key: \N
@@ -99,14 +97,18 @@ class Route
 
   _WrapRequest: (fName, args) ->
     Req = new Request args
-    ret = @[fName] Req
-    if ret?
-      switch
-        | ret._promise? =>
-          ret
-            .Then -> Req.Send it
-            .Catch -> Req.SendError it
-        | _         => Req.Send ret
+    try
+      ret = @[fName] Req
+      if ret?
+        switch
+          | ret._promise? =>
+            ret
+              .Then -> Req.Send it
+              .Catch -> Req.SendError it
+          | _         => Req.Send ret
+      else if ret is null => Req.Send null
+    catch e
+      Req.SendError e
 
   _Add: (type, url, ...middle, done) ->
     if not done?
@@ -153,7 +155,7 @@ _set = (verb) ~>
 
 each _set, <[ All Post Get Put Delete ]>
 
-class MultiRoute extends Route
+class Collection extends Route
 
   Config: ->
     super()
@@ -161,49 +163,49 @@ class MultiRoute extends Route
     @Get           ~> @resource.List it.query
     @Post          ~> @resource.Create it.body
     @Get    \/:id  ~> it.instance
-    @Put    \/:id  ~> it.instance.ExtendSafe it.body;it.instance.Save!
+    @Put    \/:id  ~> it.instance.Set it.body
     @Delete \/:id  ~> it.instance.Delete!
 
-class SingleRoute extends Route
+# class SingleRoute extends Route
+#
+#   ->
+#
+#     @resource.Init()
+#     @rname = @resource.lname
+#
+#     @name = @rname
+#
+#     @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
+#
+#     if @rname[*-1] is 'y'
+#       @name = @rname[ til @ name.length]*'' + 'ies'
+#
+#     N := require '../..' if not N?
+#     if not N.app?
+#       Route._InitServer!
+#     @app = N.app
+#     # @resource.Init()
+#
+#     #Resource creation if non-existant
+#     @resource.Fetch 1, (err, result) ~>
+#       if err? and @resource.config?.schema? and
+#          _(@resource.config.schema).filter((item) ->
+#            not item.default? and not item.optional?).length
+#         throw new Error """
+#         SingleRoute used with schema Resource and non existant row at id = 1.
+#         Please add it manualy to your DB system before continuing.'
+#         """
+#       if err?
+#         @resource.Create {}, (err, res) ->
+#
+#     @All ~> it.SetInstance @resource.Fetch 1
+#     @Get ~> it.instance
+#     @Put ~> it.instance.ExtendSafe it.body; it.instance.Save!
+#
+#     @Config()
 
-  ->
-
-    @resource.Init()
-    @rname = @resource.lname
-
-    @name = @rname
-
-    @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
-
-    if @rname[*-1] is 'y'
-      @name = @rname[ til @ name.length]*'' + 'ies'
-
-    N := require '../..' if not N?
-    if not N.app?
-      Route._InitServer!
-    @app = N.app
-    # @resource.Init()
-
-    #Resource creation if non-existant
-    @resource.Fetch 1, (err, result) ~>
-      if err? and @resource.config?.schema? and
-         _(@resource.config.schema).filter((item) ->
-           not item.default? and not item.optional?).length
-        throw new Error """
-        SingleRoute used with schema Resource and non existant row at id = 1.
-        Please add it manualy to your DB system before continuing.'
-        """
-      if err?
-        @resource.Create {}, (err, res) ->
-
-    @All ~> it.SetInstance @resource.Fetch 1
-    @Get ~> it.instance
-    @Put ~> it.instance.ExtendSafe it.body; it.instance.Save!
-
-    @Config()
-
-Route.MultiRoute = MultiRoute
-Route.SingleRoute = SingleRoute
+Route.Collection = Collection
+# Route.SingleRoute = SingleRoute
 module.exports = Route
 
-# Route.MultiRoute = require \./MultiRoute
+# Route.Collection = require \./Collection

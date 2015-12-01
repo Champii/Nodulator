@@ -16,6 +16,10 @@ class Request
   Send: !->
     return if @sent
 
+    if it is null
+      @sent = true
+      return @res.status(404).send "Cannot #{@method.toUpperCase!} #{@url}"
+
     if is-type 'Array' it
       it := map (-> if it.ToJSON? => it.ToJSON! else it), it
 
@@ -27,7 +31,7 @@ class Request
   SendError: ->
     return if @sent
 
-    status = errors[it.status] || 500
+    status = it.code || errors[it.status] || 500
 
     it = that if it.message?
 

@@ -6,7 +6,7 @@ N.Config do
   cache:
     type: \Redis
 #
-Players = N \player N.Route.MultiRoute .Init!
+Players = N \player N.Route.Collection .Init!
 
 # for i til n
 #   Players.Create!

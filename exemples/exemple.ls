@@ -1,4 +1,4 @@
-require! {\.. : {{MultiRoute}:Route}:N}
+require! {\.. : {{Collection}:Route}:N}
 
 class WeaponRoute extends Route
   Config: ->
@@ -21,7 +21,7 @@ Unit
   ..Field \life  \int  .Default 100
   ..MayBelongsTo Weapon
 
-class UnitRoute extends MultiRoute
+class UnitRoute extends Collection
   Config: ->
     super!
     @Put \/:id/levelup          -> it.instance.LevelUp!

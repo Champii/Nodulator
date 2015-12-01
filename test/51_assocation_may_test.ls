@@ -100,7 +100,7 @@
 #   #     done!
 #   #
 #   # test 'should fetch distantKey with array' (done) ->
-#   #   class Childs extends N 'child2', N.Route.MultiRoute
+#   #   class Childs extends N 'child2', N.Route.Collection
 #   #
 #   #   testConfig =
 #   #     schema:

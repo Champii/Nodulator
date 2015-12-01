@@ -3,7 +3,7 @@ async = require 'async'
 
 n = +process.env.MW || 1
 
-Players = N.Resource 'player', N.Route.MultiRoute
+Players = N.Resource 'player', N.Route.Collection
 
 
 # async.eachSeries [til n]

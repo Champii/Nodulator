@@ -59,7 +59,7 @@ describe 'N Inheritance', ->
 
           done null, __(list).pluck \username
 
-    class PlayerRoute extends N.Route.MultiRoute
+    class PlayerRoute extends N.Route.Collection
       resource: Players
 
       Config: ->
@@ -79,7 +79,7 @@ describe 'N Inheritance', ->
 
   test 'should have inherited in route 2', (done2) ->
 
-    class PlayerRoute extends N.Route.MultiRoute
+    class PlayerRoute extends N.Route.Collection
 
       Config: ->
         @Get \/usernames ~> @resource.ListUsernames!

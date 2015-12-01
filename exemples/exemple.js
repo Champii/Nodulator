@@ -36,10 +36,10 @@ Unit.Field('level', 'int') .Default(1);
 Unit.Field('life', 'int')  .Default(100);
 Unit.MayBelongsTo(Weapon)
 
-var UnitRoute = N.Route.MultiRoute.Extend();
+var UnitRoute = N.Route.Collection.Extend();
 
 UnitRoute.prototype.Config = function () {
-  N.Route.MultiRoute.prototype.Config.apply(this, arguments);
+  N.Route.Collection.prototype.Config.apply(this, arguments);
 
   this.Put('/:id/levelup', function (req) {
     return req.instance.LevelUp();
