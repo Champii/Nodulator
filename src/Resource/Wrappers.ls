@@ -50,7 +50,7 @@ class Wrappers
       idx = _FindDone args
 
       if not idx?
-        d = @_d || Q.defer!
+        d = Q.defer!
 
         args.push (err, data) ->
           return d.reject err if err?
