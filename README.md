@@ -76,8 +76,8 @@ Or check the [Project Generation](#project-generation) section
 
 After you can require `Nodulator` as a module :
 
-```coffeescript
-N = require 'nodulator'
+```javascript
+var N = require('nodulator');
 ```
 
 ___
@@ -102,17 +102,14 @@ ___
 ## Philosophy
 
 `Nodulator` is a project that is trying to make a big overlay to every
-traditional packages used to make REST client/server applications in CoffeeScript.
+traditional packages used to make REST client/server applications in Javascript/CoffeeScript/LiveScript/...
 
 Its main goal is to give developers a complex REST routing system, an ORM and
 high-level modules, encapsulating every classic behaviour needed to create
 complex projects.
 
-Its core provides everything needed to build powerfull and highly modulable
+Its core provides everything needed to build powerful and highly modulable
 REST APIs, and allow the developer to reuse his code through every projects.
-
-With this framework, you can avoid 10 or 20 hours boostraping a
-project from scratch or looking for the right technology to implement.
 
 ___
 ## Developers
@@ -131,6 +128,9 @@ ___
 
 By order of priority
 
+- Isomorphic reactive view system
+- Fix config and default config for modules
+- Bind Route 'this' to Resource by default, and rename SetInstance to BindThis to change it (to an instance for exemple)
 - Customise error codes in Route
 - Paginated Resource
 - When cache expire, remove correspondant Watcher /!\

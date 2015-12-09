@@ -8,9 +8,7 @@ Weapon = N 'weapon', WeaponRoute, schema: 'strict'
 Weapon.Field('power', 'int').Default 10
 
 class Unit extends N 'unit', {abstract: true, schema: 'strict'}
-
-  LevelUp: -> @Set level: @level + 1
-
+  LevelUp:           -> @Set level: @level + 1
   Attack: (targetId) ->
     throw 'No weapon' if not @Weapon?
     Target = if @_type is 'player' then Monster else if @_type is 'monster' then Player

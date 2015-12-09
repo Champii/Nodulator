@@ -8,12 +8,12 @@ Weapon = N \weapon WeaponRoute, schema: \strict
   ..Field \power \int .Default 10
 
 class Unit extends N \unit abstract: true schema: \strict
-
-  LevelUp: -> @Set level: @level + 1
-
+  LevelUp:           -> @Set (.level++)
   Attack: (targetId) ->
     throw 'No weapon' if not @Weapon?
-    Target = if @_type is \player => Monster else if @_type is \monster => Player
+    Target = switch @_type
+      | \player => Monster
+      | \monster => Player
     Target.Fetch targetId .Set ~> it.life -= @Weapon.power
 
 Unit
@@ -24,8 +24,8 @@ Unit
 class UnitRoute extends Collection
   Config: ->
     super!
-    @Put \/:id/levelup          -> it.instance.LevelUp!
-    @Put \/:id/attack/:targetId -> it.instance.Attack +it.params.targetId
+    @Put \/:id/levelup          (.instance.LevelUp!)
+    @Put \/:id/attack/:targetId (.instance.Attack +it.params.targetId)
 
 Player =  Unit.Extend \player  UnitRoute
 Monster = Unit.Extend \monster UnitRoute

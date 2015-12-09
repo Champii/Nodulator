@@ -58,6 +58,7 @@ module.exports = (config, routes, name) ->
 
       if blob.promise?
         debug-resource.Log "Defered instanciation"
+        @_d = blob
         @_promise = blob.promise
         return
 
@@ -117,9 +118,9 @@ module.exports = (config, routes, name) ->
       __(@).extend newBlob
 
     # Watch the instance refetch itself
-    Watch: (done) ->
+    Watch: @_WrapResolvePromise (done) ->
       N.Watch ~>
-        N[capitalize name + \s ].Fetch @id, (err, res) ~>
+        @Fetch (err, res) ~>
           return done err if err? and done?
           return console.error err if err?
 
@@ -532,6 +533,7 @@ module.exports = (config, routes, name) ->
 
     Log: @_WrapPromise @_WrapResolvePromise ->
 
+      console.log 'tamere', @
       console.log @ToJSON!
       it null @
 

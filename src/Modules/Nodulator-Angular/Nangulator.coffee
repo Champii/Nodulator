@@ -86,9 +86,9 @@ module.exports = (N) ->
           var _resources = #{JSON.stringify _(N.resources).keys()};\n
       "
 
-      j += '''
-        script(src="/socket.io/socket.io.js")
-      '''
+      j += "
+         script(src=\"/socket.io/socket.io.js\")
+      "
 
     Compile: ->
       jcompile = {}

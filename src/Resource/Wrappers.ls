@@ -50,7 +50,7 @@ class Wrappers
       idx = _FindDone args
 
       if not idx?
-        d = Q.defer()
+        d = @_d || Q.defer!
 
         args.push (err, data) ->
           return d.reject err if err?
@@ -63,10 +63,14 @@ class Wrappers
       if d? and @Init?
         @Init!
         new @ d
+      # else if @_promise? and d?
+      #   @_promise.then d.promise
+      #   @
       else if d? #and @_promise?
         @_promise = d.promise
         @
       else if not d? and ret?.state? and @_type?
+        console.log 'WRAPPROMISE state', ret
         @_promise = ret
         @
       else
@@ -82,6 +86,7 @@ class Wrappers
         @
           .Then ~> cb.apply it, args
           .Catch oldDone
+          # .Catch -> throw 'tamere'
       else
         cb.apply @, args
 

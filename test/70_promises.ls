@@ -53,3 +53,46 @@ describe 'N Promises', ->
     .Then ->
       done()
     .Catch (err) -> throw new Error err
+
+###
+###
+
+  test 'Create should return error', (done) ->
+    Tests.Field \test \int .Required!
+    Tests.Create!
+      .Then (test) -> throw new Error 'Wtf'
+      .Catch -> done!
+
+  test 'Fetch should return error', (done) ->
+    Tests.Fetch 2
+      .Then (test) -> throw new Error 'Wtf'
+      .Catch -> done!
+
+  test 'List should return error', (done) ->
+    Tests.List()
+      .Then (test) -> throw new Error 'Wtf'
+      .Catch -> done!
+
+  test 'Delete should return error', (done) ->
+    Tests.Delete 2
+      .Then (test) -> throw new Error 'Wtf'
+      .Catch -> done!
+
+###
+###
+
+  test 'Chaining should return promise', (done) ->
+    Tests.Create test: 1
+      .Set (.test++)
+      .Set (.toto = \tata)
+      .Log!
+      .Then -> done!
+      .Catch -> throw new Error it
+
+  test 'Chaining should return error', (done) ->
+    Tests.Fetch 111
+      .Set (.test++)
+      .Set (.toto = \tata)
+      .Log!
+      .Catch -> done!
+      .Then -> throw new Error it
