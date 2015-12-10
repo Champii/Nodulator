@@ -130,10 +130,15 @@ class N
   Render: (func) ->
     @Watch ->
       dom = func!
-      if typeof! dom is \Object
-        dom.then -> console.log \final it
+      if dom.Render?
+        dom = dom.Render!
+      if typeof! dom is \Object and dom.then?
+        dom.then ->
+          console.log \final \async it
+          fs.writeFile 'index.html', it
       else
-        console.log \final dom
+        console.log \final \normal dom
+        fs.writeFile 'index.html', dom
 
 
   _ListEndpoints: (done) ->

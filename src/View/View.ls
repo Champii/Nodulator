@@ -19,7 +19,7 @@ resolveChildren = (children, done) ->
       item
         .Then -> done null, it
         .Catch done
-    else if typeof! item is \Object
+    else if item.then?
       item
         .then -> done null, it
         .catch done
@@ -27,16 +27,15 @@ resolveChildren = (children, done) ->
       done null item
   , done
 
-createElement = (name, attrs, ...children = [], done) ->
+prepareArgs = (name, attrs, children) ->
   throw "Unknown Tag: #{name}" if name not in tags
-
-  async = false
 
   if attrs? and (typeof! attrs isnt \Object or attrs._promise? or attrs.then?)
     children.unshift attrs
     attrs := {}
 
   newChildren = []
+
   for child in children
     if typeof! child is \Array
       newChildren = newChildren.concat child
@@ -45,46 +44,64 @@ createElement = (name, attrs, ...children = [], done) ->
 
   children = newChildren
 
+  {name, attrs, children}
 
-  selfClosing = false
-  if name in selfClosingTags
-    selfClosing = true
+manageSelfClosing = (name, node, children) ->
 
-  if selfClosing and children.length
+  if children.length
     throw "Self closing tags cannot have children: #{name}"
 
+  return node + ' />'
+
+isAsync = (children) ->
   for child in children
-    if child._promise? or typeof! child is \Object
-      async := true
+    if child._promise? or typeof! child is \Function or child.then?
+      return true
 
-  node = "<#name#{makeAttrStr attrs}"
+  false
 
-  if selfClosing
-    node += ' />'
-  else
-    node += '>'
+asyncMode = (name, node, children) ->
+  d = q.defer!
+  resolveChildren children, (err, res) ->
+    return d.reject err if err?
 
-  if selfClosing
-    return node
+    async.eachSeries res, (child, done) ->
+      if typeof! child is \Array
+        for grandchild in child
+          if grandchild.Render?
+            grandchild = grandchild.Render!
+          node += grandchild
+      else
+        if child.Render?
+          child = child.Render!
+        if child.then?
+          return child.then ->
+            node += it
+            done!
 
-  if async is true
-    d = q.defer!
-    resolveChildren children, (err, res) ->
+        node += child
+
+      done!
+    , (err, results) ->
       return d.reject err if err?
-
-      for child in res
-        if typeof! child is \Array
-          for grandchild in child
-            node += grandchild
-        else
-        # console.log 'Resolved' child
-          node += child
-
       node += "</#name>"
 
       d.resolve node
 
-    return d.promise
+  return d.promise
+
+createElement = (name, attrs, ...children) ->
+  {name, attrs, children} = prepareArgs name, attrs, children
+
+  node = "<#name#{makeAttrStr attrs}"
+
+  if name in selfClosingTags
+    return manageSelfClosing name, node, children
+
+  node += '>'
+
+  if isAsync children
+    return asyncMode name, node, children
 
   for child in children
     node += child
@@ -101,16 +118,11 @@ tags |> each (tag) ->
 
 class View
 
+  @_type = 'View'
+
   (@resource) ->
-    # if not @resource.routes?
-    #   @resource.AttachRoute N.Route.Collection
-
-    # N.app.get \/ (req, res) -> res.status(200).send('hello')
-
     @resource.Render = ~> @.__proto__.constructor.Render.call @resource
-
     @resource::Render =  @Render
-
 
 View.DOM = DOM
 
