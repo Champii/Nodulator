@@ -1,0 +1,28 @@
+{
+  "name": "nodulator-view",
+  "version": "0.0.1",
+  "description": "View system for Nodulator",
+  "main": "index.ls",
+  "dependencies": {
+    "async": "^1.5.0",
+    "q": "^1.4.1"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "mocha": "~2.0.1"
+  },
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register test"
+  },
+  "keywords": [
+    "Nodulator",
+    "View"
+  ],
+  "author": "Champii <greine_f@epitech.eu>",
+  "license": "GPLv2",
+  "bugs": {
+    "url": "https://github.com/Champii/Nodulator/issues"
+  }
+}

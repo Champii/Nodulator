@@ -73,7 +73,6 @@ class N
     resource
 
   Route: require \./Route/Route
-  View: require \./View/View
   Wrappers: null
   Config: (config) ->
     if @config?
@@ -126,20 +125,6 @@ class N
     @Init()
 
     done() if done?
-
-  Render: (func) ->
-    @Watch ->
-      dom = func!
-      if dom.Render?
-        dom = dom.Render!
-      if typeof! dom is \Object and dom.then?
-        dom.then ->
-          console.log \final \async it
-          fs.writeFile 'index.html', it
-      else
-        console.log \final \normal dom
-        fs.writeFile 'index.html', dom
-
 
   _ListEndpoints: (done) ->
     endpoints = []
