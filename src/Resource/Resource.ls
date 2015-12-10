@@ -370,6 +370,7 @@ module.exports = (config, routes, name) ->
 
     @AttachRoute = (@_routes) ->
       @Init!
+      @routes = new @_routes(@, @config)
 
     @_AddRelationship = (res, isArray, isDistant, isRequired, key, fieldName, prepare = true) ->
       @Init!

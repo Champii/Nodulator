@@ -73,7 +73,8 @@ class N
     resource
 
   Route: require \./Route/Route
-
+  View: require \./View/View
+  Wrappers: null
   Config: (config) ->
     if @config?
       return
@@ -125,6 +126,15 @@ class N
     @Init()
 
     done() if done?
+
+  Render: (func) ->
+    @Watch ->
+      dom = func!
+      if typeof! dom is \Object
+        dom.then -> console.log \final it
+      else
+        console.log \final dom
+
 
   _ListEndpoints: (done) ->
     endpoints = []

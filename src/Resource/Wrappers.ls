@@ -15,7 +15,7 @@ class Wrappers
   @_FindDone = -> it |> find-index is-type \Function
 
   @_WrapFlipDone = (cb) ->
-    if not N.config.flipDone
+    if not N.config?.flipDone
       return cb
 
     resource = @
@@ -205,3 +205,4 @@ class Wrappers
     watchers := []
 
 module.exports = Wrappers
+N.Wrappers = Wrappers
