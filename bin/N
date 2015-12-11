@@ -89,8 +89,23 @@ generateMain = (modules) ->
 if args.length is 1 and args[0] not in ['init', 'install', 'remove', 'install-dev', 'console', 'c']
   return usage()
 
+#launch project
+if not args[0]?
 
-if not args[0]? or args[0] in ['console', 'c']
+  # Manage modules and dependencies installation and require at startup
+  # Read settings files or take default config
+
+  global.N = require NodulatorRoot
+
+  #test
+  View = require(path.resolve NodulatorRoot, 'src/Modules/Nodulator-View')
+  global.N.Use View
+
+  # global import N.View.DOM
+
+  require path.resolve appRoot
+
+if args[0] in ['console', 'c']
   if not args[1]?
     args[1] := './settings/dev'
   if not args[2]?

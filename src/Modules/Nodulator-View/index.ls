@@ -1,143 +1,83 @@
 require! {
+  underscore: _
   q
   async
+  browserify
+  livescript
+  fs
+  path
+  \browserify-livescript
 }
 
 module.exports = (N) ->
 
-  global import require \prelude-ls
+  assets = []
 
-  makeAttrStr = ->
-    return '' if not it?
-    res = ''
-    for k, v of it
-      res += " #k=\"#v\""
-    res
+  parseRec = (dirs, rec = false) ->
+    for dir in dirs when dir?
 
-  resolveChildren = (children, done) ->
-    async.mapSeries children, (item, done) ->
-      if item._promise?
-        item
-          .Then -> done null, it
-          .Catch done
-      else if item.then?
-        item
-          .then -> done null, it
-          .catch done
-      else
-        done null item
-    , done
+      if dir[dir.length - 1] isnt '/'
+        dir += '/'
 
-  prepareArgs = (name, attrs, children) ->
-    throw "Unknown Tag: #{name}" if name not in tags
+      entries = fs.readdirSync dir
 
-    if attrs? and (typeof! attrs isnt \Object or attrs._promise? or attrs.then?)
-      children.unshift attrs
-      attrs := {}
+      files = _(entries).filter (entry) ~>
+        fs.statSync(dir + entry).isFile() and (entry.match(/\.ls$/g) or entry.match(/\.js$/g))
 
-    newChildren = []
+      if rec
+        folders = _(entries).filter (entry) ~>
+          fs.statSync(dir + entry).isDirectory() and not entry.match(/^\./g)
+        folders = _(folders).map (folder) ~>
+          dir + folder
 
-    for child in children
-      if typeof! child is \Array
-        newChildren = newChildren.concat child
-      else
-        newChildren.push child
+        parseRec folders, true
 
-    children = newChildren
+      files = _(files).map (file) ~>
+        if file.match(/\.ls$/g)
+          dir + file
+        else if file.match(/\.js$/g) or file.match(/\.css$/g)
+          dir + file
 
-    {name, attrs, children}
+      assets := assets.concat files
 
-  manageSelfClosing = (name, node, children) ->
+  parseRec [
+    path.resolve __dirname, 'assets'
+    path.resolve '.'
+    ]
 
-    if children.length
-      throw "Self closing tags cannot have children: #{name}"
+  b = browserify!
 
-    return node + ' />'
+  b.transform browserify-livescript
 
-  isAsync = (children) ->
-    for child in children
-      if child._promise? or typeof! child is \Function or child.then?
-        return true
+  b.add assets
 
-    false
+  N.Route._InitServer!
+  N.app.get \/ (req, res) ->
+    b.bundle (err, assets) ->
+      return res.status 500 .send err if err
 
-  asyncMode = (name, node, children) ->
-    d = q.defer!
-    resolveChildren children, (err, res) ->
-      return d.reject err if err?
+      # assets = '<script>' + assets + '</script>'
+      assets = '<html><head></head><body><script>' + assets + '</script></body></html>'
 
-      async.eachSeries res, (child, done) ->
-        if typeof! child is \Array
-          for grandchild in child
-            if grandchild.Render?
-              grandchild = grandchild.Render!
-            node += grandchild
-        else
-          if child.Render?
-            child = child.Render!
-          if child.then?
-            return child.then ->
-              node += it
-              done!
-
-          node += child
-
-        done!
-      , (err, results) ->
-        return d.reject err if err?
-        node += "</#name>"
-
-        d.resolve node
-
-    return d.promise
-
-  createElement = (name, attrs, ...children) ->
-    {name, attrs, children} = prepareArgs name, attrs, children
-
-    node = "<#name#{makeAttrStr attrs}"
-
-    if name in selfClosingTags
-      return manageSelfClosing name, node, children
-
-    node += '>'
-
-    if isAsync children
-      return asyncMode name, node, children
-
-    for child in children
-      node += child
-
-    node + "</#name>"
-
-  tags = <[a abbr address area article aside audio b base bdo blockquote body br button canvas caption cite code col colgroup datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure footer form head header h1 h2 h3 h4 h5 h6 hr html i iframe img ins input kbd keygen label legend li link map mark menu menuitem meta meter nav object ol optgroup option output p param pre progress q s samp script section select small source span strong style sub summary sup table td th tr textarea time title track u ul var video]>
-  selfClosingTags = <[area base br col command embed hr img input keygen link meta param source track wbr]>
-
-  DOM = {}
-
-  tags |> each (tag) ->
-    DOM[tag] = -> createElement.apply this, [tag].concat Array::slice.call(arguments);
+      res.status 200 .send assets.toString!
 
   class View
 
     @_type = 'View'
 
     (@resource) ->
+      @resource.AttachRoute N.Route.Collection
 
-      @resource.Render = ~> @.__proto__.constructor.Render.call @resource
-      @resource::Render =  @Render
 
-  View.DOM = DOM
+  N.Render = ->
+
+  View.DOM = {}
   N.View = View
-  N.Render = (func) ->
-    @Watch ->
-      dom = func!
-      if dom.Render?
-        dom = dom.Render!
-      if typeof! dom is \Object and dom.then?
-        dom.then ->
-          fs.writeFile 'index.html', it
-      else
-        fs.writeFile 'index.html', dom
-  # module.exports = View
+
+  # files =
+  #   * \index.ls
+  #
+  # files |> map -> livescript.compile fs.readFileSync it
+
 
   {name: 'View'}

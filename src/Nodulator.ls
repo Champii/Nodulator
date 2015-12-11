@@ -3,9 +3,10 @@ require! {
   fs
   path
   hacktiv
-  \prelude-ls : {each, obj-to-pairs}
   \./Helpers/Debug
 }
+
+global import require \prelude-ls
 
 debug-nodulator = new Debug 'N::Core'
 
@@ -18,6 +19,7 @@ class N
     db: type: \SqlMem
     cache: false
     flipDone: false
+  isServer: true
 
   ->
     @Init()
@@ -60,7 +62,6 @@ class N
 
     if _parent?
       class ExtendedResource extends _parent
-        Ntm: -> 0
 
       @resources[name] = resource := ExtendedResource
       @resources[name]._PrepareResource config, routes, name, _parent
@@ -73,7 +74,7 @@ class N
     resource
 
   Route: require \./Route/Route
-  Wrappers: null
+
   Config: (config) ->
     if @config?
       return

@@ -8,8 +8,6 @@ cache = require \./Cache
 
 watchers = []
 
-global import require \prelude-ls
-
 class Wrappers
 
   @_FindDone = -> it |> find-index is-type \Function

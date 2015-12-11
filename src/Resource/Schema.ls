@@ -6,8 +6,6 @@ require! {
   \../../ : N
 }
 
-global import require \prelude-ls
-
 validationError = (field, value, message) ->
   field: field
   value: value

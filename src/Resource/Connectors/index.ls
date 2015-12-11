@@ -1,5 +1,4 @@
 async = require \async
-global import require \prelude-ls
 N = require '../../..'
 
 drivers = do

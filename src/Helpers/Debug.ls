@@ -1,6 +1,4 @@
-require! {debug, \prelude-ls}
-
-global import prelude-ls
+require! debug
 
 debug.depth = 0
 debug.longuest = 0

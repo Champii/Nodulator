@@ -17,8 +17,6 @@ Wrappers = null
 
 debug-res = new Debug 'N::Resource', Debug.colors.blue
 
-global import prelude-ls
-
 N.Validator = Validator
 
 N.inited = {}

@@ -5,7 +5,11 @@
   "main": "index.ls",
   "dependencies": {
     "async": "^1.5.0",
-    "q": "^1.4.1"
+    "browserify": "^12.0.1",
+    "browserify-livescript": "^0.2.3",
+    "q": "^1.4.1",
+    "rest": "^1.3.1",
+    "rest-js": "^1.1.2"
   },
   "directories": {
     "test": "test"
