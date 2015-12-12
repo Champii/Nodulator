@@ -12,12 +12,5 @@ View.Node = Node
 N.View = View
 
 N.Render = (func) ->
-  body = document.getElementsByTagName('body').0
-  root = DOM.root func!
-  dom = root.Resolve!
-  dom
-    .then (.0.Render!)
-    .then ->
-      # console.log it
-      body.innerHTML += it
-    .catch -> console.error it
+
+  DOM.root func! .Make!then console~log .catch console~error

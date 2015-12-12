@@ -8,8 +8,11 @@ tags = <[a abbr address area article aside audio b base bdo blockquote body br b
 selfClosingTags = <[area base br col command embed hr img input keygen link meta param source track wbr]>
 customTags = <[root text]>
 
+events = <[click]>
+
 window.DOM = {}
 
+anchorNb = 0
 class Node
 
   (@name, @attrs = {}, ...@origChildren) ->
@@ -22,27 +25,18 @@ class Node
           @text = @attrs
           @Resolve = -> @text
 
-    if @attrs? and (typeof! @attrs isnt \Object or @attrs._promise? or @attrs.then? or @name is \root or @attrs._type is \Node)
+    if @attrs? and (typeof! @attrs isnt \Object or @attrs._promise? or @attrs.then? or @attrs._type is \Node)
       @origChildren.unshift @attrs
       @attrs = {}
 
+    @attrs.anchor = anchorNb++
+
     @origChildren = @_Flatten @origChildren
-
-  _Flatten: (array) ->
-    newArray = []
-
-    for item in array
-      if typeof! item is \Array
-        newArray = newArray.concat item
-      else
-        newArray.push item
-
-    newArray
 
   # Change every child into a Renderable Node
   Resolve: ->
     d = q.defer!
-    async.mapSeries @origChildren, @~ResolveType, (err, childs) ~>
+    async.mapSeries @origChildren, @~_ResolveType, (err, childs) ~>
       return d.reject err if err?
 
       childs = @_Flatten childs
@@ -58,42 +52,102 @@ class Node
       ,(err, childs) ~>
         return d.reject err if err?
 
-        d.resolve @children
+        d.resolve @
 
     return d.promise
 
-  MakeAttrStr: ->
+  Render: ->
+    @node = "<#{@name}#{@_MakeAttrStr!}"
+
+    if @name in selfClosingTags
+      return @_ManageSelfClosing!
+
+    @node += '>'
+
+    @_RenderChildren @node
+
+
+  SetEvents: ->
+    if @name isnt \root and any (in events), keys @attrs
+      node = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
+
+      node.onclick = @attrs.click
+
+    if @children
+      @children |> map (.SetEvents!)
+
+  Make: ->
+    d = q.defer!
+    if @name isnt \root
+      d.reject 'You can Make() only on a root Node'
+      return d.promise
+
+    body = document.getElementsByTagName('body').0
+    dom = @Resolve!
+    dom
+      .then ->
+        html = it.Render!
+        body.innerHTML += html
+        it.SetEvents!
+        d.resolve html
+      .catch -> d.reject it
+
+    return d.promise
+
+
+  _RenderChildren: ->
+    if @name is \text
+      return @node = @text
+    if @name is \root
+      return @node = @children |> map (.Render!) |> fold (+), ''
+
+    @node += @children |> map (.Render!) |> fold (+), ''
+    @node += "</#{@name}>"
+
+    @node
+
+  _Flatten: (array) ->
+    newArray = []
+
+    for item in array
+      if typeof! item is \Array
+        newArray = newArray.concat item
+      else
+        newArray.push item
+
+    newArray
+
+
+  _MakeAttrStr: ->
     return '' if not @attrs?
     res = ''
     for k, v of @attrs when k isnt \click
       res += " #k=\"#v\""
     res
 
-  ManageSelfClosing: ->
-    d = q.defer!
+  _ManageSelfClosing: ->
     if @origChildren.length
-      return d.reject "Self closing tags cannot have children: #{@name}"
+      throw "Self closing tags cannot have children: #{@name}"
 
-    d.resolve @node += ' />'
-    return d.promise
+    @node += ' />'
 
-  ResolveType: (child, done) ->
+  _ResolveType: (child, done) ->
     switch
       | typeof! child is \String      => @_String child, done
+      | typeof! child is \Array       => @_Array child, done
       | child.then?                   => @_Promise child, done
       | child.Init?                   => @_Resource child, done
       | child._promise?               => @_ResourcePromise child, done
       | child.Then?                   => @_ResourceInst child, done
       | child._type is \Node          => @_Node child, done
       | child.Render?                 => @_View child, done
-      | typeof! child is \Array       => @_Array child, done
       | _                             => @_String '' + child, done
 
   _String:    (text, done)      -> done null new Node \text text
-  _View:      (view, done)      -> @ResolveType view.Render!, done
+  _View:      (view, done)      -> @_ResolveType view.Render!, done
   _Node:      (node, done)      -> done null node
-  _Array:     (array, done)     -> async.mapSeries array, @~ResolveType, done
-  _Resource:  (resource, done)  -> @ResolveType resource.Render!, done
+  _Array:     (array, done)     -> async.mapSeries array, @~_ResolveType, done
+  _Resource:  (resource, done)  -> @_ResolveType resource.Render!, done
 
   _Promise: (promise, done) ->
     promise
@@ -110,40 +164,14 @@ class Node
         if it.Render?
           return done null it.Render!
 
-        @ResolveType it, done
+        @_ResolveType it, done
       .Catch -> done it
 
-  _ResolveChild: (child, done) ->
+  _RenderChild: (child, done) ->
     promise = child.Render!
 
     promise.then -> done null it
     promise.catch done
-
-  Process: ->
-    d = q.defer!
-    if @name is \text
-      d.resolve @text
-      return d.promise
-
-    async.mapSeries @children, @_ResolveChild, (err, childs) ~>
-      return d.reject err if err?
-
-      @node += childs |> fold (+), ''
-      @node += "</#{@name}>"
-
-      d.resolve @node
-
-    return d.promise
-
-  Render: ->
-    @node = "<#{@name}#{@MakeAttrStr!}"
-
-    if @name in selfClosingTags
-      return @ManageSelfClosing!
-
-    @node += '>'
-
-    return @Process @node
 
 tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)

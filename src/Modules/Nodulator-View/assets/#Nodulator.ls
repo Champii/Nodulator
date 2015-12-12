@@ -15,12 +15,10 @@ class Nodulator
     return if config.abstract
     name = name + \s
 
-    N[capitalize name] = @resources[name] = _Resource name, config
+    resource = _Resource name, config
+    new routes resource
 
-    new routes @resources[name]
-
-    tmp = (...args) ~> @resources[name].Render.apply @resources[name], args
-    tmp <<<< @resources[name]
+    N[capitalize name] = @resources[name] = resource
 
 nodulator = new Nodulator
 
