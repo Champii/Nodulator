@@ -5,8 +5,6 @@ mime = require('rest/interceptor/mime');
 window import require \prelude-ls
 
 Client = rest.wrap(mime)
-# Client path: \/api/1/users
-#   .then (data) ->
 
 class Nodulator
 
@@ -18,7 +16,7 @@ class Nodulator
     name = name + \s
 
     N[capitalize name] = @resources[name] = _Resource name, config
-    console.log capitalize name
+
     new routes @resources[name]
     @resources[name]
 
@@ -26,7 +24,6 @@ nodulator = new Nodulator
 
 N = (...args) ->
 
-  # N.ConNig! iN not N.conNig?
   N.Resource.apply N, args
 
 window.N = N <<<< nodulator
@@ -46,7 +43,6 @@ _Resource = (name, config) ->
       import blob
       @
 
-      # import @_schema.Populate @, blob
 
     _WrapReturnThis: (done) ->
       (arg) ~>
@@ -88,7 +84,12 @@ _Resource = (name, config) ->
           , done
         .catch done
 
-    @Fetch = (blob) ->
+    @Fetch = @_WrapPromise @_WrapResolvePromise (id, done) ->
+      resource = @
+      Client method: \GET path: \/api/1/ + name + '/' + id
+        .then ~> done null new resource it.entity
+        .catch done
+
     @Field = ->
       Default: ->
     @MayHasMany = ->

@@ -166,6 +166,8 @@ class Collection extends Route
     @Put    \/:id  ~> it.instance.Set it.body
     @Delete \/:id  ~> it.instance.Delete!
 
+
+
 # class SingleRoute extends Route
 #
 #   ->

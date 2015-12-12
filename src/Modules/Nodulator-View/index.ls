@@ -40,10 +40,9 @@ module.exports = (N) ->
 
       assets := assets.concat files
 
-  parseRec [
-    path.resolve __dirname, 'assets'
-    path.resolve '.'
-    ]
+  parseRec [path.resolve __dirname, 'assets']
+  assets = sort assets
+  parseRec [path.resolve '.']
 
   b = browserify!
 
