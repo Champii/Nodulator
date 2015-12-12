@@ -18,7 +18,9 @@ class Nodulator
     N[capitalize name] = @resources[name] = _Resource name, config
 
     new routes @resources[name]
-    @resources[name]
+
+    tmp = (...args) ~> @resources[name].Render.apply @resources[name], args
+    tmp <<<< @resources[name]
 
 nodulator = new Nodulator
 
@@ -69,24 +71,38 @@ _Resource = (name, config) ->
     Delete: @_WrapPromise @_WrapResolvePromise (done) ->
 
 
-    @Create = @_WrapPromise @_WrapResolvePromise (blob, done) ->
+    @Create = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
       resource = @
-      Client method: \POST path: \/api/1/ + name, headers: {'Content-Type': 'application/json'}, entity: blob
+      if typeof! blob is \Function
+        done = blob
+        blob = {}
+      Client method: \POST path: \/api/1/ + name + '/create', headers: {'Content-Type': 'application/json'}, entity: blob
         .then ~> done null new resource it.entity
         .catch done
 
-    @List = @_WrapPromise @_WrapResolvePromise (done) ->
+    @List = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
       resource = @
-      Client method: \GET path: \/api/1/ + name
+      if typeof! blob is \Function
+        done = blob
+        blob = {}
+
+      Client method: \POST path: \/api/1/ + name + '/list', headers: {'Content-Type': 'application/json'}, entity: blob
         .then ~>
           async.mapSeries it.entity, (item, done) ->
             done null new resource item
           , done
         .catch done
 
-    @Fetch = @_WrapPromise @_WrapResolvePromise (id, done) ->
+    @Fetch = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
       resource = @
-      Client method: \GET path: \/api/1/ + name + '/' + id
+      if typeof! blob is \Function
+        done = blob
+        blob = {}
+
+      if typeof! blob is \Number
+        blob = id: blob
+
+      Client method: \POST path: \/api/1/ + name + '/fetch', headers: {'Content-Type': 'application/json'}, entity: blob
         .then ~> done null new resource it.entity
         .catch done
 

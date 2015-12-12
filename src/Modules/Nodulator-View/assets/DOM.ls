@@ -77,7 +77,7 @@ class Node
     d.resolve @node += ' />'
     return d.promise
 
-  ResolveType: (child, done)->
+  ResolveType: (child, done) ->
     switch
       | typeof! child is \String      => @_String child, done
       | child.then?                   => @_Promise child, done

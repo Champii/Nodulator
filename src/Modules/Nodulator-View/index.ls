@@ -65,7 +65,7 @@ module.exports = (N) ->
     @_type = 'View'
 
     (@resource) ->
-      @resource.AttachRoute N.Route.Collection
+      @resource.AttachRoute N.Route.RPC
 
 
   N.Render = ->

@@ -16,8 +16,8 @@ N.Render = (func) ->
   root = DOM.root func!
   dom = root.Resolve!
   dom
+    .then (.0.Render!)
     .then ->
-      rendered = it.0.Render!
-    .then ->
+      # console.log it
       body.innerHTML += it
-    .catch console~error
+    .catch -> console.error it

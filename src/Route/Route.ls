@@ -152,7 +152,6 @@ _set = (verb) ~>
     args.unshift verb[0].toLowerCase() + verb[1 til verb.length]*''
     @_Add.apply @, args
 
-
 each _set, <[ All Post Get Put Delete ]>
 
 class Collection extends Route
@@ -166,48 +165,16 @@ class Collection extends Route
     @Put    \/:id  ~> it.instance.Set it.body
     @Delete \/:id  ~> it.instance.Delete!
 
+class RPC extends Route
 
+  Config: ->
+    super()
+    @Post \/list    ~> @resource.List   it.body
+    @Post \/create  ~> @resource.Create it.body
+    @Post \/fetch   ~> @resource.Fetch  it.body
+    @Post \/set/:id ~> @resource.Fetch  it.params.id .Set it.body
+    @Post \/delete  ~> @resource.Delete it.params.id
 
-# class SingleRoute extends Route
-#
-#   ->
-#
-#     @resource.Init()
-#     @rname = @resource.lname
-#
-#     @name = @rname
-#
-#     @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
-#
-#     if @rname[*-1] is 'y'
-#       @name = @rname[ til @ name.length]*'' + 'ies'
-#
-#     N := require '../..' if not N?
-#     if not N.app?
-#       Route._InitServer!
-#     @app = N.app
-#     # @resource.Init()
-#
-#     #Resource creation if non-existant
-#     @resource.Fetch 1, (err, result) ~>
-#       if err? and @resource.config?.schema? and
-#          _(@resource.config.schema).filter((item) ->
-#            not item.default? and not item.optional?).length
-#         throw new Error """
-#         SingleRoute used with schema Resource and non existant row at id = 1.
-#         Please add it manualy to your DB system before continuing.'
-#         """
-#       if err?
-#         @resource.Create {}, (err, res) ->
-#
-#     @All ~> it.SetInstance @resource.Fetch 1
-#     @Get ~> it.instance
-#     @Put ~> it.instance.ExtendSafe it.body; it.instance.Save!
-#
-#     @Config()
-
+Route.RPC = RPC
 Route.Collection = Collection
-# Route.SingleRoute = SingleRoute
 module.exports = Route
-
-# Route.Collection = require \./Collection
