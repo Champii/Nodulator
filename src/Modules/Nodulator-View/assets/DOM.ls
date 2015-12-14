@@ -13,6 +13,7 @@ events = <[click]>
 window.DOM = {}
 
 anchorNb = 0
+
 class Node
 
   (@name, @attrs = {}, ...@origChildren) ->
@@ -32,16 +33,20 @@ class Node
     @attrs.anchor = anchorNb++
 
     @origChildren = @_Flatten @origChildren
+    @currentChildren = @origChildren
+
 
   # Change every child into a Renderable Node
   Resolve: ->
     d = q.defer!
-    async.mapSeries @origChildren, @~_ResolveType, (err, childs) ~>
+    @currentChildren = @origChildren
+    async.mapSeries @currentChildren, @~_ResolveType, (err, childs) ~>
       return d.reject err if err?
 
       childs = @_Flatten childs
+
       @children = childs
-      async.mapSeries childs, (item, done) ->
+      async.mapSeries childs, (item, done) ~>
         promise = item.Resolve!
 
         if promise.then?
@@ -49,9 +54,11 @@ class Node
           promise.catch done
         else
           done null promise
+
       ,(err, childs) ~>
         return d.reject err if err?
 
+        childs = childs |> map ~> it.parent = @
         d.resolve @
 
     return d.promise
@@ -66,7 +73,6 @@ class Node
 
     @_RenderChildren @node
 
-
   SetEvents: ->
     if @name isnt \root and any (in events), keys @attrs
       node = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
@@ -78,22 +84,23 @@ class Node
 
   Make: ->
     d = q.defer!
-    if @name isnt \root
-      d.reject 'You can Make() only on a root Node'
-      return d.promise
+    anchor = ''
+    if @name is \root
+      anchor = document.querySelector("body")
+    else
+      anchor = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
-    body = document.getElementsByTagName('body').0
     dom = @Resolve!
     dom
       .then ->
         html = it.Render!
-        body.innerHTML += html
+        anchor.outerHTML = html
         it.SetEvents!
         d.resolve html
+
       .catch -> d.reject it
 
     return d.promise
-
 
   _RenderChildren: ->
     if @name is \text
@@ -117,7 +124,6 @@ class Node
 
     newArray
 
-
   _MakeAttrStr: ->
     return '' if not @attrs?
     res = ''
@@ -136,7 +142,6 @@ class Node
       | typeof! child is \String      => @_String child, done
       | typeof! child is \Array       => @_Array child, done
       | child.then?                   => @_Promise child, done
-      | child.Init?                   => @_Resource child, done
       | child._promise?               => @_ResourcePromise child, done
       | child.Then?                   => @_ResourceInst child, done
       | child._type is \Node          => @_Node child, done
@@ -144,10 +149,14 @@ class Node
       | _                             => @_String '' + child, done
 
   _String:    (text, done)      -> done null new Node \text text
-  _View:      (view, done)      -> @_ResolveType view.Render!, done
   _Node:      (node, done)      -> done null node
   _Array:     (array, done)     -> async.mapSeries array, @~_ResolveType, done
-  _Resource:  (resource, done)  -> @_ResolveType resource.Render!, done
+
+  _View:      (view, done)      ->
+    view.Render (err, res)~>
+      return done err if err?
+
+      @_ResolveType res, done
 
   _Promise: (promise, done) ->
     promise
@@ -156,22 +165,17 @@ class Node
 
   _ResourceInst: (resourceInst, done) ->
     throw "No Render() on #{resourceInst._type}. Attach view first" if not resourceInst.Render?
-    done null resourceInst.Render!
+    resourceInst.Render done
 
   _ResourcePromise: (resourcePromise, done) ->
     resourcePromise
       .Then  ~>
-        if it.Render?
-          return done null it.Render!
-
         @_ResolveType it, done
+
       .Catch -> done it
 
-  _RenderChild: (child, done) ->
-    promise = child.Render!
-
-    promise.then -> done null it
-    promise.catch done
+  GetElement: ->
+    document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
 tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)

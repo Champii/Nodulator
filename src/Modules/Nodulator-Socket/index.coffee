@@ -16,19 +16,19 @@ module.exports = (N) ->
 
     constructor: ->
 
-      # @_OverrideResource()
+      @_OverrideResource()
 
       N.Config()
       N.Route._InitServer()
       @_InitSockets()
 
-    # _OverrideResource: ->
-    #   oldResource = N.Resource
-    #   N.Resource = (name, routes, config, _parent) ->
-    #     if not @resources[name.toLowerCase()]?
-    #       @bus.emit 'new_resource', name
-    #
-    #     oldResource.call N, name, routes, config, _parent
+    _OverrideResource: ->
+      oldResource = N.Resource
+      N.Resource = (name, routes, config, _parent) ->
+        if not @resources[name.toLowerCase()]?
+          @bus.emit 'new_resource', name
+
+        oldResource.call N, name, routes, config, _parent
 
     _InitSockets: ->
       @io = socket.listen N.server
@@ -53,7 +53,7 @@ module.exports = (N) ->
 
       @io.sockets.on 'connection', (socket) =>
 
-        # Socket.JoinRooms socket
+        Socket.JoinRooms socket
 
         socket.once 'disconnect', () =>
           @OnDisconnect socket if @OnDisconnect?
@@ -68,34 +68,36 @@ module.exports = (N) ->
         user.id is userId
       sockets?[0]
 
-
     @JoinRoom: (socket, instance) ->
-      console.log instance._type
+      # console.log 'join', instance._type
       socket.join instance._type + '-' + instance.id
 
     JoinRoom: Socket.JoinRoom
 
-    # @JoinRooms: (socket) ->
-    #   for room in Socket.rooms
-    #     socket.join room
+    @JoinRooms: (socket) ->
+      for room in Socket.rooms
+        socket.join room
     #
     @EmitRoom: (instance, args...) ->
-      console.log instance._type
-      room = io.sockets.in(instance._type)
+      # console.log 'emit', instance
+      room = io.sockets.in(instance)
+      # console.log 'room', room, args
       room.emit.apply room, args
     #
-    # @NewRoom: (name) ->
-    #   @rooms.push name
-    #   for prefix in prefixes
-    #     do (prefix) ->
-    #       N.bus.on prefix + name, (item) =>
-    #         Socket.EmitRoom name, prefix + name, item
+    @NewRoom: (name) ->
+      @rooms.push name
+      for prefix in prefixes
+        do (prefix) ->
+          N.bus.on prefix + name, (item) =>
+            Socket.EmitRoom name, prefix + name, item
 
     @Init: ->
       res = @
       N.socket = new res
 
-  N.bus.on 'new_resource', (name) -> Socket.NewRoom name
+  N.bus.on 'new_resource', (name) ->
+    # console.log 'New_resource', name
+    Socket.NewRoom name
 
   N.Socket = ->
     Socket

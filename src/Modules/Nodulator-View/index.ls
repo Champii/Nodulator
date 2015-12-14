@@ -7,6 +7,7 @@ require! {
   fs
   path
   \browserify-livescript
+  \coffeeify
 }
 
 module.exports = (N) ->
@@ -47,21 +48,32 @@ module.exports = (N) ->
   b = browserify!
 
   b.transform browserify-livescript
+  b.transform coffeeify
 
   b.add assets
+
+  class Socket extends N.Socket!
+
+    OnConnect: (socket) ->
+
+  Socket.Init!
+
+
+  socketio = '<script src="/socket.io/socket.io.js"></script>'
 
   N.Route._InitServer!
   N.app.get \/ (req, res) ->
     b.bundle (err, assets) ->
-      return res.status 500 .send err if err
+      # console.log 'Err?', err
+      return res.status 500 .send err if err?
 
       # assets = '<script>' + assets + '</script>'
-      assets = '<html><head></head><body><script>' + assets + '</script></body></html>'
+      assets = "<html><head></head><body>#{socketio}<script>#{assets}</script></body></html>"
 
       res.status 200 .send assets.toString!
 
-  class View
 
+  View = ->
     @_type = 'View'
 
     (@resource) ->

@@ -2,6 +2,10 @@ rest = require 'rest'
 async = require 'async'
 mime = require('rest/interceptor/mime');
 
+require! hacktiv
+
+window.socket = io!
+
 window import require \prelude-ls
 
 Client = rest.wrap(mime)
@@ -16,9 +20,13 @@ class Nodulator
     name = name + \s
 
     resource = _Resource name, config
-    new routes resource
+    # new routes resource
+    routes.AttachResource resource
 
     N[capitalize name] = @resources[name] = resource
+
+  Watch:    hacktiv
+  DontWatch: hacktiv.DontWatch
 
 nodulator = new Nodulator
 
@@ -29,9 +37,18 @@ N = (...args) ->
 window.N = N <<<< nodulator
 
 _Resource = (name, config) ->
+
+  # socket.on \new_ + name[to -2]*'', (item) -> console.log 'New', name, item
+
   class Resource extends N.Wrappers
 
+    @_type = name
+
+
     (blob) ->
+
+      @_type = name
+
       if blob.promise?
         @_promise = blob.promise
         return @
@@ -42,7 +59,6 @@ _Resource = (name, config) ->
 
       import blob
       @
-
 
     _WrapReturnThis: (done) ->
       (arg) ~>
@@ -65,31 +81,28 @@ _Resource = (name, config) ->
     Save: @_WrapPromise @_WrapResolvePromise (done) ->
       # serie = @Serialize()
 
-
     Delete: @_WrapPromise @_WrapResolvePromise (done) ->
-
 
     @Create = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
       resource = @
       if typeof! blob is \Function
         done = blob
         blob = {}
-      Client method: \POST path: \/api/1/ + name + '/create', headers: {'Content-Type': 'application/json'}, entity: blob
-        .then ~> done null new resource it.entity
-        .catch done
 
-    @List = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
+      db.Insert blob, done
+
+    @List = @_WrapPromise @_WrapResolvePromise @_WrapWatchArgs (blob = {}, done) ->
       resource = @
       if typeof! blob is \Function
         done = blob
         blob = {}
 
-      Client method: \POST path: \/api/1/ + name + '/list', headers: {'Content-Type': 'application/json'}, entity: blob
-        .then ~>
-          async.mapSeries it.entity, (item, done) ->
-            done null new resource item
-          , done
-        .catch done
+      db.Select blob, {}, (err, data) ->
+        return done err if err?
+
+        async.mapSeries data, (item, done) ->
+          done null new resource item
+        , done
 
     @Fetch = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
       resource = @
@@ -100,11 +113,19 @@ _Resource = (name, config) ->
       if typeof! blob is \Number
         blob = id: blob
 
-      Client method: \POST path: \/api/1/ + name + '/fetch', headers: {'Content-Type': 'application/json'}, entity: blob
-        .then ~> done null new resource it.entity
-        .catch done
+      db.Select blob, {}, (err, data) ->
+        return done err if err?
+
+        done null new resource data
 
     @Field = ->
       Default: ->
     @MayHasMany = ->
     @Init = ->
+
+    @Watch = ->
+    Watch: ->
+
+  db = new N.LocalDB Resource
+
+  Resource

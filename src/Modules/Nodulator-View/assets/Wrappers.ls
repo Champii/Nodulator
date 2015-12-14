@@ -2,6 +2,7 @@ Q = require 'q'
 async = require 'async'
 
 polyparams = require \polyparams
+ChangeWatcher = require './ChangeWatcher.ls'
 
 watchers = []
 
@@ -70,5 +71,14 @@ class Wrappers
 
         cb.apply @, results
       @
+
+  @_WrapWatchArgs = (cb) ->
+    (...args) ->
+
+      if not N.Watch.active
+        return cb.apply @, args
+
+      if not @watcher = ChangeWatcher.Watch cb, args, @
+        return cb.apply @, args
 
 N.Wrappers = Wrappers

@@ -98,7 +98,9 @@ if not args[0]?
   global.N = require NodulatorRoot
 
   #test
+  Socket = require(path.resolve NodulatorRoot, 'src/Modules/Nodulator-Socket')
   View = require(path.resolve NodulatorRoot, 'src/Modules/Nodulator-View')
+  global.N.Use Socket
   global.N.Use View
 
   # global import N.View.DOM
