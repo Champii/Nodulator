@@ -78,7 +78,11 @@ class Wrappers
       if not N.Watch.active
         return cb.apply @, args
 
-      if not @watcher = ChangeWatcher.Watch cb, args, @
-        return cb.apply @, args
+      watcher = ChangeWatcher.Watch cb, args, @
+      if not watcher
+        cb.apply @, args
+      else
+        @watchers.push watcher
+        watcher
 
 N.Wrappers = Wrappers

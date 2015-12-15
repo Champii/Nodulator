@@ -1,39 +1,58 @@
 
-View = (resource, fn) ->
+View = (context, fn) ->
   @_type = \View
-  if typeof! resource is \Function and not fn?
-    fn = resource
-    resource = null
+  if typeof! context is \Function and not fn?
+    fn := context
+    context := null
 
-  RealRender = (...args, done) ->
+  RealRender = (arg, done) ->
+    viewRoot = DOM.div!
     first = true
-    anchor = null
+
+    if not done?
+      done := arg
+      arg := undefined
+
+    # console.log arg, done
+
+    if not @Set?
+      @Set = ~>
+        @ <<< it
+        RealRender.call @, (_, render) ~>
+          render.attrs.anchor = viewRoot.attrs.anchor
+          render.Make!catch console~error
+
     N.Watch ~>
-      render = fn.apply @, args
+      viewRoot.Empty!
+      render = viewRoot.AddChild fn.call @, arg
       if first
         first := false
-        anchor := render.attrs.anchor
         return done null, render
 
-      render.attrs.anchor = anchor
-      render.Make!
-        # .then -> console.log 'RENDER', it
-        # .catch console~error
+      render.attrs.anchor = viewRoot.attrs.anchor
+      render.Make!catch console~error
     @
 
-  ret = (...args) ~>
-    _type: \View
-    Render: (done) ~>
-      args.push done
-      RealRender.apply resource || @, args
+
+
+  ret = (ctx) ~>
+    (->) <<< do
+      _type: \View
+      Render: (done) ~>
+        # context := ctx
+        args = [done]
+        args.unshift ctx if ctx?
+        RealRender.apply context, args
 
   ret.Render = (done) ->
-    RealRender.apply resource || @, [done]
+    # console.log done
+    RealRender.call context, done
 
   ret.AttachResource = (res) ->
-    resource := res
-    resource::Render = ->
-    resource::Render = RealRender
+    # context := res
+
+    # context::Render = RealRender
+    res::Render = RealRender
 
   ret
 
@@ -44,4 +63,6 @@ N.View = View
 
 N.Render = (func) ->
 
-  DOM.root func! .Make! #then console~log .catch console~error
+  N.Watch ->
+    DOM.root func! .Make!.catch console~error
+ #then console~log

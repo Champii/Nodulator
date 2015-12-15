@@ -20,8 +20,8 @@ class RESTClient
     Client method: \POST path: \/api/1/ + @name + '/list', headers: {'Content-Type': 'application/json'}, entity: blob
       .then ~> done null it.entity
       .catch done
-  Delete: (blob, done) ->
-    Client method: \POST path: \/api/1/ + @name + '/delete', headers: {'Content-Type': 'application/json'}, entity: blob
+  Delete: (id, blob, done) ->
+    Client method: \POST path: \/api/1/ + @name + '/delete/' + id, headers: {'Content-Type': 'application/json'}, entity: blob
       .then ~> done null it.entity
       .catch done
 

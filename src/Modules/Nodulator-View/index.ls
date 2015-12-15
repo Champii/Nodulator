@@ -62,15 +62,24 @@ module.exports = (N) ->
   socketio = '<script src="/socket.io/socket.io.js"></script>'
 
   N.Route._InitServer!
-  N.app.get \/ (req, res) ->
+
+  if N.config?.minified
     b.bundle (err, assets) ->
-      # console.log 'Err?', err
-      return res.status 500 .send err if err?
+      return console.log 'Err?', err if err?
 
-      # assets = '<script>' + assets + '</script>'
-      assets = "<html><head></head><body>#{socketio}<script>#{assets}</script></body></html>"
+      assets = "<body>#{socketio}<script>#{assets.toString!}</script>"
+      N.app.get \/ (req, res) ->
+        res.status 200 .send assets
+  else
+    N.app.get \/ (req, res) ->
+      b.bundle (err, assets) ->
+        # console.log 'Err?', err
+        return res.status 500 .send err if err?
 
-      res.status 200 .send assets.toString!
+        # assets = '<script>' + assets + '</script>'
+        assets = "<html><head></head><body>#{socketio}<script>#{assets.toString!}</script></body></html>"
+
+        res.status 200 .send assets
 
 
   View = ->

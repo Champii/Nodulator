@@ -16,14 +16,13 @@ class Nodulator
   resources: {}
 
   Resource: (name, routes, config, _parent) ->
-    return if config.abstract
-    name = name + \s
+    return if config?.abstract
+    lname = name + \s
 
-    resource = _Resource name, config
-    # new routes resource
-    routes.AttachResource resource
+    resource = _Resource lname, config
+    routes?.AttachResource resource
 
-    N[capitalize name] = @resources[name] = resource
+    N[capitalize name] = @resources[lname] = resource
 
   Watch:    hacktiv
   DontWatch: hacktiv.DontWatch
@@ -38,9 +37,9 @@ window.N = N <<<< nodulator
 
 _Resource = (name, config) ->
 
-  # socket.on \new_ + name[to -2]*'', (item) -> console.log 'New', name, item
-
   class Resource extends N.Wrappers
+
+    @watchers = []
 
     @_type = name
 
@@ -55,7 +54,10 @@ _Resource = (name, config) ->
 
       for k, v of blob
         if typeof! v is \Array
-          blob[k] = map (-> new N[k] it), v
+          blob[k] = map (-> new N.resources[k.toLowerCase()] it), v
+
+      if not (db.collection |> find ~> it.id is blob.id)
+        db.collection.push blob
 
       import blob
       @
@@ -82,8 +84,9 @@ _Resource = (name, config) ->
       # serie = @Serialize()
 
     Delete: @_WrapPromise @_WrapResolvePromise (done) ->
+      db.Delete {id: @id}, done
 
-    @Create = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
+    @Create = @_WrapPromise @_WrapResolvePromise @_WrapWatchArgs (blob = {}, done) ->
       resource = @
       if typeof! blob is \Function
         done = blob
@@ -104,7 +107,7 @@ _Resource = (name, config) ->
           done null new resource item
         , done
 
-    @Fetch = @_WrapPromise @_WrapResolvePromise (blob = {}, done) ->
+    @Fetch = @_WrapPromise @_WrapResolvePromise @_WrapWatchArgs (blob = {}, done) ->
       resource = @
       if typeof! blob is \Function
         done = blob
@@ -113,19 +116,28 @@ _Resource = (name, config) ->
       if typeof! blob is \Number
         blob = id: blob
 
-      db.Select blob, {}, (err, data) ->
+      db.Select blob, {limit: 1}, (err, data) ->
         return done err if err?
 
         done null new resource data
 
+    Set: @_WrapPromise @_WrapResolvePromise (blob, done) ->
+      @ <<< blob
+      db.Update blob, {id: @id}, (err, data) ->
+        return done err if err?
+
+        done err, data
+
     @Field = ->
       Default: ->
     @MayHasMany = ->
+    @HasMany = ->
     @Init = ->
 
     @Watch = ->
     Watch: ->
+    @_Changed = -> @watchers |> each (.dep._Changed!)
 
-  db = new N.LocalDB Resource
+  Resource.db = db = new N.LocalDB Resource
 
   Resource

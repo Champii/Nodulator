@@ -7,24 +7,30 @@ ChangeWatcher = require './ChangeWatcher.ls'
 class LocalDB
 
   name: ''
-  collection: []
-  insertSync: []
-  deleteSync: []
-  fetched: []
+  # insertSync: []
+  # deleteSync: []
 
   (@resource) ->
+    @fetched = []
+    @collection = []
     @client = new N.Client @resource._type
-    socket.on \new_ + @resource._type[to -2]*'', ~>
+    name = @resource._type[to -2]*''
+    socket.on \new_ + name, ~>
+      console.log 'New', it
       @collection.push it
-      @resource.watcher?.dep._Changed!
-    socket.on \update_ + @resource._type[to -2]*'', ~>
-      return if it.id not in @collection |> map (.id)
-      @Update it, id: it.id
-      @resource.watcher?.dep._Changed!
-    socket.on \delete_ + @resource._type[to -2]*'', ~>
-      return if it.id not in @collection |> map (.id)
-      @Delete id: it.id
-      @resource.watcher?.dep._Changed!
+      @resource._Changed!
+    socket.on \update_ + name, (item) ~>
+      console.log 'Update', item
+      # return if item.id not in (@collection |> map (.id))
+      idx = @collection |> find-index -> it.id is item.id
+      # console.log idx, @collection.idx
+      @collection[idx] = item
+      console.log 'COLLECTION' @collection
+      @resource._Changed!
+    socket.on \delete_ + name, (item) ~>
+      # return if it.id not in @collection |> map (.id)
+      @collection = _(@collection).reject (record) -> record.id is item.id
+      @resource._Changed!
 
   Select: (where, options, done) ->
     res = map (-> {} import it), _(@collection).where(where)
@@ -33,60 +39,63 @@ class LocalDB
       offset = options.offset || 0
       res = res[offset til options.limit]
 
-    if option?.limit is 1
-      if not (@fetched |> find -> it === where)
-        @client.Fetch where, (err, data) ~>
-          return console.error err if err?
+    if options?.limit is 1
+      if not (@collection |> find -> it.id === options.id)
+        return @client.Fetch where, (err, data) ~>
+          return done err if err?
 
-          if data !== res
-            @fetched.push where
-            @collection.push res
+          @collection.push data
+          @resource._Changed!
+          done null data
+
     else
+      # console.log 'BEFORE' not (@fetched |> find -> console.log it; it === where)
       if not (@fetched |> find -> it === where)
+        @fetched.push where
         return @client.List where, (err, data) ~>
-          return console.error err if err?
+          return done err if err?
 
           if data !== res
-            @fetched.push where
-            @collection = @collection.concat data
-            done null, data
+            data
+              |> each (item) ~>
+                | item.id in map (.id), @collection => @collection[@collection |> find-index -> it.id is item.id] <<< item
+                | _                                 => @collection.push item
+
+            @resource._Changed!
+          done null data
 
     done null, res
 
   Insert: (fields, done) ->
-    @insertSync.push {} import fields
     @client.Create fields, (err, data) ~>
-      elem = _ @insertSync .findWhere fields
-      @insertSync = _(@insertSync).reject (item) -> item !== elem
-      if err?
-        return
+      return done err if err?
 
       @collection.push elem
-
-    done null, fields
+      # @resource._Changed!
+      done null, data
 
   Update: (fields, where, done) ->
-    save = _(@collection).findWhere(where)
-    updated = _(@collection).findWhere(where) import fields
-
     @client.Set where.id, fields, (err, data) ~>
-      if err?
-        idx = @collection |> find-index -> it.id is where.id
-        @collection.idx = save
-        # ChangeWatcher.Invalidate!
-        return
+      return done err if err?
+      idx = @collection |> find-index -> it.id is where.id
+      @collection[idx] = data
+      # @resource._Changed!
 
-    done null updated
+    done null fields
+      # done null data
 
   Delete: (where, done) ->
-    idx = @collection |> find-index -> it.id is where.id
-    save = @collection[idx]
+    # idx = @collection |> find-index -> it.id is where.id
+    # save = @collection[idx]
     @collection = _(@collection).reject (item) -> item.id is where.id
 
-    @client.Delete where, (err, data) ~>
-      if err?
-        @collection.splice idx, 0, save
+    @client.Delete where.id, where, (err, data) ~>
+      return done err if err?
+      # if err?
+      #   @collection.splice idx, 0, save
         # ChangeWatcher.Invalidate!
+      @resource._Changed!
+
 
     done null, 1
 

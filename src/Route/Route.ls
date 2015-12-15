@@ -169,11 +169,11 @@ class RPC extends Route
 
   Config: ->
     super()
-    @Post \/list    ~> @resource.List   it.body
-    @Post \/create  ~> @resource.Create it.body
-    @Post \/fetch   ~> @resource.Fetch  it.body
-    @Post \/set/:id ~> @resource.Fetch  it.params.id .Set it.body
-    @Post \/delete  ~> @resource.Delete it.params.id
+    @Post \/list        ~> @resource.List   it.body
+    @Post \/create      ~> @resource.Create it.body
+    @Post \/fetch       ~> @resource.Fetch  it.body
+    @Post \/set/:id     ~> @resource.Fetch  +it.params.id .Set it.body
+    @Post \/delete/:id  ~> @resource.Delete +it.params.id
 
 Route.RPC = RPC
 Route.Collection = Collection

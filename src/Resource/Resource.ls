@@ -90,6 +90,7 @@ module.exports = (config, routes, name) ->
 
     # Get what to send to the database
     Serialize: ->
+      # console.log 'Serialize', @_schema
       @_schema.Filter @
 
     # Get what to send to client
@@ -109,7 +110,11 @@ module.exports = (config, routes, name) ->
 
     # Preserve the assocs while extending
     ExtendSafe: (blob) ->
+
       newBlob = __({}).extend blob
+      for k, v of newBlob
+        if k.0 is \_
+          delete newBlob[k]
 
       each (-> delete newBlob[it.name]), @_schema.assocs
 

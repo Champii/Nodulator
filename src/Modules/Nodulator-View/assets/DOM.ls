@@ -12,9 +12,11 @@ events = <[click]>
 
 window.DOM = {}
 
-anchorNb = 0
+
 
 class Node
+
+  @anchorNb = 0
 
   (@name, @attrs = {}, ...@origChildren) ->
     @_type = 'Node'
@@ -30,11 +32,10 @@ class Node
       @origChildren.unshift @attrs
       @attrs = {}
 
-    @attrs.anchor = anchorNb++
+    @attrs.anchor = Node.anchorNb++
 
     @origChildren = @_Flatten @origChildren
     @currentChildren = @origChildren
-
 
   # Change every child into a Renderable Node
   Resolve: ->
@@ -63,6 +64,10 @@ class Node
 
     return d.promise
 
+  GetAnchor: ->
+    @anchor = Node.anchorNb++
+    @
+
   Render: ->
     @node = "<#{@name}#{@_MakeAttrStr!}"
 
@@ -77,7 +82,9 @@ class Node
     if @name isnt \root and any (in events), keys @attrs
       node = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
-      node.onclick = @attrs.click
+      node.onclick = ~>
+        @attrs.click ...
+
 
     if @children
       @children |> map (.SetEvents!)
@@ -92,7 +99,7 @@ class Node
 
     dom = @Resolve!
     dom
-      .then ->
+      .then ~>
         html = it.Render!
         anchor.outerHTML = html
         it.SetEvents!
@@ -101,6 +108,15 @@ class Node
       .catch -> d.reject it
 
     return d.promise
+
+  GetElement: ->
+    document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
+
+  Empty: (@origChildren = []) ->
+
+  AddChild: ->
+    @origChildren.push it
+    @
 
   _RenderChildren: ->
     if @name is \text
@@ -153,7 +169,7 @@ class Node
   _Array:     (array, done)     -> async.mapSeries array, @~_ResolveType, done
 
   _View:      (view, done)      ->
-    view.Render (err, res)~>
+    view.Render (err, res) ~>
       return done err if err?
 
       @_ResolveType res, done
@@ -173,9 +189,6 @@ class Node
         @_ResolveType it, done
 
       .Catch -> done it
-
-  GetElement: ->
-    document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
 tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)
