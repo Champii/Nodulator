@@ -26,7 +26,8 @@ class LocalDB
       # console.log idx, @collection.idx
       @collection[idx] = item
       console.log 'COLLECTION' @collection, @resource.watchers
-      @resource._Changed!
+      # @resource._Changed!
+      N.bus.emit \update_ + name + \_ + item.id, item
     socket.on \delete_ + name, (item) ~>
       # return if it.id not in @collection |> map (.id)
       @collection = _(@collection).reject (record) -> record.id is item.id

@@ -73,7 +73,7 @@ module.exports = (N) ->
   else
     N.app.get \/ (req, res) ->
       b.bundle (err, assets) ->
-        # console.log 'Err?', err
+        console.log 'Err?', err if err?
         return res.status 500 .send err if err?
 
         # assets = '<script>' + assets + '</script>'

@@ -25,19 +25,6 @@ class Node
         | \text =>
           @text = @attrs
           @Resolve = -> @text
-        | \func =>
-          @func = @attrs
-          @attrs = {}
-          # first = true
-          console.log 'Func'
-          N.Watch ~>
-            # @func!
-            console.log 'Changed', @func!, @attrs, @
-            @parent?.Rerender!then console~log .catch console~error
-          @Resolve = ->
-            d = q.defer!
-            d.resolve @func!
-            return d.promise
 
     if @attrs? and (typeof! @attrs isnt \Object or @attrs._promise? or @attrs.then? or @attrs._type is \Node)
       @origChildren.unshift @attrs
@@ -46,13 +33,11 @@ class Node
     @attrs.anchor = Node.anchorNb++
 
     @origChildren = @_Flatten @origChildren
-    @currentChildren = @origChildren
 
   # Change every child into a Renderable Node
   Resolve: ->
     d = q.defer!
-    @currentChildren = @origChildren
-    async.mapSeries @currentChildren, @~_ResolveType, (err, childs) ~>
+    async.mapSeries @origChildren, @~_ResolveType, (err, childs) ~>
       return d.reject err if err?
 
       childs = @_Flatten childs
@@ -71,29 +56,39 @@ class Node
       ,(err, childs) ~>
         return d.reject err if err?
 
-        # if
-        # console.log 'Childs', childs
         d.resolve @
 
     return d.promise
 
-  # GetAnchor: ->
-  #   @anchor = Node.anchorNb++
-  #   @
+  Render: (parent) ->
+    if (anchor = @GetElement!)
+      anchor.outerHTML = ''
 
-  Render: ->
+    if not parent
+      anchor = document.querySelector("body")
+    else
+      anchor = parent.GetElement!
+
+    if @name is \text
+      return anchor.innerHTML += @text
+
     @node = "<#{@name}#{@_MakeAttrStr!}"
 
-    if @name in selfClosingTags
-      return @_ManageSelfClosing!
+    if @name in selfClosingTags and @origChildren.length
+      throw "Self closing tags cannot have children: #{@name}"
+    else if @name in selfClosingTags
+      @node += ' />'
+      return anchor.innerHTML += @node
+    else
+      @node += '>'
 
-    @node += '>'
+    anchor.innerHTML += @node
 
-    @_RenderChildren @node
+    @children |> map ~> it.Render @
 
   SetEvents: ->
     if @name isnt \root and any (in events), keys @attrs
-      node = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
+      node = @GetElement!
 
       if @attrs.click?
         node.onclick = ~>
@@ -102,47 +97,19 @@ class Node
         node.onkeyup = ~>
           @attrs.change ...
 
-      if typeof! @attrs.value is \Function
-        node.value = @attrs.value!
+    if typeof! @attrs?.value is \Function
+      node.value = @attrs.value!
 
-
-    if @children? and @name isnt \func
-      @children |> map (.SetEvents!)
-
-  Rerender: ->
-    d = q.defer!
-    anchor = ''
-    if @name is \root
-      anchor = document.querySelector("body")
-    else
-      anchor = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
-
-
-    console.log 'ReRender', "#{@name}[anchor='#{@attrs.anchor}']", anchor
-    html = @Render!
-    anchor.innerHTML = html
-    @SetEvents!
-    d.resolve html
-
-    return d.promise
+    if @children?
+      @children |> map (.SetEvents?!)
 
   Make: ->
     d = q.defer!
-    anchor = ''
-    if @name is \root
-      anchor = document.querySelector("body")
-    else
-      anchor = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
-
-    console.log 'Make', "#{@name}[anchor='#{@attrs.anchor}']", anchor
     dom = @Resolve!
     dom
       .then ~>
-        # console.log 'MAKE DOM THEN', it
-        html = it.Render!
-        anchor.innerHTML = html
+        d.resolve it.Render @parent
         it.SetEvents!
-        d.resolve html
 
       .catch -> d.reject it
 
@@ -157,19 +124,6 @@ class Node
     @origChildren.push it
     @
 
-  _RenderChildren: ->
-    if @name is \text
-      return @node = @text
-    if @name is \func
-      return @node = @func!
-    if @name is \root
-      return @node = @children |> map (.Render!) |> fold (+), ''
-
-    @node += @children |> map (.Render!) |> fold (+), ''
-    @node += "</#{@name}>"
-
-    @node
-
   _Flatten: (array) ->
     newArray = []
 
@@ -179,7 +133,7 @@ class Node
       else
         newArray.push item
 
-    newArray
+    newArray |> filter -> it?
 
   _MakeAttrStr: ->
     return '' if not @attrs?
@@ -188,14 +142,10 @@ class Node
       res += " #k=\"#v\""
     res
 
-  _ManageSelfClosing: ->
-    if @origChildren.length
-      throw "Self closing tags cannot have children: #{@name}"
-
-    @node += ' />'
-
   _ResolveType: (child, done) ->
+    # console.log child
     switch
+      | child is undefined            => @_String '', done
       | typeof! child is \String      => @_String child, done
       | typeof! child is \Array       => @_Array child, done
       | child.then?                   => @_Promise child, done
@@ -209,7 +159,7 @@ class Node
   _String:    (text, done)            -> done null new Node \text text
   _Node:      (node, done)            -> done null node
   _Array:     (array, done)           -> async.mapSeries array, @~_ResolveType, done
-  _Function:  (f, done)               -> done null new Node \func f
+  _Function:  (f, done)               -> done null new WatchableNode f, @
 
   _View:      (view, done) ->
     view.Render (err, res) ~>
@@ -233,6 +183,48 @@ class Node
 
       .Catch -> done it
 
+class WatchableNode extends Node
+  (@func, @parent) ->
+    @name = \func
+    @attrs = anchor: Node.anchorNb++
+
+    @children = []
+    first = true
+    N.Watch ~>
+      @func!
+      if first
+        return first := false
+
+      @Rerender!catch console~error
+
+  Resolve: ->
+    d = q.defer!
+    @_ResolveType @func!, (err, child) ~>
+      return d.reject err if err?
+
+      @children = [child]
+      if child.Resolve?
+        child.Resolve!
+      d.resolve @
+    return d.promise
+
+  Rerender: ->
+    d = q.defer!
+
+    @Resolve!
+      .then ~>
+        if (anchor = @GetElement!)
+          anchor.innerHTML = ''
+
+        it.children.0.Render @
+        d.resolve it.children.0
+        it.children.0.SetEvents!
+      .catch ->
+        d.reject it
+
+    return d.promise
+
+
 tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)
 
@@ -240,8 +232,9 @@ DOM.root = (...args) -> new (Node.bind.apply Node, [Node, \root].concat args)
 
 (intersection tags, keys window) |> each ->
   DOM[it + \_] = DOM[it]
-  console.log it
   delete DOM[it]
+
+
 
 window import DOM
 

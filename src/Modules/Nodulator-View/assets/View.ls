@@ -5,10 +5,17 @@ View = (context, fn) ->
     fn := context
     context := null
 
+  if context?._type? and context?._id?
+    N.bus.on \update_ + res.name + \_ + id, (changed) ->
+      for k, v of changed
+        context[k] v
+
   if context?
     for k, v of context
       if typeof! v isnt \Function and typeof! v isnt \Array
         context[k] = new N.Watch.Value v
+
+
 
   RealRender = (arg, done) ->
     viewRoot = DOM.div_!
@@ -18,15 +25,6 @@ View = (context, fn) ->
       done := arg
       arg := undefined
 
-    # console.log arg, done
-
-    if not @Set?
-      @Set = ~>
-        @ <<< it
-        RealRender.call @, (_, render) ~>
-          render.attrs.anchor = viewRoot.attrs.anchor
-          render.Rerender!catch console~error
-
     N.Watch ~>
       viewRoot.Empty!
       render = viewRoot.AddChild fn.call @, arg
@@ -35,7 +33,7 @@ View = (context, fn) ->
         # render.attrs.anchor = viewRoot.attrs.anchor
         return done null, render
 
-      render.Make!catch console~error
+        render.Make!catch console~error
     viewRoot
 
 
@@ -54,7 +52,12 @@ View = (context, fn) ->
     RealRender.call context, done
 
   ret.AttachResource = (res) ->
+    # if res?
+    #   for k, v of res
+    #     if typeof! v isnt \Function and typeof! v isnt \Array
+    #       res[k] = new N.Watch.Value v
     # context := res
+
 
     # context::Render = RealRender
     res::Render = RealRender
