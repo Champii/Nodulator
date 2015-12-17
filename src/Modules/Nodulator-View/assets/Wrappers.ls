@@ -73,16 +73,27 @@ class Wrappers
       @
 
   @_WrapWatchArgs = (cb) ->
+    resource = @
     (...args) ->
 
       if not N.Watch.active
         return cb.apply @, args
 
       watcher = ChangeWatcher.Watch cb, args, @
+      console.log 'Added Watcher', watcher, @_type
       if not watcher
         cb.apply @, args
       else
-        @watchers.push watcher
+        resource.watchers.push watcher
         watcher
+
+  @_WrapWatch = (cb) ->
+    (...args) ->
+      first = true
+      N.Watch ~>
+        if first
+          first := false
+          cb.apply @, args
+
 
 N.Wrappers = Wrappers

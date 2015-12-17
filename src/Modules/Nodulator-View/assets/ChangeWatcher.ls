@@ -13,7 +13,7 @@ class ChangeWatcher
     @dep = new Hacktiv.Dependency
     @doneIdx = @_FindDone()
 
-    @args[@doneIdx] = @_WrapDoneFirst()
+    # @args[@doneIdx] = @_WrapDoneFirst()
 
   _FindDone: ->
     for arg, i in @args

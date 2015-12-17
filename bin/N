@@ -105,6 +105,7 @@ if not args[0]?
 
   # global import N.View.DOM
 
+
   require path.resolve appRoot
 
 if args[0] in ['console', 'c']

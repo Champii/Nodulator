@@ -25,7 +25,7 @@ class LocalDB
       idx = @collection |> find-index -> it.id is item.id
       # console.log idx, @collection.idx
       @collection[idx] = item
-      console.log 'COLLECTION' @collection
+      console.log 'COLLECTION' @collection, @resource.watchers
       @resource._Changed!
     socket.on \delete_ + name, (item) ~>
       # return if it.id not in @collection |> map (.id)

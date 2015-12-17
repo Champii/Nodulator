@@ -5,8 +5,13 @@ View = (context, fn) ->
     fn := context
     context := null
 
+  if context?
+    for k, v of context
+      if typeof! v isnt \Function and typeof! v isnt \Array
+        context[k] = new N.Watch.Value v
+
   RealRender = (arg, done) ->
-    viewRoot = DOM.div!
+    viewRoot = DOM.div_!
     first = true
 
     if not done?
@@ -20,18 +25,18 @@ View = (context, fn) ->
         @ <<< it
         RealRender.call @, (_, render) ~>
           render.attrs.anchor = viewRoot.attrs.anchor
-          render.Make!catch console~error
+          render.Rerender!catch console~error
 
     N.Watch ~>
       viewRoot.Empty!
       render = viewRoot.AddChild fn.call @, arg
       if first
         first := false
+        # render.attrs.anchor = viewRoot.attrs.anchor
         return done null, render
 
-      render.attrs.anchor = viewRoot.attrs.anchor
       render.Make!catch console~error
-    @
+    viewRoot
 
 
 
@@ -53,6 +58,10 @@ View = (context, fn) ->
 
     # context::Render = RealRender
     res::Render = RealRender
+    # console.log res._type
+    # socket.on 'update_' + res._type[to -2]*'', ~>
+    #   console.log 'tamere'
+    #   res::Render.call it, (err, r) -> console.log r; r.Make!then console~log .catch console~error
 
   ret
 

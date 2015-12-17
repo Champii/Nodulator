@@ -6,13 +6,11 @@ require! {
 
 tags = <[a abbr address area article aside audio b base bdo blockquote body br button canvas caption cite code col colgroup datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure footer form head header h1 h2 h3 h4 h5 h6 hr html i iframe img ins input kbd keygen label legend li link map mark menu menuitem meta meter nav object ol optgroup option output p param pre progress q s samp script section select small source span strong style sub summary sup table td th tr textarea time title track u ul var video]>
 selfClosingTags = <[area base br col command embed hr img input keygen link meta param source track wbr]>
-customTags = <[root text]>
+customTags = <[root text func]>
 
-events = <[click]>
+events = <[click change]>
 
 window.DOM = {}
-
-
 
 class Node
 
@@ -27,6 +25,19 @@ class Node
         | \text =>
           @text = @attrs
           @Resolve = -> @text
+        | \func =>
+          @func = @attrs
+          @attrs = {}
+          # first = true
+          console.log 'Func'
+          N.Watch ~>
+            # @func!
+            console.log 'Changed', @func!, @attrs, @
+            @parent?.Rerender!then console~log .catch console~error
+          @Resolve = ->
+            d = q.defer!
+            d.resolve @func!
+            return d.promise
 
     if @attrs? and (typeof! @attrs isnt \Object or @attrs._promise? or @attrs.then? or @attrs._type is \Node)
       @origChildren.unshift @attrs
@@ -45,6 +56,7 @@ class Node
       return d.reject err if err?
 
       childs = @_Flatten childs
+      childs = childs |> map ~> it.parent = @; it
 
       @children = childs
       async.mapSeries childs, (item, done) ~>
@@ -59,14 +71,15 @@ class Node
       ,(err, childs) ~>
         return d.reject err if err?
 
-        childs = childs |> map ~> it.parent = @
+        # if
+        # console.log 'Childs', childs
         d.resolve @
 
     return d.promise
 
-  GetAnchor: ->
-    @anchor = Node.anchorNb++
-    @
+  # GetAnchor: ->
+  #   @anchor = Node.anchorNb++
+  #   @
 
   Render: ->
     @node = "<#{@name}#{@_MakeAttrStr!}"
@@ -82,12 +95,36 @@ class Node
     if @name isnt \root and any (in events), keys @attrs
       node = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
-      node.onclick = ~>
-        @attrs.click ...
+      if @attrs.click?
+        node.onclick = ~>
+          @attrs.click ...
+      if @attrs.change?
+        node.onkeyup = ~>
+          @attrs.change ...
+
+      if typeof! @attrs.value is \Function
+        node.value = @attrs.value!
 
 
-    if @children
+    if @children? and @name isnt \func
       @children |> map (.SetEvents!)
+
+  Rerender: ->
+    d = q.defer!
+    anchor = ''
+    if @name is \root
+      anchor = document.querySelector("body")
+    else
+      anchor = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
+
+
+    console.log 'ReRender', "#{@name}[anchor='#{@attrs.anchor}']", anchor
+    html = @Render!
+    anchor.innerHTML = html
+    @SetEvents!
+    d.resolve html
+
+    return d.promise
 
   Make: ->
     d = q.defer!
@@ -97,11 +134,13 @@ class Node
     else
       anchor = document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
+    console.log 'Make', "#{@name}[anchor='#{@attrs.anchor}']", anchor
     dom = @Resolve!
     dom
       .then ~>
+        # console.log 'MAKE DOM THEN', it
         html = it.Render!
-        anchor.outerHTML = html
+        anchor.innerHTML = html
         it.SetEvents!
         d.resolve html
 
@@ -121,6 +160,8 @@ class Node
   _RenderChildren: ->
     if @name is \text
       return @node = @text
+    if @name is \func
+      return @node = @func!
     if @name is \root
       return @node = @children |> map (.Render!) |> fold (+), ''
 
@@ -162,13 +203,15 @@ class Node
       | child.Then?                   => @_ResourceInst child, done
       | child._type is \Node          => @_Node child, done
       | child.Render?                 => @_View child, done
+      | typeof! child is \Function    => @_Function child, done
       | _                             => @_String '' + child, done
 
-  _String:    (text, done)      -> done null new Node \text text
-  _Node:      (node, done)      -> done null node
-  _Array:     (array, done)     -> async.mapSeries array, @~_ResolveType, done
+  _String:    (text, done)            -> done null new Node \text text
+  _Node:      (node, done)            -> done null node
+  _Array:     (array, done)           -> async.mapSeries array, @~_ResolveType, done
+  _Function:  (f, done)               -> done null new Node \func f
 
-  _View:      (view, done)      ->
+  _View:      (view, done) ->
     view.Render (err, res) ~>
       return done err if err?
 
@@ -194,5 +237,12 @@ tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)
 
 DOM.root = (...args) -> new (Node.bind.apply Node, [Node, \root].concat args)
+
+(intersection tags, keys window) |> each ->
+  DOM[it + \_] = DOM[it]
+  console.log it
+  delete DOM[it]
+
+window import DOM
 
 window.Node = Node
