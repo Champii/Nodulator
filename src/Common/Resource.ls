@@ -1,10 +1,8 @@
 require! {
-  '../../': N
-  \./ChangeWatcher
+  \./Helpers/ChangeWatcher
   \./Schema
   \prelude-ls
-  \../Helpers/Debug
-  \./Connectors : DB
+  \./Helpers/Debug
   async
   underscore: __
   validator: Validator
@@ -15,31 +13,35 @@ require! {
 cache = null
 Wrappers = null
 
-debug-res = new Debug 'N::Resource', Debug.colors.blue
 
-N.Validator = Validator
+if not cache?
+  cache := require \./Helpers/Cache
+if not Wrappers?
+  Wrappers := require \./Helpers/Wrappers
 
-N.inited = {}
+error = new Hacktiv.Value
 
-module.exports = (config, routes, name) ->
+# N = null
+module.exports = (config, routes, name, N) ->
+  # if not N?
+  #   N := _N
+    # N.Validator = Validator
+    # N.inited = {}
 
-  if not cache?
-    cache := require \./Cache
-  if not Wrappers?
-    Wrappers := require \./Wrappers
-
+  debug-res = new Debug 'N::Resource', Debug.colors.blue
   debug-resource = new Debug "N::Resource::#name"
-
-  debug-res.Log "Creating new Resource : #name"
-
-  error = new Hacktiv.Value
-
   class Resource extends Wrappers
+    @N = N
+    @watchers = []
+
 
     @DEFAULT_DEPTH = 1
     @INITED = false
-    @error = error
     @_schema = null
+    @error = error
+    @debug-resource = debug-resource
+    @debug-res = debug-res
+    @debug-res.Log "Creating new Resource : #name"
 
   #
   # Public
@@ -48,7 +50,6 @@ module.exports = (config, routes, name) ->
 
     # Constructor
     (blob) ->
-
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
       @_type = @.__proto__.constructor.lname
@@ -83,14 +84,13 @@ module.exports = (config, routes, name) ->
       @
 
     # Wrap the _SaveUnwrapped() call
-    Save: @_WrapFlipDone @_WrapPromise @_WrapResolvePromise @_WrapDebugError debug-resource~Error, -> @_SaveUnwrapped ...
+    Save: @_WrapPromise @_WrapResolvePromise @_WrapDebugError @debug-resource~Error, -> @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
-    Delete: @_WrapFlipDone @_WrapPromise @_WrapResolvePromise @_WrapDebugError debug-resource~Error, -> @_DeleteUnwrapped ...
+    Delete: @_WrapPromise @_WrapResolvePromise @_WrapDebugError @debug-resource~Error, -> @_DeleteUnwrapped ...
 
     # Get what to send to the database
     Serialize: ->
-      # console.log 'Serialize', @_schema
       @_schema.Filter @
 
     # Get what to send to client
@@ -137,53 +137,10 @@ module.exports = (config, routes, name) ->
   #
 
     # Save without wrap
-    _SaveUnwrapped: (config, done) ->
-      if not done?
-        done = config
-        config = @_config
-
-      serie = @Serialize()
-      @_schema.Validate serie, (err) ~>
-        exists = @id?
-
-        if exists => debug-resource.Log "Saving  {id: #{@id}}"
-        else      => debug-resource.Log "Saving New"
-
-        switch
-          | err? => done err
-          | _    =>
-            @_table.Save serie, config, (err, instance) ~>
-              | err?  =>  done err
-              | _     =>
-                if !exists
-                  @id = instance.id
-                  N.bus.emit \new_ + name, @
-                else
-                  N.bus.emit \update_ + name, @
-                ChangeWatcher.Invalidate()
-
-                debug-resource.Log "Saved  {id: #{@id}}"
-                done null, @
-      @
+    _SaveUnwrapped: (config, done) -> ...
 
     # Delete without wrap
-    _DeleteUnwrapped: (done) ->
-      debug-resource.Log "Deleting  {id: #{@id}}"
-      @_table.Delete @id, (err, affected) ~>
-        switch
-          | err? => done err
-          | _    =>
-            cache.Delete @_type + 'Fetch' + @id, ~>
-              @id = undefined
-              N.bus.emit \delete_ + name, @
-
-              ChangeWatcher.Invalidate()
-
-              debug-resource.Log "Deleted  {id: #{@id}}"
-
-              done null, @
-
-      @
+    _DeleteUnwrapped: (done) -> ...
 
   #
   # Public
@@ -205,146 +162,36 @@ module.exports = (config, routes, name) ->
       res
 
     # _Deserialize and Save from a blob or an array of blob
-    @Create = @_WrapFlipDone @_WrapPromise @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
+    @Create = @_WrapPromise @_WrapWatchArgs @_WrapDebugError @debug-resource~Error, ->
       @Init!
       @_CreateUnwrapped ...
 
     # Create without wraps
-    @_CreateUnwrapped = @_WrapParams do
-      * \Object : optional: true
-      * \Array : optional: true
-      * \Object : optional: true
-      * \Function
-      * \Number : optional: true
-      (arg, args, config, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
-
-        if args?
-          debug-resource.Log "Creating from array: #{args.length} entries"
-
-        @_HandleArrayArg arg || args || {}, (blob, done) ~>
-
-          async.mapSeries obj-to-pairs(blob), (pair, done) ~>
-            if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1?._promise
-              pair.1.Then -> done null [pair.0, it.id]
-              pair.1.Catch done
-            else
-              done null, pair
-          , (err, results) ~>
-            return done err if err?
-
-            blob = pairs-to-obj results
-
-            debug-resource.Log "Creating #{JSON.stringify blob}"
-            @resource._Deserialize blob, (err, instance) ~>
-              | err? => done err
-              | _    =>
-                c = {}
-                if config?.db?
-                  @_table.AddDriver config
-                  c = config
-                else
-                  c = @config
-                instance._SaveUnwrapped c, (err, instance) ~>
-                  | err? => done err
-                  | _    =>
-                    if instance._schema.assocs.length
-                      @_schema.FetchAssoc instance, (err, blob) ~>
-                        | err? => done err
-                        | _    =>
-                          instance import blob
-                          debug-resource.Log "Created {id: #{instance.id}}"
-                          done null instance
-                      , _depth
-                    else
-                      debug-resource.Log "Created {id: #{instance.id}}"
-                      done null instance
-
-            , _depth
-        , done
+    @_CreateUnwrapped = -> ...
 
     # Fetch from id or id array
-    @Fetch = @_WrapFlipDone @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
+    @Fetch = @_WrapPromise @_WrapCache 'Fetch' @_WrapWatchArgs @_WrapDebugError @debug-resource~Error, ->
       @Init!
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
-    @_FetchUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
-
-      if is-type \Array arg
-        debug-resource.Log "Fetching from array: #{arg.length} entries"
-
-      cb = (done) ~> (err, blob) ~>
-        | err?  => done err
-        | _     =>
-          debug-resource.Log "Fetched {id: #{blob.id}}"
-          Debug.Depth!
-          @resource._Deserialize blob, done, _depth
-
-      @_HandleArrayArg arg, (constraints, done) ~>
-
-        debug-resource.Log "Fetch #{JSON.stringify constraints}"
-
-        if is-type 'Object', constraints
-          @_table.FindWhere '*', constraints, cb done
-        else
-          @_table.Find constraints, cb done
-      , done
+    @_FetchUnwrapped = -> ...
 
     # Get a list of records from DB
-    @List = @_WrapFlipDone @_WrapPromise @_WrapCache 'List' @_WrapWatchArgs @_WrapDebugError debug-resource~Error, ->
+    @List = @_WrapPromise @_WrapCache 'List' @_WrapWatchArgs @_WrapDebugError @debug-resource~Error, ->
       @Init!
       @_ListUnwrapped ...
 
     # Get a list of records from DB
-    @_ListUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
-
-      if typeof(arg) is 'function'
-        if typeof(done) is 'number'
-          _depth = done
-
-        done = arg
-        arg = {}
-
-      if is-type \Array arg
-        debug-resource.Log "Listing from array: #{arg.length} entries"
-        # Debug.Depth!
-
-      @_HandleArrayArg arg, (constraints, _done) ~>
-        done = (err, data) ->
-          Debug.UnDepth!
-          _done err, data
-
-        debug-resource.Log "List #{JSON.stringify constraints}"
-        Debug.Depth!
-
-        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
-          | err?  => done err?
-          | _     =>
-            async.map blobs, (blob, done) ~>
-              debug-resource.Log "Listed {id: #{blob.id}}"
-              @resource._Deserialize blob, done, _depth
-            , done
-
-      , done
+    @_ListUnwrapped = -> ...
 
     # Delete given records from DB
-    @Delete = @_WrapFlipDone @_WrapPromise @_WrapDebugError debug-resource~Error, ->
+    @Delete = @_WrapPromise @_WrapDebugError @debug-resource~Error, ->
       @Init!
       @_DeleteUnwrapped ...
 
     # Delete given records from DB
-    @_DeleteUnwrapped = (arg, done) ->
-
-      if is-type \Array arg
-        debug-resource.Warn "Deleting from array: #{arg.length} entries"
-
-      @_HandleArrayArg arg, (constraints, done) ~>
-        debug-resource.Warn "Deleting #{JSON.stringify constraints}"
-        @resource._FetchUnwrapped constraints, (err, instance) ~>
-          | err?  => done err
-          | _     => instance._DeleteUnwrapped done
-
-      , done
+    @_DeleteUnwrapped = -> ...
 
     # Watch the Resource for a particular event or any changes
     @Watch = (...args) ->
@@ -536,8 +383,6 @@ module.exports = (config, routes, name) ->
       @Save done
 
     Log: @_WrapPromise @_WrapResolvePromise ->
-
-      console.log 'tamere', @
       console.log @ToJSON!
       it null @
 
@@ -557,6 +402,7 @@ module.exports = (config, routes, name) ->
     # Pre-Instanciation and associated model retrival
     @_Deserialize = (blob, done, _depth) ->
       res = @
+      delete blob._id if N.config.dbType is \Mongo
 
       if @_schema.assocs.length
         @_schema.FetchAssoc blob, (err, blob) ->
@@ -573,31 +419,7 @@ module.exports = (config, routes, name) ->
   #
 
     # Prepare the core of the Resource
-    @_PrepareResource = (_config, _routes, _name, _parent = null) ->
-      debug-res.Log 'Preparing resource'
-
-      @lname = _name.toLowerCase()
-
-      @_table = new DB @lname + \s
-      if not _config?.abstract
-        @_table.AddDriver _config
-      else if not _config? or (_config? and not _config.abstract)
-        @_table.AddDriver @config
-
-      @config = _config
-      @INITED = false
-
-      @_schema = new Schema @lname, _config?.schema
-      @_parent = _parent
-      if @_parent?
-        @_schema <<< @_parent._schema.Inherit!
-
-      @_schema.Resource = @
-
-      @Route = _routes
-      @_routes = _routes
-
-      @
+    @_PrepareResource = -> ...
 
     # Setup inheritance
     @Extend = (name, routes, config) ->
@@ -617,29 +439,24 @@ module.exports = (config, routes, name) ->
     @Init = (@config = @config, extendArgs) ->
       if @INITED
         return @
-
-      if N.inited[@lname]?
-        return @
-        throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
+      # if N.inited[@lname]?
+      #   return @
+      #   throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
 
       @resource = @
 
       N.resources[@lname] = @
 
-      debug-res.Log "Init() #{@lname}"
+      @debug-res.Log "Init() #{@lname}"
 
       N.inited[@lname] = true
 
       @INITED = true
 
-
-
-      if @_routes?
-        @routes = new @_routes(@, @config)
+      # if @_routes?
+      #   @routes = new @_routes(@, @config)
 
       #FIXME
       N[capitalize @lname] = @
 
       @
-
-  Resource._PrepareResource(config, routes, name)

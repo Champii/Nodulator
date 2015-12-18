@@ -1,41 +1,16 @@
-N = require '../..'
 ChangeWatcher = require './ChangeWatcher'
 Q = require 'q'
 async = require 'async'
 
 polyparams = require \polyparams
-cache = require \./Cache
 
 watchers = []
 
+cache = null
 class Wrappers
 
+
   @_FindDone = -> it |> find-index is-type \Function
-
-  @_WrapFlipDone = (cb) ->
-    if not N.config?.flipDone
-      return cb
-
-    resource = @
-
-    (...args) ->
-
-      doneIdx = resource._FindDone args
-      if not doneIdx?
-        return cb.apply @, args
-
-      oldDone = args[doneIdx]
-
-      args[doneIdx] = (err, data) ->
-        if err?
-          resource.error err
-          return oldDone data, err
-
-        resource.error null, false
-
-        oldDone data, err
-
-      cb.apply @, args
 
   @_WrapPromise = (cb) ->
     d = null
@@ -68,7 +43,6 @@ class Wrappers
         @_promise = d.promise
         @
       else if not d? and ret?.state? and @_type?
-        console.log 'WRAPPROMISE state', ret
         @_promise = ret
         @
       else
@@ -107,13 +81,26 @@ class Wrappers
       @
 
   @_WrapWatchArgs = (cb) ->
+    resource = @
     (...args) ->
 
-      if not N.Watch.active
+      if not @N.Watch.active
         return cb.apply @, args
 
-      if not ChangeWatcher.Watch cb, args, @
-        return cb.apply @, args
+      watcher = ChangeWatcher.Watch cb, args, @, @N
+      if not watcher
+        cb.apply @, args
+      else
+        resource.watchers.push watcher
+        watcher
+
+  @_WrapWatch = (cb) ->
+    (...args) ->
+      first = true
+      @N.Watch ~>
+        if first
+          first := false
+          cb.apply @, args
 
   @_WrapDebugError = (debug, cb) ->
 
@@ -144,8 +131,9 @@ class Wrappers
       _cb.apply @, args
 
   @_WrapCache = (name, cb) ->
-
-    if not N.config?.cache
+    if not cache?
+      cache = require(\./Cache)(@N.config)
+    if not @N.config?.cache
       return (...args) ->
         cb.apply @, args
 
@@ -195,7 +183,7 @@ class Wrappers
 
             oldDone null, res
 
-        watchers.push N.Watch ~>
+        watchers.push @N.Watch ~>
           cb.apply @, args
 
   @Reset = ->
@@ -203,4 +191,4 @@ class Wrappers
     watchers := []
 
 module.exports = Wrappers
-N.Wrappers = Wrappers
+# @N.Wrappers = Wrappers

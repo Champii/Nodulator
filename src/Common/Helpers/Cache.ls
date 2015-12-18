@@ -1,4 +1,3 @@
-N = require '../..'
 redis = require \redis
 Debug = require '../Helpers/Debug'
 
@@ -61,12 +60,12 @@ class MemCache
 
 class Cache
 
-  ->
-    if N.config?.cache?.type is \Redis or N.config?.cache is \Redis
+  (config) ->
+    if config?.cache?.type is \Redis or config?.cache is \Redis
       debug-cache.Warn 'Redis cache init'
-      @client = new RedisCache N.config.cache if not is-type \String N.config.cache
-      @client = new RedisCache {} if is-type \String N.config.cache
-    else if N.config?.cache?.type is \Mem or N.config?.cache is \Mem
+      @client = new RedisCache config.cache if not is-type \String config.cache
+      @client = new RedisCache {} if is-type \String config.cache
+    else if config?.cache?.type is \Mem or config?.cache is \Mem
       debug-cache.Warn 'Mem cache init'
       @client = new MemCache
     else
@@ -100,4 +99,4 @@ class Cache
     return if not @client?
     @client.Reset!
 
-module.exports = new Cache
+module.exports = -> new Cache it

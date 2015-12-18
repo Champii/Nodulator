@@ -2,9 +2,9 @@ require! \prelude-ls : {each, unchars}
 _ = require 'underscore'
 N = null
 Request = require './Request'
-require! {\../Helpers/Debug}
+require! {\../../Common/Helpers/Debug}
 express = require \express
-Client = require '../../test/common/client'
+Client = require '../../../test/common/client'
 http = require 'http'
 body-parser = require \body-parser
 express-session = require 'express-session'

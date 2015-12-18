@@ -1,48 +1,14 @@
-rest = require 'rest'
 async = require 'async'
-mime = require('rest/interceptor/mime');
+ClientDB = require \./Connectors/ClientDB
+Schema = require \../../Common/Schema
+# N = null
+module.exports = (config, routes, name) ->
+  # if not N?
+  #   N := require \../Nodulator
 
-require! hacktiv
-
-window.socket = io!
-
-window import require \prelude-ls
-
-Client = rest.wrap(mime)
-
-class Nodulator
-
-  isClient: true
-  resources: {}
-
-  Resource: (name, routes, config, _parent) ->
-    return if config?.abstract
-    lname = name + \s
-
-    resource = _Resource lname, config
-    routes?.AttachResource resource
-
-    N[capitalize name] = @resources[lname] = resource
-
-  Watch:    hacktiv
-  DontWatch: hacktiv.DontWatch
-
-nodulator = new Nodulator
-
-N = (...args) ->
-
-  N.Resource.apply N, args
-
-window.N = N <<<< nodulator
-
-_Resource = (name, config) ->
-
-  class Resource extends N.Wrappers
-
-    @watchers = []
-
+  class Resource extends require(\../../Common/Resource)(config, routes, name, N)
+    @N = N
     @_type = name
-
 
     (blob) ->
 
@@ -60,23 +26,6 @@ _Resource = (name, config) ->
         db.collection.push blob
 
       import blob
-      @
-
-    _WrapReturnThis: (done) ->
-      (arg) ~>
-        res = done arg
-        res?._promise || res || arg
-
-    Then: ->
-      @_promise = @_promise.then @_WrapReturnThis it if @_promise?
-      @
-    #
-    Catch: ->
-      @_promise = @_promise.catch @_WrapReturnThis it if @_promise?
-      @
-
-    Fail: ->
-      @_promise = @_promise.fail @_WrapReturnThis it if @_promise?
       @
 
     Add: ->
@@ -128,16 +77,38 @@ _Resource = (name, config) ->
 
         done err, data
 
-    @Field = ->
-      Default: ->
-    @MayHasMany = ->
-    @HasMany = ->
-    @Init = ->
+    @_PrepareResource = (_config, _routes, _name, _parent = null) ->
+      @debug-res.Log 'Preparing resource'
 
-    @Watch = ->
-    Watch: ->
-    @_Changed = -> @watchers |> each (.dep._Changed!)
+      console.log arguments
+      @lname = _name.toLowerCase()
 
-  Resource.db = db = new N.LocalDB Resource
+      # @_table = new DB @lname + \s
+      # if not _config?.abstract
+      #   @_table.AddDriver _config
+      # else if not _config? or (_config? and not _config.abstract)
+      #   @_table.AddDriver @config
 
+      @config = _config
+      @INITED = false
+
+      @_schema = new Schema @lname, _config?.schema
+      @_parent = _parent
+      if @_parent?
+        @_schema <<< @_parent._schema.Inherit!
+
+      @_schema.Resource = @
+
+      @Route = _routes
+      @_routes = _routes
+
+      @
+
+    # @Init = ->
+
+
+    @_Changed = -> console.log 'Watchers', @watchers; @watchers |> each (.dep._Changed!)
+
+  Resource.db = db = new ClientDB Resource
+  Resource._PrepareResource(config, routes, name)
   Resource

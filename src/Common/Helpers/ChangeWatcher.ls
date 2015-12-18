@@ -1,6 +1,5 @@
 _ = require 'underscore'
 Hacktiv = require 'hacktiv'
-N = require '../../'
 
 class ChangeWatcher
 
@@ -10,7 +9,7 @@ class ChangeWatcher
 
   @list = []
 
-  (@func, @args, @instance) ->
+  (@func, @args, @instance, N) ->
     @dep = new Hacktiv.Dependency
     @doneIdx = @_FindDone()
 
@@ -32,7 +31,7 @@ class ChangeWatcher
 
   _ReWrap: ->
     @args[@doneIdx] = (err, res) ~>
-      return if err?
+      return console.error err if err?
 
       if (@res?.length? and res? and @res.length != res.length) or !_(@res).isEqual res
         @res = res
@@ -42,14 +41,16 @@ class ChangeWatcher
     @dep._Depends()
     @func.apply @instance, @args
 
-  @Watch = (func, args, instance) ->
+  @Watch = (func, args, instance, N) ->
     return false if not N.Watch.active or _(@list).find (item) -> item.func is func and _(item.args).isEqual args
 
     elem = new ChangeWatcher func, args, instance
     @list.push elem
     elem.Invalidate()
+    elem
 
   @Invalidate = ->
+    # console.log 'Invalidate', @list
     for watcher in @list
       watcher.Invalidate()
 

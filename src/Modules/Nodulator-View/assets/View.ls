@@ -5,19 +5,14 @@ View = (context, fn) ->
     fn := context
     context := null
 
-  if context?._type? and context?._id?
-    N.bus.on \update_ + res.name + \_ + id, (changed) ->
-      for k, v of changed
-        context[k] v
-
-  if context?
-    for k, v of context
-      if typeof! v isnt \Function and typeof! v isnt \Array
-        context[k] = new N.Watch.Value v
-
 
 
   RealRender = (arg, done) ->
+    for k, v of @
+      if typeof! v isnt \Function and typeof! v isnt \Array
+        @[k] = new N.Watch.Value v
+
+    console.log \Context @
     viewRoot = DOM.div_!
     first = true
 
@@ -30,6 +25,13 @@ View = (context, fn) ->
       render = viewRoot.AddChild fn.call @, arg
       if first
         first := false
+        console.log 'FIRST', @
+        if @_type? and @id?
+          name = @_type[to -2]*''
+          N.bus.on \update_ + name + \_ + @id, (changed) ~>
+            console.log 'UPDATE' name, @id, changed
+            for k, v of changed when @[k]
+              @[k] v
         # render.attrs.anchor = viewRoot.attrs.anchor
         return done null, render
 

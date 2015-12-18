@@ -82,6 +82,9 @@ module.exports = (N) ->
       # console.log 'emit', instance
       room = io.sockets.in(instance)
       # console.log 'room', room, args
+      for k, v of args
+        if v.ToJSON?
+          args[k] = v.ToJSON()
       room.emit.apply room, args
     #
     @NewRoom: (name) ->

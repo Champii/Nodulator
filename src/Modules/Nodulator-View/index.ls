@@ -20,18 +20,21 @@ module.exports = (N) ->
       if dir[dir.length - 1] isnt '/'
         dir += '/'
 
-      entries = fs.readdirSync dir
+      try
+        entries = fs.readdirSync dir
 
-      files = _(entries).filter (entry) ~>
-        fs.statSync(dir + entry).isFile() and (entry.match(/\.ls$/g) or entry.match(/\.js$/g))
+        files = _(entries).filter (entry) ~>
+          fs.statSync(dir + entry).isFile() and (entry.match(/\.ls$/g) or entry.match(/\.js$/g))
 
-      if rec
-        folders = _(entries).filter (entry) ~>
-          fs.statSync(dir + entry).isDirectory() and not entry.match(/^\./g)
-        folders = _(folders).map (folder) ~>
-          dir + folder
+        if rec
+          folders = _(entries).filter (entry) ~>
+            fs.statSync(dir + entry).isDirectory() and not entry.match(/^\./g)
+      catch e
 
-        parseRec folders, true
+      folders = _(folders).map (folder) ~>
+        dir + folder
+
+      parseRec folders, true
 
       files = _(files).map (file) ~>
         if file.match(/\.ls$/g)
@@ -41,23 +44,24 @@ module.exports = (N) ->
 
       assets := assets.concat files
 
-  parseRec [path.resolve __dirname, 'assets']
-  assets = sort assets
-  parseRec [path.resolve '.']
 
-  b = browserify!
+  b = browserify extensions: [\.ls]
 
   b.transform browserify-livescript
   b.transform coffeeify
 
-  b.add assets
+
+  b.add path.resolve __dirname, '../../Client/Nodulator.ls'
+  b.add path.resolve __dirname, './assets/DOM.ls'
+  b.add path.resolve __dirname, './assets/View.ls'
+  b.add path.resolve '.'
+  b.ignore 'redis'
 
   class Socket extends N.Socket!
 
     OnConnect: (socket) ->
 
   Socket.Init!
-
 
   socketio = '<script src="/socket.io/socket.io.js"></script>'
 
@@ -74,20 +78,19 @@ module.exports = (N) ->
     N.app.get \/ (req, res) ->
       b.bundle (err, assets) ->
         console.log 'Err?', err if err?
-        return res.status 500 .send err if err?
+        return if err?
+        # return res.status 500 .send err if err?
 
         # assets = '<script>' + assets + '</script>'
         assets = "<html><head></head><body>#{socketio}<script>#{assets.toString!}</script></body></html>"
 
         res.status 200 .send assets
 
-
   View = ->
     @_type = 'View'
 
     (@resource) ->
       @resource.AttachRoute N.Route.RPC
-
 
   N.Render = ->
 
@@ -98,6 +101,5 @@ module.exports = (N) ->
   #   * \index.ls
   #
   # files |> map -> livescript.compile fs.readFileSync it
-
 
   {name: 'View'}

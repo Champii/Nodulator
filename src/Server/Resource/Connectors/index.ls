@@ -1,5 +1,4 @@
 async = require \async
-N = require '../../..'
 
 drivers = do
   Mongo: require \./Mongo
@@ -146,3 +145,4 @@ module.exports = DB
 
 module.exports._reset = ->
   # driver._Reset() if driver?
+N = require '../../..'

@@ -2,8 +2,8 @@ require! {
   async
   underscore: _
   validator: Validator
-  \../Helpers/Debug
-  \../../ : N
+  \./Helpers/Debug
+  # \../../ : N
 }
 
 validationError = (field, value, message) ->
@@ -122,7 +122,6 @@ class Schema
 
   # Check for schema validity
   Validate: (blob, done) ->
-    delete blob._id if N.config.dbType is \Mongo
 
     errors = []
 
