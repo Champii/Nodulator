@@ -6,14 +6,14 @@ View = (context, fn) ->
     context := null
 
 
-
   RealRender = (arg, done) ->
-    for k, v of @
-      if typeof! v isnt \Function and typeof! v isnt \Array
-        @[k] = new N.Watch.Value v
+    if @ isnt window
+      for k, v of @
+        if typeof! v isnt \Function and typeof! v isnt \Array
+          @[k] = new N.Watch.Value v
 
     console.log \Context @
-    viewRoot = DOM.div_!
+    viewRoot = DOM.div!
     first = true
 
     if not done?
@@ -47,11 +47,15 @@ View = (context, fn) ->
         # context := ctx
         args = [done]
         args.unshift ctx if ctx?
-        RealRender.apply context, args
+        # context = {} <<<< context
+        ctx2 = {} <<< context
+        RealRender.apply ctx2, args
 
   ret.Render = (done) ->
     # console.log done
-    RealRender.call context, done
+    ctx = {} <<< context
+    console.log 'TAMERE' ctx
+    RealRender.call ctx, done
 
   ret.AttachResource = (res) ->
     # if res?

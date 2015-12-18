@@ -231,8 +231,11 @@ tags |> each (tag) ->
 DOM.root = (...args) -> new (Node.bind.apply Node, [Node, \root].concat args)
 
 (intersection tags, keys window) |> each ->
-  DOM[it + \_] = DOM[it]
-  delete DOM[it]
+  if it isnt \div and it isnt span
+    DOM[it + \_] = DOM[it]
+    delete DOM[it]
+
+
 
 
 
