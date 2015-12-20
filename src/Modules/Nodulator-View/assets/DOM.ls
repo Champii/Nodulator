@@ -11,7 +11,6 @@ customTags = <[root text func]>
 events = <[click change]>
 
 window.DOM = {}
-
 class Node
 
   @anchorNb = 0
@@ -84,7 +83,12 @@ class Node
 
     anchor.innerHTML += @node
 
-    @children |> map ~> it.Render @
+    if @children?
+      @children |> map ~>
+        if typeof! it is \Array
+          it |> map ~> it.Render @
+        else
+          it.Render? @
 
   SetEvents: ->
     if @name isnt \root and any (in events), keys @attrs
@@ -116,6 +120,9 @@ class Node
     return d.promise
 
   GetElement: ->
+    if @name is \text and @parent?
+      return document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
+    # else
     document.querySelector("#{@name}[anchor='#{@attrs.anchor}']")
 
   Empty: (@origChildren = []) ->
@@ -143,7 +150,7 @@ class Node
     res
 
   _ResolveType: (child, done) ->
-    # console.log child
+    # console.log 'Child', child
     switch
       | child is undefined            => @_String '', done
       | typeof! child is \String      => @_String child, done
@@ -159,7 +166,8 @@ class Node
   _String:    (text, done)            -> done null new Node \text text
   _Node:      (node, done)            -> done null node
   _Array:     (array, done)           -> async.mapSeries array, @~_ResolveType, done
-  _Function:  (f, done)               -> done null new WatchableNode f, @
+  _Function:  (f, done)               ->
+    done null new WatchableNode f, @
 
   _View:      (view, done) ->
     view.Render (err, res) ~>
@@ -191,7 +199,7 @@ class WatchableNode extends Node
     @children = []
     first = true
     N.Watch ~>
-      @func!
+      res = @func!
       if first
         return first := false
 
@@ -202,10 +210,24 @@ class WatchableNode extends Node
     @_ResolveType @func!, (err, child) ~>
       return d.reject err if err?
 
-      @children = [child]
-      if child.Resolve?
-        child.Resolve!
-      d.resolve @
+      if typeof! child isnt \Array
+        child = [child]
+
+      @children = child
+      async.mapSeries @children, (item, done) ~>
+        promise = item.Resolve!
+
+        if promise.then?
+          promise.then -> done null it
+          promise.catch done
+        else
+          done null promise
+
+      ,(err, childs) ~>
+        return d.reject err if err?
+
+        d.resolve @
+
     return d.promise
 
   Rerender: ->
@@ -216,29 +238,31 @@ class WatchableNode extends Node
         if (anchor = @GetElement!)
           anchor.innerHTML = ''
 
-        it.children.0.Render @
-        d.resolve it.children.0
-        it.children.0.SetEvents!
+        it.Render @parent
+        it.SetEvents!
+        d.resolve it
       .catch ->
         d.reject it
 
     return d.promise
-
 
 tags |> each (tag) ->
   DOM[tag] = (...args) ->  new (Node.bind.apply Node, [Node, tag].concat args)
 
 DOM.root = (...args) -> new (Node.bind.apply Node, [Node, \root].concat args)
 
-(intersection tags, keys window) |> each ->
-  if it isnt \div and it isnt span
-    DOM[it + \_] = DOM[it]
-    delete DOM[it]
+DOM.map_ = DOM.map
+DOM.head_ = DOM.head
+delete DOM.map
+delete DOM.head
 
-
-
-
-
+# (intersection tags, keys window) |> each ->
+#   if it isnt \div and it isnt \span
+#     DOM[it + \_] = DOM[it]
+#     delete DOM[it]
+  # else
+  #   window[it + \_] = window[it]
+  #   delete window[it]
 window import DOM
 
-window.Node = Node
+# window.Node = Node

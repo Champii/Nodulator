@@ -5,57 +5,66 @@ View = (context, fn) ->
     fn := context
     context := null
 
+  RealRender = (...args, done) ->
+    listener = null
 
-  RealRender = (arg, done) ->
+    isInstance = @_type and @id?
+    if isInstance
+      for k, v of @
+        let k = k
+          if typeof! v is \Array and k in map (.name), @_schema.assocs
+            @[k] = N.Watch.Value v
+            assoc = find (.name is k), @_schema.assocs
+            N.bus.on \new_ + assoc.type._type, ~>
+              if assoc.keyType is \distant
+                if it[assoc.foreign] is @id!
+                  @[k] @[k]!.concat [new assoc.type it]
+
     if @ isnt window
       for k, v of @
-        if typeof! v isnt \Function and typeof! v isnt \Array
+        if typeof! v isnt \Function and typeof! v isnt \Array and k.0 isnt \_
           @[k] = new N.Watch.Value v
 
-    console.log \Context @
+
+    if isInstance and listener?
+      N.bus.removeListeners \update_ + @_type + \_ + @id!, listener
+
     viewRoot = DOM.div!
     first = true
 
     if not done?
-      done := arg
-      arg := undefined
+      done := args
+      args := []
 
     N.Watch ~>
       viewRoot.Empty!
-      render = viewRoot.AddChild fn.call @, arg
+      render = viewRoot.AddChild fn.apply @, args
       if first
         first := false
-        console.log 'FIRST', @
-        if @_type? and @id?
-          name = @_type[to -2]*''
-          N.bus.on \update_ + name + \_ + @id, (changed) ~>
-            console.log 'UPDATE' name, @id, changed
+        if isInstance
+          name = @_type
+          listener := (changed) ~>
             for k, v of changed when @[k]
               @[k] v
-        # render.attrs.anchor = viewRoot.attrs.anchor
+          N.bus.on \update_ + name + \_ + @id!, listener
         return done null, render
-
-        render.Make!catch console~error
+      render.Make!catch console~error
     viewRoot
 
-
-
-  ret = (ctx) ~>
+  ret = (...args) ~>
     (->) <<< do
       _type: \View
       Render: (done) ~>
-        # context := ctx
-        args = [done]
-        args.unshift ctx if ctx?
-        # context = {} <<<< context
-        ctx2 = {} <<< context
-        RealRender.apply ctx2, args
+        args_ = args
+        args_.push done if done?
+        ctx = {} <<< context
+        RealRender.apply ctx, args_
 
+  ret._type = \View
   ret.Render = (done) ->
     # console.log done
-    ctx = {} <<< context
-    console.log 'TAMERE' ctx
-    RealRender.call ctx, done
+    # ctx = {} <<< context
+    RealRender.call context, done
 
   ret.AttachResource = (res) ->
     # if res?
@@ -66,6 +75,7 @@ View = (context, fn) ->
 
 
     # context::Render = RealRender
+    console.log 'Tamere'
     res::Render = RealRender
     # console.log res._type
     # socket.on 'update_' + res._type[to -2]*'', ~>

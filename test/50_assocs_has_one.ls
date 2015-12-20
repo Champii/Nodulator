@@ -30,6 +30,7 @@ describe 'N Associations HasOne', ->
 
   test 'should create with id', (done) ->
     Childs.Create name: \child1 testId: Tests.Create name: \test
+      .Log!#      console.log 'IT', it
       .Then -> assert.equal it.name, \child1
       .Then ->
         Tests.Fetch 1
@@ -39,18 +40,18 @@ describe 'N Associations HasOne', ->
             assert.equal it.Child.testId, 1
             done!
 
-        .Catch -> done new Error JSON.stringify it
+        .Catch -> done  it
 
   test 'should not remove child with promise', (done) ->
     Childs.Create name: \child1 testId: Tests.Create name: \test
       .Then ->
         Tests.Fetch 1 .Remove Childs.Fetch 1
-          .Then -> done new Error 'Has deleted ?!'
+          .Then -> done 'Has deleted ?!'
           .Catch -> done!
 
   test 'should not remove child', (done) ->
     Childs.Create name: \child1 testId: Tests.Create name: \test
       .Then ->
         Tests.Fetch 1 .Remove it
-          .Then -> done new Error 'Has deleted ?!'
+          .Then -> done 'Has deleted ?!'
           .Catch -> done!

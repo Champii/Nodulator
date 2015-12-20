@@ -5,6 +5,8 @@ require! {
   hacktiv
 }
 
+global import require \prelude-ls
+
 class N extends require \../Common/Nodulator
 
   config: null
@@ -25,18 +27,6 @@ class N extends require \../Common/Nodulator
   Resource: ->
     @resource = require './Resource/Resource' if not @resource?
     super ...
-
-  Config: (config) ->
-    if @config?
-      return
-
-    @debug-nodulator.Warn "Main config"
-
-    @config = config || @defaultConfig
-
-    @defaultConfig
-      |> obj-to-pairs
-      |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
   Use: (module) ->
     @debug-nodulator.Log "Loading module"

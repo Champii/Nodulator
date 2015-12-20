@@ -1,5 +1,5 @@
 _ = require 'underscore'
-N = require '../../Nodulator'
+# N = require '../../Nodulator'
 tables = {}
 
 rest = require 'rest'
@@ -34,8 +34,9 @@ class RESTClient
       .then ~> done null it.entity
       .catch done
 
-N.Client = RESTClient
+# @N.Client = RESTClient
 
+dbs = {}
 
 class ClientDB
 
@@ -44,33 +45,59 @@ class ClientDB
   # deleteSync: []
 
   (@resource) ->
+    dbs[@resource._type] = @
     @fetched = []
     @collection = []
-    @client = new N.Client @resource._type
-    name = @resource._type[to -2]*''
-    socket.on \new_ + name, ~>
-      console.log 'New', it
-      @collection.push it
-      @resource._Changed!
-    socket.on \update_ + name, (item) ~>
-      console.log 'Update', item
-      return if item.id not in (@collection |> map (.id))
-      idx = @collection |> find-index -> it.id is item.id
-      # console.log idx, @collection.idx
+    @client = new RESTClient @resource._type
+    @SetSockets!
+
+  SetSockets: ->
+    socket.on \new_ + @resource._type, @~OnNew
+    socket.on \update_ + @resource._type, @~OnUpdate
+    socket.on \delete_ + @resource._type, @~OnDelete
+
+  OnNew: ->
+    it = @ExtractAssocs it
+    console.log 'New', it
+    @collection.push it
+    @resource._Changed!
+    @resource.N.bus.emit \new_ + @resource._type, it
+
+  OnUpdate: (item) ->
+    item = @ExtractAssocs item
+    console.log 'Update', item
+    # return if item.id not in (@collection |> map (.id))
+    idx = @collection |> find-index -> it.id is item.id
+    # console.log idx, @collection.idx
+    if idx?
+      console.log 'Id ?', idx, item, @collection[idx]
       diff = @GetChange @collection[idx], item
+      console.log 'diff ?', diff
       @collection[idx] = item
-      console.log 'COLLECTION' keys diff
-      # @resource._Changed!0
+    # @resource._Changed!0
       if keys diff .length
-        N.bus.emit \update_ + name + \_ + item.id, diff
-    socket.on \delete_ + name, (item) ~>
-      # return if it.id not in @collection |> map (.id)
-      @collection = _(@collection).reject (record) -> record.id is item.id
-      @resource._Changed!
+        @resource.N.bus.emit \update_ + @resource._type + \_ + item.id, diff
+    else
+      @OnNew item
+
+  OnDelete: (item) ->
+    item = @ExtractAssocs item
+    # return if it.id not in @collection |> map (.id)
+    @collection = _(@collection).reject (record) -> record.id is item.id
+    @resource._Changed!
+
+  ExtractAssocs: (blob) ->
+    @resource._schema.assocs |> map ~>
+      if blob[it.name]?
+        dbs[it.type._type].ImportAssocs blob[it.name]
+        delete blob[it.name]
+    blob
+
+  ImportAssocs: ->
+    map @~OnUpdate, it
 
   GetChange: (base, toCmp)->
     res = {}
-    console.log base, toCmp
     for k, v of base when toCmp[k] isnt v and typeof! v isnt \String and typeof! v isnt \Object
       res[k] = toCmp[k]
     res
@@ -83,13 +110,14 @@ class ClientDB
       res = res[offset til options.limit]
 
     if options?.limit is 1
-      if not (@collection |> find -> it.id === options.id)
+      if not res.length
         return @client.Fetch where, (err, data) ~>
           return done err if err?
 
+          data = @ExtractAssocs data
           @collection.push data
-          @resource._Changed!
-          done null data
+          # @resource._Changed!
+          done null [data]
 
     else
       # console.log 'BEFORE' not (@fetched |> find -> console.log it; it === where)
@@ -98,13 +126,14 @@ class ClientDB
         return @client.List where, (err, data) ~>
           return done err if err?
 
+          data = map @~ExtractAssocs, data
           if data !== res
             data
               |> each (item) ~>
                 | item.id in map (.id), @collection => @collection[@collection |> find-index -> it.id is item.id] <<< item
                 | _                                 => @collection.push item
 
-            @resource._Changed!
+            # @resource._Changed!
           done null data
 
     done null, res
@@ -121,10 +150,10 @@ class ClientDB
     @client.Set where.id, fields, (err, data) ~>
       return done err if err?
       idx = @collection |> find-index -> it.id is where.id
-      @collection[idx] = data
+      # @collection[idx] <<< data
       # @resource._Changed!
 
-    done null fields
+      done null data
       # done null data
 
   Delete: (where, done) ->
@@ -143,3 +172,8 @@ class ClientDB
     done null, 1
 
 module.exports = ClientDB
+
+module.exports.AddTable = (name) ->
+  # if !(tables[name]?)
+  #   tables[name] = []
+  # tables[name]

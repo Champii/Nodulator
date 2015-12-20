@@ -13,7 +13,7 @@ describe 'N Resource', ->
 
   before (done) ->
     N.Reset ->
-      Tests := N 'test'
+      Tests := N \tests
 
       assert Tests?
       done()

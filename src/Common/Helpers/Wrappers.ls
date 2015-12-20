@@ -9,7 +9,6 @@ watchers = []
 cache = null
 class Wrappers
 
-
   @_FindDone = -> it |> find-index is-type \Function
 
   @_WrapPromise = (cb) ->
@@ -35,7 +34,7 @@ class Wrappers
       # console.log 'Wrap Promise', d, @
       if d? and @Init?
         @Init!
-        new @ d
+        new resource d
       # else if @_promise? and d?
       #   @_promise.then d.promise
       #   @
@@ -91,7 +90,7 @@ class Wrappers
       if not watcher
         cb.apply @, args
       else
-        resource.watchers.push watcher
+        resource._watchers.push watcher
         watcher
 
   @_WrapWatch = (cb) ->
@@ -140,7 +139,7 @@ class Wrappers
     fullName = name
     (...args) ->
       Resource = @
-      name = @lname + fullName
+      name = @name + fullName
       doneIdx = @_FindDone args
       _oldDone = args[doneIdx]
       first = true

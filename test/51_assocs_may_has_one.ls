@@ -30,6 +30,7 @@ describe 'N Associations MayHasOne', ->
 
   test 'should create with id', (done) ->
     Childs.Create name: \child1 testId: Tests.Create name: \test
+      .Log!
       .Then -> assert.equal it.name, \child1
       .Then ->
         Tests.Fetch 1
@@ -56,12 +57,14 @@ describe 'N Associations MayHasOne', ->
       .Catch -> done new Error it
 
   test 'should create with Add reverse', (done) ->
-    Childs.Create name: \child1 .Add Tests.Create name: \test
+    Childs.Create name: \child1 .Add(Tests.Create name: \test)
       .Then ->
+        console.log 'IT', it
         assert.equal it.name, \child1
       .Then ->
         Tests.Fetch 1
           .Then ->
+            console.log 'IT2', it
             assert.equal it.name, \test
             assert.equal it.Child.name, \child1
             assert.equal it.Child.testId, 1

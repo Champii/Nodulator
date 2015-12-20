@@ -17,18 +17,19 @@ describe 'N Route', ->
     N.Reset ->
 
       class TestRoute extends N.Route
-        resource: N 'test'
+        resource: N \tests
 
         Config: ->
           super()
           @Get -> {message: 'Coucou'}
 
       new TestRoute
+      N._ListEndpoints console.log
       done()
 
   test 'should get resource', (done) ->
     N.client.Get '/api/1/tests', (err, res) ->
       throw err if err?
-      
+
       assert.equal res.body.message, 'Coucou'
       done()

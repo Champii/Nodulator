@@ -196,7 +196,7 @@ class Schema
           if not typeCheck.array blob[description.localKey]
             return done new Error 'Model association needs array of integer as ids and localKeys'
 
-        description.type._FetchUnwrapped blob[description.localKey], done, _depth
+        description.type.Fetch blob[description.localKey], done, _depth
 
     else if description.distantKey?
       foreign = description.distantKey
@@ -206,9 +206,9 @@ class Schema
           return done()
 
         if !isArray
-          description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth
+          description.type.Fetch {"#{description.distantKey}": blob.id} , done, _depth
         else
-          description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth
+          description.type.List {"#{description.distantKey}": blob.id}, done, _depth
 
     toPush  =
       keyType: keyType
@@ -223,12 +223,13 @@ class Schema
   FetchAssoc: (blob, done, _depth) ->
     assocs = {}
 
-    @debug.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
+    console.log 'FetchAssocs', blob, @name, _depth
+    # @debug.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
     async.eachSeries @assocs, (resource, _done) ~>
       done = (err, data)->
         _done err, data
 
-      @debug.Log "Assoc: Fetching #{resource.name}"
+      # @debug.Log "Assoc: Fetching #{resource.name}"
       resource.Get blob, (err, instance) ->
         assocs[resource.name] = resource.default if resource.default?
 
@@ -246,17 +247,17 @@ class Schema
     get = (blob, done, _depth) ~>
       return done! if not _depth or not blob.id?
 
-      assoc = _(@assocs).findWhere name: capitalize through.lname
+      assoc = _(@assocs).findWhere name: capitalize through.name
       assoc.Get blob, (err, instance) ->
         return done err if err?
 
-        done null, instance[capitalize res.lname]
+        done null, instance[capitalize res._type]
       , _depth + 1
 
     toPush  =
       keyType: 'distant'
       type: res
-      name: capitalize res.lname
+      name: capitalize res._type
       Get: get
     @assocs.push toPush
 
@@ -264,11 +265,11 @@ class Schema
     get = (blob, done, _depth) ~>
       return done! if not _depth or not blob.id?
 
-      assoc = _(@assocs).findWhere name: capitalize through.lname + \s
+      assoc = _(@assocs).findWhere name: capitalize through.name
       assoc.Get blob, (err, instance) ->
         return done err if err?
 
-        res._ListUnwrapped instance[capitalize res.lname], (err, instances) ->
+        res._ListUnwrapped instance[capitalize res._type], (err, instances) ->
           return done err if err?
 
           done null, instances
@@ -279,7 +280,7 @@ class Schema
     toPush  =
       keyType: 'distant'
       type: res
-      name: capitalize res.lname + \s
+      name: capitalize res._type
       Get: get
     @assocs.push toPush
 
@@ -291,7 +292,7 @@ class Schema
         return done err if err?
 
         async.mapSeries instances, (instance, done) ~>
-          res._FetchUnwrapped instance[res.lname + \Id ], done, _depth - 1
+          res._FetchUnwrapped instance[res._type + \Id ], done, _depth - 1
         , (err, results) ~>
           return done err if err?
 
@@ -306,7 +307,7 @@ class Schema
     toPush  =
       keyType: 'distant'
       type: res
-      name: capitalize res.lname + \s
+      name: capitalize res._type
       Get: get
     @assocs.push toPush
     @habtm.push through

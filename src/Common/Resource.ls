@@ -1,12 +1,8 @@
 require! {
-  \./Helpers/ChangeWatcher
-  \./Schema
-  \prelude-ls
   \./Helpers/Debug
+  \./Schema
   async
   underscore: __
-  validator: Validator
-  hacktiv: Hacktiv
   polyparams: ParamWraper
 }
 
@@ -32,16 +28,17 @@ module.exports = (config, routes, name, N) ->
   debug-resource = new Debug "N::Resource::#name"
   class Resource extends Wrappers
     @N = N
-    @watchers = []
+    @_watchers = []
+    @_type = name
 
 
-    @DEFAULT_DEPTH = 1
-    @INITED = false
+    @_DEFAULT_DEPTH = 1
+    @_INITED = false
     @_schema = null
     @error = error
     @debug-resource = debug-resource
     @debug-res = debug-res
-    @debug-res.Log "Creating new Resource : #name"
+    # @debug-res.Log "Creating new Resource : #name"
 
   #
   # Public
@@ -52,17 +49,17 @@ module.exports = (config, routes, name, N) ->
     (blob) ->
       @_table = @.__proto__.constructor._table
       @_schema = @.__proto__.constructor._schema
-      @_type = @.__proto__.constructor.lname
       @_config = @.__proto__.constructor.config
+      @_type = name
 
       if blob.promise?
-        debug-resource.Log "Defered instanciation"
+        # debug-resource.Log "Defered instanciation"
         @_d = blob
         @_promise = blob.promise
         return
 
 
-      debug-resource.Log "Instantiate with {id: #{blob.id}}"
+      # debug-resource.Log "Instantiate with {id: #{blob.id}}"
 
       import @_schema.Populate @, blob
 
@@ -153,11 +150,11 @@ module.exports = (config, routes, name, N) ->
       res = new @ blob
 
       @_schema.assocs |> each ->
-        if blob[it.name]?
-          if is-type \Array blob[it.name]
-            res[it.name] = blob[it.name] |> map (it.type~Hydrate)
+        if blob[it._type]?
+          if is-type \Array blob[it._type]
+            res[it._type] = blob[it._type] |> map (it.type~Hydrate)
           else
-            res[it.name] = it.type.Hydrate blob[it.name]
+            res[it._type] = it.type.Hydrate blob[it._type]
 
       res
 
@@ -175,7 +172,27 @@ module.exports = (config, routes, name, N) ->
       @_FetchUnwrapped ...
 
     # Fetch from id or id array
-    @_FetchUnwrapped = -> ...
+    @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth) ->
+
+      # if is-type \Array arg
+      #   @debug-resource.Log "Fetching from array: #{arg.length} entries"
+
+      cb = (done) ~> (err, blob) ~>
+        | err?  => done err
+        | _     =>
+          # @debug-resource.Log "Fetched {id: #{blob.id}}"
+          Debug.Depth!
+          @resource._Deserialize blob, done, _depth
+
+      @_HandleArrayArg arg, (constraints, done) ~>
+
+        # @debug-resource.Log "Fetch #{JSON.stringify constraints}"
+
+        if is-type 'Object', constraints
+          @_table.FindWhere '*', constraints, cb done
+        else
+          @_table.Find constraints, cb done
+      , done
 
     # Get a list of records from DB
     @List = @_WrapPromise @_WrapCache 'List' @_WrapWatchArgs @_WrapDebugError @debug-resource~Error, ->
@@ -183,15 +200,43 @@ module.exports = (config, routes, name, N) ->
       @_ListUnwrapped ...
 
     # Get a list of records from DB
-    @_ListUnwrapped = -> ...
+    @_ListUnwrapped = (arg, done, _depth = @config.maxDepth) ->
+      if typeof(arg) is 'function'
+        if typeof(done) is 'number'
+          _depth = done
+        done = arg
+        arg = {}
 
+      # if is-type \Array arg => @debug-resource.Log "Listing from array: #{arg.length} entries"
+
+      midDone = (constraints, done) ~>
+        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
+          return done err if err?
+
+          async.map blobs, (blob, done) ~>
+            # @debug-resource.Log "Listed {id: #{blob.id}}"
+            @resource._Deserialize blob, done, _depth
+          , done
+      @_HandleArrayArg arg, midDone, done
     # Delete given records from DB
     @Delete = @_WrapPromise @_WrapDebugError @debug-resource~Error, ->
       @Init!
       @_DeleteUnwrapped ...
 
     # Delete given records from DB
-    @_DeleteUnwrapped = -> ...
+    @_DeleteUnwrapped = (arg, done) ->
+
+      if is-type \Array arg
+        @debug-resource.Warn "Deleting from array: #{arg.length} entries"
+
+      @_HandleArrayArg arg, (constraints, done) ~>
+        # @debug-resource.Warn "Deleting #{JSON.stringify constraints}"
+        @resource._FetchUnwrapped constraints, (err, instance) ~>
+          | err?  => done err
+          | _     => instance._DeleteUnwrapped done
+
+      , done
+
 
     # Watch the Resource for a particular event or any changes
     @Watch = (...args) ->
@@ -204,9 +249,9 @@ module.exports = (config, routes, name, N) ->
       for arg in args
         switch
           | is-type \Function arg => done := arg
-          | is-type \Array arg    => types := arg
-          | is-type \String arg   => types.push arg
-          | is-type \Object arg   => query := arg
+          | is-type \Array    arg => types := arg
+          | is-type \String   arg => types.push arg
+          | is-type \Object   arg => query := arg
 
       if not types.length
         types.push \all
@@ -244,8 +289,8 @@ module.exports = (config, routes, name, N) ->
       * \String : optional: true
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
-        @_AddRelationship res, false, true, may, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, fieldName || @lname, key || @lname + \Id , may if belongsTo
+        @_AddRelationship res, false, true, may, key || @_type + \Id , fieldName || res._type
+        res.BelongsTo @, fieldName || @_type, key || @_type + \Id , may if belongsTo
         @
 
     @HasMany = @_WrapParams do
@@ -255,8 +300,8 @@ module.exports = (config, routes, name, N) ->
       * \String : optional: true
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
-        @_AddRelationship res, true, true, may, key || @lname + \Id , fieldName || res.lname
-        res.BelongsTo @, fieldName || @lname, key || @lname + \Id , may if belongsTo
+        @_AddRelationship res, true, true, may, key || @_type + \Id , fieldName || res._type
+        res.BelongsTo @, fieldName || @_type, key || @_type + \Id , may if belongsTo
         @
 
     @BelongsTo = @_WrapParams do
@@ -265,7 +310,7 @@ module.exports = (config, routes, name, N) ->
       * \String : optional: true
       * \Boolean : default: true
       (res, fieldName, key, may) ->
-        @_AddRelationship res, false, false, may, key || res.lname + \Id , fieldName || res.lname
+        @_AddRelationship res, false, false, may, key || res._type + \Id , fieldName || res._type
         @
 
     @MayHasOne = @_WrapParams do
@@ -302,8 +347,8 @@ module.exports = (config, routes, name, N) ->
       @_schema.HasManyThrough res, through
 
     @HasAndBelongsToMany = (res, reverse = true) ->
-      names = sort [@lname, res.lname]
-      Assoc = N names.0 + \s_ + names.1, @config .Init!
+      names = sort [@_type, res._type]
+      Assoc = N names.0 + \_ + names.1, @config .Init!
       @_schema.HasAndBelongsToMany res, Assoc
       res._schema.HasAndBelongsToMany @, Assoc if reverse
 
@@ -317,7 +362,7 @@ module.exports = (config, routes, name, N) ->
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
 
       names = sort [@_type, instance._type]
-      res = @_schema.habtm |> find (.lname is names.0 + \s_ + names.1)
+      res = @_schema.habtm |> find (._type is names.0 + \_ + names.1)
       if res?
         return res._CreateUnwrapped {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ~>
           return done err if err?
@@ -327,7 +372,8 @@ module.exports = (config, routes, name, N) ->
 
             @Fetch done
 
-      res = @_schema.assocs |> find (.type.lname is instance._type)
+      # console.log instance._type, @_schema.assocs
+      res = @_schema.assocs |> find (.type._type is instance._type)
       if res?
         if res.keyType is \distant
           instance[res.foreign] = @id
@@ -347,12 +393,12 @@ module.exports = (config, routes, name, N) ->
 
     Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]
-      res = __(@_schema.habtm).findWhere lname: names.0 + \s_ + names.1
+      res = __(@_schema.habtm).findWhere name: names.0 + \_ + names.1
       if res?
         return res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
           done err, instance
 
-      res = @_schema.assocs |> find (.type.lname is instance._type)
+      res = @_schema.assocs |> find (.type._type is instance._type)
       if res?
         if res.keyType is \distant
           instance[res.foreign] = null
@@ -368,7 +414,7 @@ module.exports = (config, routes, name, N) ->
 
             @Fetch done
       else
-        done new Error "#{capitalize @lname}: Add: No assocs found for #{capitalize instance.lname}"
+        done new Error "#{capitalize @_type}: Add: No assocs found for #{capitalize instance.name}"
 
     # Change properties and save
     Set: @_WrapPromise @_WrapResolvePromise (obj, done) ->
@@ -401,6 +447,9 @@ module.exports = (config, routes, name, N) ->
 
     # Pre-Instanciation and associated model retrival
     @_Deserialize = (blob, done, _depth) ->
+      if not _depth?
+        _depth = @_DEFAULT_DEPTH
+
       res = @
       delete blob._id if N.config.dbType is \Mongo
 
@@ -435,28 +484,63 @@ module.exports = (config, routes, name, N) ->
 
       N.Resource name, routes, config, @
 
+    # Prepare the core of the Resource
+    @_PrepareResource = (_config, _routes, _name, _parent = null) ->
+      # @debug-res.Log 'Preparing resource'
+
+      @_type = _name.toLowerCase()
+
+      @_table = new @DB @_type, @
+      if not _config?.abstract
+        @_table.AddDriver _config
+      else if not _config? or (_config? and not _config.abstract)
+        @_table.AddDriver @config
+
+      @config = _config || {}
+      if not @config.maxDepth?
+        @config.maxDepth = @_DEFAULT_DEPTH
+
+      @_INITED = false
+
+      @_schema = new Schema @_type, _config?.schema
+      @_parent = _parent
+      if @_parent?
+        @_schema <<< @_parent._schema.Inherit!
+
+      @_schema.Resource = @
+
+
+      @Route = _routes
+      @_routes = _routes
+
+
+      @
+
     # Initialisation
     @Init = (@config = @config, extendArgs) ->
-      if @INITED
+      if @_INITED
         return @
-      # if N.inited[@lname]?
-      #   return @
-      #   throw new Error 'ALREADY INITED !!!! BUUUUUUUUUG' + @lname
+      if N.inited[@_type]?
+        return @
+      #   throw new Error 'ALREADY _INITED !!!! BUUUUUUUUUG' + @_type
 
       @resource = @
 
-      N.resources[@lname] = @
+      N.resources[@_type] = @
 
-      @debug-res.Log "Init() #{@lname}"
+      # @debug-res.Log "Init() #{@_type}"
 
-      N.inited[@lname] = true
+      N.inited[@_type] = true
 
-      @INITED = true
+      @_INITED = true
 
-      # if @_routes?
-      #   @routes = new @_routes(@, @config)
+      if @_routes?._type is \View
+        @routes = @_routes
+        @routes.AttachResource @
+      else if @_routes?
+        @routes = new @_routes(@, @config)
 
       #FIXME
-      N[capitalize @lname] = @
+      N[capitalize @_type] = @
 
       @

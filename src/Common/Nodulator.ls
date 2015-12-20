@@ -3,8 +3,6 @@ require! {
   \./Helpers/Debug
 }
 
-global import require \prelude-ls
-
 class N
 
   resources: {}
@@ -59,6 +57,16 @@ class N
   Route: {}
 
   Config: (config) ->
+    if @config?
+      return
+
+    @debug-nodulator.Warn "Main config"
+
+    @config = config || @defaultConfig
+
+    @defaultConfig
+      |> obj-to-pairs
+      |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
   Use: (module) ->
 

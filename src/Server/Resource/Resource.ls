@@ -93,7 +93,7 @@ module.exports = (config, routes, name, N) ->
       * \Object : optional: true
       * \Function
       * \Number : optional: true
-      (arg, args, config, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
+      (arg, args, config, done, _depth = @config?.maxDepth) ->
 
         if args?
           @debug-resource.Log "Creating from array: #{args.length} entries"
@@ -139,117 +139,22 @@ module.exports = (config, routes, name, N) ->
             , _depth
         , done
 
-    # Fetch from id or id array
-    @_FetchUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
-
-      if is-type \Array arg
-        @debug-resource.Log "Fetching from array: #{arg.length} entries"
-
-      cb = (done) ~> (err, blob) ~>
-        | err?  => done err
-        | _     =>
-          @debug-resource.Log "Fetched {id: #{blob.id}}"
-          Debug.Depth!
-          @resource._Deserialize blob, done, _depth
-
-      @_HandleArrayArg arg, (constraints, done) ~>
-
-        @debug-resource.Log "Fetch #{JSON.stringify constraints}"
-
-        if is-type 'Object', constraints
-          @_table.FindWhere '*', constraints, cb done
-        else
-          @_table.Find constraints, cb done
-      , done
-
-    # Get a list of records from DB
-    @_ListUnwrapped = (arg, done, _depth = if @config?.maxDepth? => @config.maxDepth else @@DEFAULT_DEPTH) ->
-
-      if typeof(arg) is 'function'
-        if typeof(done) is 'number'
-          _depth = done
-
-        done = arg
-        arg = {}
-
-      if is-type \Array arg
-        @debug-resource.Log "Listing from array: #{arg.length} entries"
-        # Debug.Depth!
-
-      @_HandleArrayArg arg, (constraints, _done) ~>
-        done = (err, data) ->
-          Debug.UnDepth!
-          _done err, data
-
-        @debug-resource.Log "List #{JSON.stringify constraints}"
-        Debug.Depth!
-
-        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
-          | err?  => done err?
-          | _     =>
-            async.map blobs, (blob, done) ~>
-              @debug-resource.Log "Listed {id: #{blob.id}}"
-              @resource._Deserialize blob, done, _depth
-            , done
-
-      , done
-
-    # Delete given records from DB
-    @_DeleteUnwrapped = (arg, done) ->
-
-      if is-type \Array arg
-        @debug-resource.Warn "Deleting from array: #{arg.length} entries"
-
-      @_HandleArrayArg arg, (constraints, done) ~>
-        @debug-resource.Warn "Deleting #{JSON.stringify constraints}"
-        @resource._FetchUnwrapped constraints, (err, instance) ~>
-          | err?  => done err
-          | _     => instance._DeleteUnwrapped done
-
-      , done
-
   #
   # Private
   # Init process
   #
 
-    # Prepare the core of the Resource
-    @_PrepareResource = (_config, _routes, _name, _parent = null) ->
-      @debug-res.Log 'Preparing resource'
-
-      @lname = _name.toLowerCase()
-
-      @_table = new DB @lname + \s
-      if not _config?.abstract
-        @_table.AddDriver _config
-      else if not _config? or (_config? and not _config.abstract)
-        @_table.AddDriver @config
-
-      @config = _config
-      @INITED = false
-
-      @_schema = new Schema @lname, _config?.schema
-      @_parent = _parent
-      if @_parent?
-        @_schema <<< @_parent._schema.Inherit!
-
-      @_schema.Resource = @
-
-      @Route = _routes
-      @_routes = _routes
-
-      @
-
     # Initialisation
-    @Init = (@config = @config, extendArgs) ->
-      if @INITED
-        return @
+    # @Init = (@config = @config, extendArgs) ->
+    #   if @INITED
+    #     return @
+    #
+    #   super ...
+    #
+    #   if @_routes?
+    #     @routes = new @_routes(@, @config)
+    #
+    #   @
 
-      super ...
-
-      if @_routes?
-        @routes = new @_routes(@, @config)
-
-      @
-
+  ResourceServer.DB = DB
   ResourceServer._PrepareResource(config, routes, name)

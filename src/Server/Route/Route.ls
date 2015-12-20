@@ -15,7 +15,7 @@ class Route
 
   basePath: '/api/'
   apiVersion: 1
-  rname: ''
+  name: ''
 
   (resource, @config) ->
 
@@ -25,15 +25,15 @@ class Route
 
     if @resource
       if typeof(@resource) is 'function'
-        @rname = @resource.lname
+        @name = @resource._type
       else if typeof(@resource) is 'string'
-        @rname = @resource
+        @name = @resource
         @resource = undefined
         N.Config() if not N.config?
       else
         throw new Error 'Route needs a Resource (or at least a name)'
 
-    @debug = new Debug "N::Route::#{@rname}", Debug.colors.purple
+    @debug = new Debug "N::Route::#{@name}", Debug.colors.purple
 
     N.Config!
     if N.consoleMode
@@ -44,10 +44,9 @@ class Route
 
     @app = N.app
 
-    @name = @rname + 's'
-
-    if @rname[*-1] is 'y'
-      @name = @rname[til @name.length - 2]*'' + 'ies'
+    #
+    # if @name[*-1] is 'y'
+    #   @name = @name[til @name.length - 2]*'' + 'ies'
 
     @Config()
 

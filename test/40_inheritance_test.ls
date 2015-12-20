@@ -45,7 +45,7 @@ describe 'N Inheritance', ->
 
   test 'should have inherited in route', (done2) ->
 
-    class Players extends N 'player'
+    class Players extends N \players
 
       level: 1
 
@@ -111,11 +111,11 @@ describe 'N Inheritance', ->
     # console.log err, body
 
   test 'should have inherited fields', (done) ->
-    P = N \p
+    P = N \ps
 
     P.Field \a \int .Default 0
 
-    C = P.Extend \c
+    C = P.Extend \cs
 
     C.Create!
       .Then -> assert.equal it.a, 0
@@ -123,11 +123,11 @@ describe 'N Inheritance', ->
       .Catch done
 
   test 'should not have inherited fields', (done) ->
-    P2 = N \p2
+    P2 = N \p2s
 
     P2.Field \a \int .Default 0
 
-    C2 = P2.Extend \c2
+    C2 = P2.Extend \c2s
 
     C2.Field \b \int .Default 1
 

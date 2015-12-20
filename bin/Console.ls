@@ -35,7 +35,7 @@ module.exports = (configPath, resPath)->
 
     if res?
       if res?.Init?
-        res.inspect = -> "[Resource #{res.lname}]"
+        res.inspect = -> "[Resource #{res._type}]"
       if res._promise?
 
         res
