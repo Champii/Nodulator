@@ -41,9 +41,7 @@ module.exports = (config, routes, name, N) ->
       serie = @Serialize()
       @_schema.Validate serie, (err) ~>
         exists = @id?
-
-        if exists => debug-resource.Log "Saving  {id: #{@id}}"
-        else      => debug-resource.Log "Saving New"
+        debug-resource.Log "Saving  #{JSON.stringify serie}"
 
         switch
           | err? => done err

@@ -141,7 +141,7 @@ class Schema
     res = {}
     (@properties or [])
       |> filter (.virtual?)
-      |> each (-> res[it.name] = it.virtual.call instance, blob, ->)
+      |> each (-> res[it.name] = it.virtual.call instance, instance, ->)
 
     res
 
@@ -196,7 +196,7 @@ class Schema
           if not typeCheck.array blob[description.localKey]
             return done new Error 'Model association needs array of integer as ids and localKeys'
 
-        description.type.Fetch blob[description.localKey], done, _depth
+        description.type._FetchUnwrapped blob[description.localKey], done, _depth
 
     else if description.distantKey?
       foreign = description.distantKey
@@ -206,9 +206,9 @@ class Schema
           return done()
 
         if !isArray
-          description.type.Fetch {"#{description.distantKey}": blob.id} , done, _depth
+          description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth
         else
-          description.type.List {"#{description.distantKey}": blob.id}, done, _depth
+          description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth
 
     toPush  =
       keyType: keyType
@@ -223,7 +223,6 @@ class Schema
   FetchAssoc: (blob, done, _depth) ->
     assocs = {}
 
-    console.log 'FetchAssocs', blob, @name, _depth
     # @debug.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
     async.eachSeries @assocs, (resource, _done) ~>
       done = (err, data)->
@@ -286,9 +285,9 @@ class Schema
 
   HasAndBelongsToMany: (res, through) ->
     get = (blob, done, _depth) ~>
-      return done! if not _depth or not blob.id?
+      return done! if _depth < 0 or not blob.id?
 
-      through._ListUnwrapped "#{@name + \Id }": blob.id, (err, instances) ~>
+      through._ListUnwrapped {(@name + \Id): blob.id}, (err, instances) ~>
         return done err if err?
 
         async.mapSeries instances, (instance, done) ~>
@@ -296,22 +295,17 @@ class Schema
         , (err, results) ~>
           return done err if err?
 
-          assocs =
-            | results.length => results
-            | _              => null
-
-          done null, assocs
+          done null, results
 
       , _depth
 
     toPush  =
       keyType: 'distant'
       type: res
-      name: capitalize res._type
+      name: capitalize res._type + \s
       Get: get
     @assocs.push toPush
     @habtm.push through
-    # console.log @habtm
 
   Inherit: ->
     properties: @properties

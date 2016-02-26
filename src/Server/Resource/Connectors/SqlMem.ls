@@ -10,6 +10,14 @@ class SqlMem
 
     res = map (-> _({}).extend it), _(tables[table]).where(where)
 
+    if options.sortBy?
+      rev = 0
+      if options.sortBy.0 is \-
+        options.sortBy = options.sortBy[1 to]*''
+        rev = 1
+      res = sort-by (.[options.sortBy]), res
+      if rev
+        res = reverse res
     if options.limit?
       offset = options.offset || 0
       res = res[offset til options.limit]

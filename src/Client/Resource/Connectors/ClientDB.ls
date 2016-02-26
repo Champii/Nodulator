@@ -58,23 +58,26 @@ class ClientDB
 
   OnNew: ->
     it = @ExtractAssocs it
-    console.log 'New', it
+    # console.log 'New', it
     @collection.push it
     @resource._Changed!
     @resource.N.bus.emit \new_ + @resource._type, it
 
   OnUpdate: (item) ->
+    console.log 'Update' item
     item = @ExtractAssocs item
-    console.log 'Update', item
+    # console.log 'Update', item
     # return if item.id not in (@collection |> map (.id))
     idx = @collection |> find-index -> it.id is item.id
     # console.log idx, @collection.idx
     if idx?
-      console.log 'Id ?', idx, item, @collection[idx]
+      # console.log 'Id ?', idx, item, @collection[idx]
+      console.log 'Change' @collection[idx], item
       diff = @GetChange @collection[idx], item
-      console.log 'diff ?', diff
+      # console.log 'diff ?', diff
       @collection[idx] = item
     # @resource._Changed!0
+      console.log 'diff' diff
       if keys diff .length
         @resource.N.bus.emit \update_ + @resource._type + \_ + item.id, diff
     else
@@ -98,7 +101,7 @@ class ClientDB
 
   GetChange: (base, toCmp)->
     res = {}
-    for k, v of base when toCmp[k] isnt v and typeof! v isnt \String and typeof! v isnt \Object
+    for k, v of base when toCmp[k] !== v and typeof! v isnt \Object and typeof! v isnt \Array
       res[k] = toCmp[k]
     res
 
@@ -142,7 +145,7 @@ class ClientDB
     @client.Create fields, (err, data) ~>
       return done err if err?
 
-      @collection.push elem
+      # @collection.push data
       # @resource._Changed!
       done null, data
 

@@ -31,7 +31,6 @@ class Wrappers
 
       ret = cb.apply @, args
 
-      # console.log 'Wrap Promise', d, @
       if d? and @Init?
         @Init!
         new resource d
@@ -52,12 +51,12 @@ class Wrappers
     (...args) ->
       doneIdx = findDone args
       oldDone = args[doneIdx]
-      if @_promise?
-        # console.log 'WrapResolvePromise', @
+      if @_promise? and doneIdx?
         @
-          .Then ~> cb.apply it, args
+          .Then ->
+            it._promise = null
+            cb.apply it, args
           .Catch oldDone
-          # .Catch -> throw 'tamere'
       else
         cb.apply @, args
 
@@ -102,7 +101,6 @@ class Wrappers
           cb.apply @, args
 
   @_WrapDebugError = (debug, cb) ->
-
     resource = @
 
     (...args) ->
