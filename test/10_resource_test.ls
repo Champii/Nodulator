@@ -66,7 +66,7 @@ describe 'N Resource', ->
     done()
 
   test 'should delete resource', (done) ->
-    err, test <- Tests.Fetch 1, done
+    err, test <- Tests.Fetch 1
     throw new Error err if err?
 
     err <- test.Delete!
@@ -89,8 +89,14 @@ describe 'N Resource', ->
       assert.equal tests[1].field1, 2
       assert.equal tests[1].field2, 2
 
-      # console.log tests
-      done()
+      Tests.List (err, tests) ->
+        assert.equal tests[0].field1, 1
+        assert.equal tests[0].field2, 1
+        assert.equal tests[1].field1, 2
+        assert.equal tests[1].field2, 2
+
+        # console.log tests
+        done()
 
   test 'should Fetch from an obj', (done) ->
     Tests.Fetch {field1: 1, field2: 1}, (err, tests) ->

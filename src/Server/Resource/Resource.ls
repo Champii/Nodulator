@@ -38,7 +38,7 @@ module.exports = (config, routes, name, N) ->
         done = config
         config = @_config
 
-      serie = @Serialize()
+      serie = @Serialize!
       @_schema.Validate serie, (err) ~>
         exists = @id?
         debug-resource.Log "Saving  #{JSON.stringify serie}"
@@ -54,7 +54,7 @@ module.exports = (config, routes, name, N) ->
                   N.bus.emit \new_ + name, @
                 else
                   N.bus.emit \update_ + name, @
-                ChangeWatcher.Invalidate()
+                ChangeWatcher.Invalidate!
 
                 debug-resource.Log "Saved  {id: #{@id}}"
                 done null, @
@@ -97,7 +97,6 @@ module.exports = (config, routes, name, N) ->
           @debug-resource.Log "Creating from array: #{args.length} entries"
 
         @_HandleArrayArg arg || args || {}, (blob, done) ~>
-
           async.mapSeries obj-to-pairs(blob), (pair, done) ~>
             if pair.0 in (@_schema.assocs |> map (.foreign)) and pair.1?._promise
               pair.1.Then -> done null [pair.0, it.id]

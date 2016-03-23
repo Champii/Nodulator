@@ -30,7 +30,6 @@ describe 'N Associations HasOne', ->
 
   test 'should create with id', (done) ->
     Childs.Create name: \child1 testId: Tests.Create name: \test
-      .Log!#      console.log 'IT', it
       .Then -> assert.equal it.name, \child1
       .Then ->
         Tests.Fetch 1
