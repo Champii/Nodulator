@@ -26,7 +26,6 @@ module.exports = (config, routes, name, N) ->
   class Resource extends Wrappers
     @N = N
     @_watchers = []
-    @_type = name
 
     @_DEFAULT_DEPTH = 1
     @_INITED = false
@@ -44,13 +43,9 @@ module.exports = (config, routes, name, N) ->
     # Constructor
     (blob) ->
       if blob.promise?
-        # debug-resource.Log "Defered instanciation"
         @_d = blob
         @_promise = blob.promise
         return
-
-
-      # debug-resource.Log "Instantiate with {id: #{blob.id}}"
 
       import @_schema.Populate @, blob
 
@@ -165,19 +160,16 @@ module.exports = (config, routes, name, N) ->
     # Fetch from id or id array
     @_FetchUnwrapped = (arg, done, _depth = @config?.maxDepth) ->
 
-      # if is-type \Array arg
-      #   @debug-resource.Log "Fetching from array: #{arg.length} entries"
+      if is-type \Array arg
+        @debug-resource.Log "Fetching from array: #{arg.length} entries"
 
       cb = (done) ~> (err, blob) ~>
         | err?  => done err
         | _     =>
-          # @debug-resource.Log "Fetched {id: #{blob.id}}"
           Debug.Depth!
           @resource._Deserialize blob, done, _depth
 
       @_HandleArrayArg arg, (constraints, done) ~>
-
-        # @debug-resource.Log "Fetch #{JSON.stringify constraints}"
 
         if is-type 'Object', constraints
           @_table.FindWhere '*', constraints, cb done
@@ -197,20 +189,12 @@ module.exports = (config, routes, name, N) ->
       * \Function
       * \Number : default: @config?.maxDepth || 1
       (arg, options, done, _depth) ->
-        # if typeof(arg) is 'function'
-        #   if typeof(done) is 'number'
-        #     _depth = done
-        #   done = arg
-        #   arg = {}
-
-        # if is-type \Array arg => @debug-resource.Log "Listing from array: #{arg.length} entries"
 
         midDone = (constraints, done) ~>
           @_table.Select '*', (constraints || {}), options, (err, blobs) ~>
             return done err if err?
 
             async.map blobs, (blob, done) ~>
-              # @debug-resource.Log "Listed {id: #{blob.id}}"
               @resource._Deserialize blob, done, _depth
             , done
 
@@ -228,7 +212,6 @@ module.exports = (config, routes, name, N) ->
         @debug-resource.Warn "Deleting from array: #{arg.length} entries"
 
       @_HandleArrayArg arg, (constraints, done) ~>
-        # @debug-resource.Warn "Deleting #{JSON.stringify constraints}"
         @resource._FetchUnwrapped constraints, (err, instance) ~>
           | err?  => done err
           | _     => instance._DeleteUnwrapped done
