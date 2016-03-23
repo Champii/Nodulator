@@ -66,7 +66,10 @@ module.exports = (config, routes, name, N) ->
     _WrapReturnThis: (done) ->
       (arg) ~>
         res = done arg
-        res?._promise || res || arg
+        if res?._promise? => res._promise
+        else if res? => res
+        else if arg? => arg
+        else @
 
     Then: ->
       @_promise = @_promise.then @_WrapReturnThis it if @_promise?
@@ -81,7 +84,7 @@ module.exports = (config, routes, name, N) ->
       @
 
     # Wrap the _SaveUnwrapped() call
-    Save: @_WrapPromise @_WrapResolvePromise @_WrapDebugError @debug-resource~Error, -> @_SaveUnwrapped ...
+    Save: @_WrapPromise @_WrapResolvePromise @_WrapDebugError @debug-resource~Error, ->  @_SaveUnwrapped ...
 
     # Wrap the _DeleteUnwrapped() call
     Delete: @_WrapPromise @_WrapResolvePromise @_WrapDebugError @debug-resource~Error, -> @_DeleteUnwrapped ...
@@ -200,24 +203,31 @@ module.exports = (config, routes, name, N) ->
       @_ListUnwrapped ...
 
     # Get a list of records from DB
-    @_ListUnwrapped = (arg, done, _depth = @config.maxDepth) ->
-      if typeof(arg) is 'function'
-        if typeof(done) is 'number'
-          _depth = done
-        done = arg
-        arg = {}
+    @_ListUnwrapped = @_WrapParams do
+      * \Object : default: {}
+      * \Object : default: {}
+      * \Function
+      * \Number : default: @config?.maxDepth || 1
+      (arg, options, done, _depth) ->
+        # if typeof(arg) is 'function'
+        #   if typeof(done) is 'number'
+        #     _depth = done
+        #   done = arg
+        #   arg = {}
 
-      # if is-type \Array arg => @debug-resource.Log "Listing from array: #{arg.length} entries"
+        # if is-type \Array arg => @debug-resource.Log "Listing from array: #{arg.length} entries"
 
-      midDone = (constraints, done) ~>
-        @_table.Select '*', (constraints || {}), {}, (err, blobs) ~>
-          return done err if err?
+        midDone = (constraints, done) ~>
+          @_table.Select '*', (constraints || {}), options, (err, blobs) ~>
+            return done err if err?
 
-          async.map blobs, (blob, done) ~>
-            # @debug-resource.Log "Listed {id: #{blob.id}}"
-            @resource._Deserialize blob, done, _depth
-          , done
-      @_HandleArrayArg arg, midDone, done
+            async.map blobs, (blob, done) ~>
+              # @debug-resource.Log "Listed {id: #{blob.id}}"
+              @resource._Deserialize blob, done, _depth
+            , done
+
+        @_HandleArrayArg arg, midDone, done
+
     # Delete given records from DB
     @Delete = @_WrapPromise @_WrapDebugError @debug-resource~Error, ->
       @Init!
@@ -349,6 +359,8 @@ module.exports = (config, routes, name, N) ->
     @HasAndBelongsToMany = (res, reverse = true) ->
       names = sort [@_type, res._type]
       Assoc = N names.0 + \_ + names.1, @config .Init!
+      Assoc.BelongsTo @
+      Assoc.BelongsTo res
       @_schema.HasAndBelongsToMany res, Assoc
       res._schema.HasAndBelongsToMany @, Assoc if reverse
 
@@ -393,10 +405,15 @@ module.exports = (config, routes, name, N) ->
 
     Remove: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (instance, done) ->
       names = sort [@_type, instance._type]
-      res = __(@_schema.habtm).findWhere name: names.0 + \_ + names.1
+      res = @_schema.habtm |> find (._type is names.0 + \_ + names.1)
       if res?
-        return res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ->
-          done err, instance
+        return res.Delete {"#{@_type}Id": @id, "#{instance._type}Id": instance.id}, (err, newRes) ~>
+          return done err if err?
+
+          @_SaveUnwrapped ~>
+            return done it if it?
+
+            @Fetch done
 
       res = @_schema.assocs |> find (.type._type is instance._type)
       if res?

@@ -32,6 +32,7 @@ module.exports = (N) ->
 
     _InitSockets: ->
       @io = socket.listen N.server
+      N.io = @io
       io = @io
       onAuthorizeSuccess = (data, accept) ->
         accept null, true

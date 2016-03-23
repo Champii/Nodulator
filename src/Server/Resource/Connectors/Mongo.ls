@@ -15,7 +15,17 @@ module.exports = (config) ->
 
     Select: (table, fields, where, options, done) ->
 
-      db(config.database + '.' + table).find where, (rows) ->
+      opts = {}
+      if options.limit?
+        opts.lim = options.limit
+      if options.sortBy?
+        rev = 1
+        if options.sortBy.0 is \-
+          options.sortBy = options.sortBy[1 to]*''
+          rev = -1
+        opts.sort = (options.sortBy): rev
+
+      db(config.database + '.' + table).find where, {}, opts, (rows) ->
         done null, rows.documents
 
     Insert: (table, fields, done) ->

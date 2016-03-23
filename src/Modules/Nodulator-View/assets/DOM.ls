@@ -91,15 +91,18 @@ class Node
           it.Render? @
 
   SetEvents: ->
+    node = @GetElement!
     if @name isnt \root and any (in events), keys @attrs
-      node = @GetElement!
-
       if @attrs.click?
         node.onclick = ~>
           @attrs.click ...
-      if @attrs.change?
+      if @attrs.keyup?
         node.onkeyup = ~>
+          @attrs.keyup ...
+      if @attrs.change?
+        node.onchange = ~>
           @attrs.change ...
+
 
     if typeof! @attrs?.value is \Function
       node.value = @attrs.value!
@@ -199,11 +202,11 @@ class WatchableNode extends Node
     @children = []
     first = true
     N.Watch ~>
-      res = @func!
-      if first
-        return first := false
+      # res = @func!
 
-      @Rerender!catch console~error
+      @Rerender first .catch console~error
+      if first
+        first := false
 
   Resolve: ->
     d = q.defer!
@@ -230,9 +233,12 @@ class WatchableNode extends Node
 
     return d.promise
 
-  Rerender: ->
+  Rerender: (first) ->
     d = q.defer!
-
+    if first
+      @func!
+      d.resolve null
+      return d.promise
     @Resolve!
       .then ~>
         if (anchor = @GetElement!)

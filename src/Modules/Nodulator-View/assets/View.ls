@@ -6,6 +6,7 @@ View = (context, fn) ->
     context := null
 
   RealRender = (...args, done) ->
+    # console.log 'Rerender'
     listener = null
 
     isInstance = @_type and @id?
@@ -13,21 +14,21 @@ View = (context, fn) ->
       for k, v of @
         let k = k
           if typeof! v is \Array and k in map (.name), @_schema.assocs
-            @[k] = N.Watch.Value v
+            @[k + \_] = N.Watch.Value v
             assoc = find (.name is k), @_schema.assocs
             N.bus.on \new_ + assoc.type._type, ~>
               if assoc.keyType is \distant
-                if it[assoc.foreign] is @id!
-                  @[k] @[k]!.concat [new assoc.type it]
+                if it[assoc.foreign] is @id
+                  @[k + \_] @[k].concat [new assoc.type it]
 
     if @ isnt window
       for k, v of @
-        if typeof! v isnt \Function and typeof! v isnt \Array and k.0 isnt \_
-          @[k] = new N.Watch.Value v
+        if (typeof! v isnt \Function and k.0 isnt \_) or (typeof! v is \Array and !isInstance)
+          @[k + \_] = new N.Watch.Value v
 
 
     if isInstance and listener?
-      N.bus.removeListeners \update_ + @_type + \_ + @id!, listener
+      N.bus.removeListeners \update_ + @_type + \_ + @id, listener
 
     viewRoot = DOM.div!
     first = true
@@ -37,16 +38,21 @@ View = (context, fn) ->
       args := []
 
     N.Watch ~>
+      # console.log 'WATCH !!!!' @
       viewRoot.Empty!
       render = viewRoot.AddChild fn.apply @, args
       if first
+        # console.log 'First?', first
         first := false
         if isInstance
+          # console.log 'Instance' @
           name = @_type
           listener := (changed) ~>
-            for k, v of changed when @[k]
-              @[k] v
-          N.bus.on \update_ + name + \_ + @id!, listener
+            console.log 'Tamere' changed
+            for k, v of changed when @[k]?
+              @[k + \_] v
+              @[k] = v
+          N.bus.on \update_ + name + \_ + @id, listener
         return done null, render
       render.Make!catch console~error
     viewRoot
@@ -75,7 +81,7 @@ View = (context, fn) ->
 
 
     # context::Render = RealRender
-    console.log 'Tamere'
+    # console.log 'Tamere'
     res::Render = RealRender
     # console.log res._type
     # socket.on 'update_' + res._type[to -2]*'', ~>
