@@ -19,18 +19,14 @@ error = new Hacktiv.Value
 
 # N = null
 module.exports = (config, routes, name, N) ->
-  # if not N?
-  #   N := _N
-    # N.Validator = Validator
-    # N.inited = {}
 
   debug-res = new Debug 'N::Resource', Debug.colors.blue
   debug-resource = new Debug "N::Resource::#name"
+
   class Resource extends Wrappers
     @N = N
     @_watchers = []
     @_type = name
-
 
     @_DEFAULT_DEPTH = 1
     @_INITED = false
@@ -38,7 +34,7 @@ module.exports = (config, routes, name, N) ->
     @error = error
     @debug-resource = debug-resource
     @debug-res = debug-res
-    # @debug-res.Log "Creating new Resource : #name"
+    @debug-res.Log "Creating new Resource : #name"
 
   #
   # Public
@@ -47,11 +43,6 @@ module.exports = (config, routes, name, N) ->
 
     # Constructor
     (blob) ->
-      @_table = @.__proto__.constructor._table
-      @_schema = @.__proto__.constructor._schema
-      @_config = @.__proto__.constructor.config
-      @_type = name
-
       if blob.promise?
         # debug-resource.Log "Defered instanciation"
         @_d = blob
@@ -66,10 +57,7 @@ module.exports = (config, routes, name, N) ->
     _WrapReturnThis: (done) ->
       (arg) ~>
         res = done arg
-        if res?._promise? => res._promise
-        else if res? => res
-        else if arg? => arg
-        else @
+        res?._promise || res || arg || @
 
     Then: ->
       @_promise = @_promise.then @_WrapReturnThis it if @_promise?
@@ -530,6 +518,7 @@ module.exports = (config, routes, name, N) ->
       @Route = _routes
       @_routes = _routes
 
+      @:: <<< @{_type, _schema, _table, _config}
 
       @
 

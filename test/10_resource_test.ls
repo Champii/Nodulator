@@ -90,6 +90,8 @@ describe 'N Resource', ->
       assert.equal tests[1].field2, 2
 
       Tests.List (err, tests) ->
+        throw new Error err if err?
+
         assert.equal tests[0].field1, 1
         assert.equal tests[0].field2, 1
         assert.equal tests[1].field1, 2

@@ -96,3 +96,18 @@ describe 'N Promises', ->
       .Log!
       .Catch -> done!
       .Then -> throw new Error it
+
+  test 'Chaining Create and List should return promise', (done) ->
+    Tmp = N \tmp
+    Tmp
+      .Create [
+        * a: 1 b: 1
+        * a: 2 b: 2]
+      .Then -> Tmp.List!
+      .Then ->
+        assert.equal it.0.a, 1
+        assert.equal it.0.b, 1
+        assert.equal it.1.a, 2
+        assert.equal it.1.b, 2
+        done!
+      .Catch -> done new Error it
