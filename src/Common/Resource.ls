@@ -457,7 +457,7 @@ module.exports = (config, routes, name, N) ->
     # Wrapper to allow simple variable or array as first argument
     @_HandleArrayArg = (arg, callback, done) ->
       do ->
-        | is-type 'Array', arg => async.mapSeries arg, callback, done
+        | is-type \Array arg => async.mapSeries arg, callback, done
         | _                    => callback arg, done
 
       @
