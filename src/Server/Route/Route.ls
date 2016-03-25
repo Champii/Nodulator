@@ -29,13 +29,11 @@ class Route
       else if typeof(@resource) is 'string'
         @name = @resource
         @resource = undefined
-        N.Config() if not N.config?
       else
         throw new Error 'Route needs a Resource (or at least a name)'
 
     @debug = new Debug "N::Route::#{@name}", Debug.colors.purple
 
-    N.Config!
     if N.consoleMode
       return
 

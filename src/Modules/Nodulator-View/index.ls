@@ -8,98 +8,106 @@ require! {
   path
   \browserify-livescript
   \coffeeify
+  \../NModule
 }
 
-module.exports = (N) ->
+class NView extends NModule
 
-  assets = []
+  name: \NView
 
-  parseRec = (dirs, rec = false) ->
-    for dir in dirs when dir?
+  Init: ->
 
-      if dir[dir.length - 1] isnt '/'
-        dir += '/'
+    assets = []
 
-      try
-        entries = fs.readdirSync dir
+    parseRec = (dirs, rec = false) ->
+      for dir in dirs when dir?
 
-        files = _(entries).filter (entry) ~>
-          fs.statSync(dir + entry).isFile() and (entry.match(/\.ls$/g) or entry.match(/\.js$/g))
+        if dir[dir.length - 1] isnt '/'
+          dir += '/'
 
-        if rec
-          folders = _(entries).filter (entry) ~>
-            fs.statSync(dir + entry).isDirectory() and not entry.match(/^\./g)
-      catch e
+        try
+          entries = fs.readdirSync dir
 
-      folders = _(folders).map (folder) ~>
-        dir + folder
+          files = _(entries).filter (entry) ~>
+            fs.statSync(dir + entry).isFile() and (entry.match(/\.ls$/g) or entry.match(/\.js$/g))
 
-      parseRec folders, true
+          if rec
+            folders = _(entries).filter (entry) ~>
+              fs.statSync(dir + entry).isDirectory() and not entry.match(/^\./g)
+        catch e
 
-      files = _(files).map (file) ~>
-        if file.match(/\.ls$/g)
-          dir + file
-        else if file.match(/\.js$/g) or file.match(/\.css$/g)
-          dir + file
+        folders = _(folders).map (folder) ~>
+          dir + folder
 
-      assets := assets.concat files
+        parseRec folders, true
 
+        files = _(files).map (file) ~>
+          if file.match(/\.ls$/g)
+            dir + file
+          else if file.match(/\.js$/g) or file.match(/\.css$/g)
+            dir + file
 
-  b = browserify extensions: [\.ls]
-
-  b.transform browserify-livescript
-  b.transform coffeeify
+        assets := assets.concat files
 
 
-  b.add path.resolve __dirname, '../../Client/Nodulator.ls'
-  b.add path.resolve __dirname, './assets/DOM.ls'
-  b.add path.resolve __dirname, './assets/View.ls'
-  b.add path.resolve '.'
-  b.ignore 'redis'
+    b = browserify extensions: [\.ls]
 
-  class Socket extends N.Socket!
+    b.transform browserify-livescript
+    b.transform coffeeify
 
-    OnConnect: (socket) ->
 
-  Socket.Init!
+    b.add path.resolve __dirname, '../../Client/Nodulator.ls'
+    b.add path.resolve __dirname, './assets/DOM.ls'
+    b.add path.resolve __dirname, './assets/View.ls'
+    b.add path.resolve '.'
+    b.ignore 'redis'
 
-  socketio = '<script src="/socket.io/socket.io.js"></script>'
+   # class Socket extends N.Socket!
 
-  N.Route._InitServer!
+    #  OnConnect: (socket) ->
 
-  if N.config?.minified
-    b.bundle (err, assets) ->
-      return console.log 'Err?', err if err?
+    #Socket.Init!
 
-      assets = "<body>#{socketio}<script>#{assets.toString!}</script>"
-      N.app.get \/ (req, res) ->
-        res.status 200 .send assets
-  else
-    N.app.get \/ (req, res) ->
+    socketio = '<script src="/socket.io/socket.io.js"></script>'
+
+    N.Route._InitServer!
+
+    if N.config?.minified
       b.bundle (err, assets) ->
-        console.log 'Err?', err if err?
-        return if err?
-        # return res.status 500 .send err if err?
+        return console.log 'Err?', err if err?
 
-        # assets = '<script>' + assets + '</script>'
-        assets = "<html><head></head><body>#{socketio}<script>#{assets.toString!}</script></body></html>"
+        assets = "<body>#{socketio}<script>#{assets.toString!}</script>"
+        N.app.get \/ (req, res) ->
+          res.status 200 .send assets
+    else
+      N.app.get \/ (req, res) ->
+        b.bundle (err, assets) ->
+          console.log 'Err?', err if err?
+          return if err?
+          # return res.status 500 .send err if err?
 
-        res.status 200 .send assets
+          # assets = '<script>' + assets + '</script>'
+          assets = "<html><head></head><body>#{socketio}<script>#{assets.toString!}</script></body></html>"
 
-  View = ->
-    @_type = 'View'
+          res.status 200 .send assets
 
-    (@resource) ->
-      @resource.AttachRoute N.Route.RPC
+    View = ->
+      @_type = 'View'
 
-  N.Render = ->
+      (@resource) ->
+        @resource.AttachRoute N.Route.RPC
 
-  View.DOM = {}
-  N.View = View
+    N.Render = ->
 
-  # files =
-  #   * \index.ls
-  #
-  # files |> map -> livescript.compile fs.readFileSync it
+    View.DOM = {}
+    N.View = View
 
-  {name: 'View'}
+    # files =
+    #   * \index.ls
+    #
+    # files |> map -> livescript.compile fs.readFileSync it
+
+    {name: 'View'}
+
+
+module.exports = NView

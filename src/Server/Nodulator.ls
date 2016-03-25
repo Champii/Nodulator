@@ -14,8 +14,9 @@ class N extends require \../Common/Nodulator
   defaultConfig:
     db: type: \SqlMem
     cache: false
-    flipDone: false
+    modules: {}
   isServer: true
+  modules: {}
 
   ->
     super!
@@ -23,21 +24,24 @@ class N extends require \../Common/Nodulator
 
   Init: ->
     @appRoot = path.resolve \.
+    @libRoot = path.resolve __dirname, \../../
 
   Resource: ->
     @resource = require './Resource/Resource' if not @resource?
     super ...
 
-  Use: (module) ->
-    @debug-nodulator.Log "Loading module"
-    m = module @
-    @debug-nodulator.Log "Loaded module: #{m.name}"
-    m
-
-  ExtendDefaultConfig: (config) ->
-    @defaultConfig = _(@defaultConfig).extend config
-
   Route: require \./Route/Route
+
+  Config: (config) ->
+
+    super ...
+
+    return if not @config.modules?
+
+    for name, conf of @config.modules
+      Module = require(path.resolve @libRoot, "src/Modules/Nodulator-#{capitalize name}")
+      @modules[name] = new Module conf
+      @config.modules[name] <<< @modules[name].config
 
   Reset: (done) ->
     @debug-nodulator.Warn "Reset"
@@ -62,6 +66,10 @@ class N extends require \../Common/Nodulator
 
     done() if done?
 
+  PostConfig: ->
+    for name, module of @modules
+      module.PostConfig!
+
   _ListEndpoints: (done) ->
     endpoints = []
     for endpoint in @app._router.stack
@@ -71,11 +79,10 @@ class N extends require \../Common/Nodulator
         endpoints.push res
     done(endpoints) if done?
 
-f = (...args) ->
+f = ((...args) ->
+  f.Config {} if not f.config?
+  f.Resource.apply f, args) <<<< new N
 
-  f.Config! if not f.config?
-  f.Resource.apply f, args
-
-f = f <<<< new N
+#f = f <<<< new N
 
 module.exports = f

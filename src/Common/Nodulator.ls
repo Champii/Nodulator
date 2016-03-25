@@ -15,6 +15,9 @@ class N
   Init: ->
 
   Resource: (name, routes, config, _parent) ->
+    if not @config?
+      throw new Error "Trying to create Resource before N.Config()"
+
     getParentChain = ->
       | it?._parent? => " <= #{that.name}" + getParentChain that
       | _   => ''
@@ -30,8 +33,6 @@ class N
     if routes? and not routes.prototype
       config = routes
       routes = null
-
-    @Config() # config of N instance, not resource one
 
     if config?
       config.db = {} if not config.db?
@@ -58,15 +59,13 @@ class N
 
   Config: (config) ->
     if @config?
-      return
+      throw new Error "Already configured."
 
     @debug-nodulator.Warn "Main config"
 
-    @config = config || @defaultConfig
+    @config = @defaultConfig
+    @config <<< config
 
-    @defaultConfig
-      |> obj-to-pairs
-      |> each ~> @config[it.0] = it.1 if not @config[it.0]?
 
   Use: (module) ->
 

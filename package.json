@@ -25,7 +25,12 @@
     "superagent": "*",
     "supertest": "*",
     "underscore": "*",
-    "validator": "~3.27.0"
+    "validator": "~3.27.0",
+    "nodulator-assets": "file:./src/Modules/Nodulator-Assets",
+    "nodulator-socket": "file:./src/Modules/Nodulator-Socket",
+    "nodulator-angular": "file:./src/Modules/Nodulator-Angular",
+    "nodulator-account": "file:./src/Modules/Nodulator-Account",
+    "nodulator-view": "file:./src/Modules/Nodulator-View"
   },
   "description": "Complete NodeJS Framework for Restfull APIs",
   "main": "index.js",
@@ -41,7 +46,7 @@
     "livescript": "^1.4.0"
   },
   "scripts": {
-    "test": "mocha --compilers ls:livescript test"
+      "test": "mocha --compilers ls:livescript test"
   },
   "repository": {
     "type": "git",

@@ -3,7 +3,7 @@
 #
 # Nodulator Boostrap
 #
-# Usage: Nodulator (init | console) | ((install | remove) moduleName)
+# Usage: Nodulator (init | (console | c)) | ((install | remove) moduleName)
 #
 
 _ = require 'underscore'
@@ -97,16 +97,15 @@ if not args[0]?
 
   global.N = require NodulatorRoot
 
-  #test
-  Socket = require(path.resolve NodulatorRoot, 'src/Modules/Nodulator-Socket')
-  View = require(path.resolve NodulatorRoot, 'src/Modules/Nodulator-View')
-  global.N.Use Socket
-  global.N.Use View
+  config = {}
+  try
+    config = require path.resolve appRoot, \./config.ls
+  catch e
+    console.log "No config, taking default one." e
 
-  # global import N.View.DOM
-
-
+  N.Config config || {}
   require path.resolve appRoot
+  N.PostConfig!
 
 if args[0] in ['console', 'c']
   if not args[1]?

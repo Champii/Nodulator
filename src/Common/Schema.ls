@@ -99,12 +99,13 @@ class Schema
     else
       each (~>
         if it[0] isnt \_ and typeof! instance[it] isnt 'Function' and
-             it not in map (.name), @assocs and
-             not _(@properties).findWhere(name: it)?.virtual? and
-             (typeof! instance[it]) isnt 'Object' and
-             (typeof! instance[it]) isnt 'Array'
+           it not in map (.name), @assocs and
+           not _(@properties).findWhere(name: it)?.virtual? and
+           (typeof! instance[it]) isnt 'Object' and
+           (typeof! instance[it]) isnt 'Array'
 
-           res[it] = instance[it]), keys instance
+          res[it] = instance[it]
+      ), keys instance
 
     res
 
