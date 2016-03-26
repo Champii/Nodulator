@@ -112,6 +112,7 @@ module.exports = (configPath, resPath)->
       |> obj-to-pairs
       |> map -> try require rootPath + \/ + it.1
       |> each -> inst.context[capitalize it._table.tableName] = it if it?._table?
+  N.PostConfig!
   # N.resources
   #   |> each ->
 

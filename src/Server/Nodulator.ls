@@ -15,6 +15,7 @@ class N extends require \../Common/Nodulator
     db: type: \SqlMem
     cache: false
     modules: {}
+    port: 3000
   isServer: true
   modules: {}
 

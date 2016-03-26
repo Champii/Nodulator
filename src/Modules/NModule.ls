@@ -14,8 +14,6 @@ class NModule
   Config: (config) ->
     return if @config?
 
-    console.log "Configure #{@name}"
-
     @config = @defaultConfig
     @config <<< config
 

@@ -86,11 +86,11 @@ class Route
     N.client = new Client N.app
 
 
-    N.server.listen N.config?.port || 3000
+    N.server.listen N.config?.port
 
     N.bus.emit \listening
 
-    debug.Log "Listening to 0.0.0.0: #{(N.config?.port || 3000)}"
+    debug.Log "Listening to 0.0.0.0: #{(N.config?.port)}"
 
   _WrapRequest: (fName, args) ->
     Req = new Request args

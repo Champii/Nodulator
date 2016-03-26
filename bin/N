@@ -6,22 +6,28 @@
 # Usage: Nodulator (init | (console | c)) | ((install | remove) moduleName)
 #
 
-_ = require 'underscore'
-fs = require 'fs'
-path = require 'path'
-exec = require('child_process').exec
-async = require 'async'
-coffee-script = require 'coffee-script/register'
+require! {
+  fs
+  path
+  async
+  commander: opts
+  underscore: _
+  child_process: {exec}
+}
 
-args = process.argv[2 to]
+opts
+  .version \1.5.0
+  .usage '[options]'
+  .option '-p, --port <n>'        'Specify the port. Override the configuration.'
+  .option '-s, --settings [path]' 'The path where to find the \'config.ls\''
+  .option '-c, --console'         'Run the Console.'
+  .option '-i, --init'            'Create a base folder structure based on which modules you have in your config.'
+  .parse process.argv
 
 NodulatorRoot = path.resolve fs.realpathSync(path.resolve __dirname, __filename), '../..'
 appRoot = path.resolve '.'
 
 moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular', 'nodulator-account']
-
-dependencies =
-  'nodulator-angular': ['nodulator-socket', 'nodulator-assets']
 
 capitalize = (str) ->
   str[0].toUpperCase() + str[1 to]*''
@@ -38,100 +44,35 @@ exists = (path, done) ->
       else
         done false
 
-npmStandard = (action, pack, done) ->
-  exec 'npm ' + action + ' ' + pack + ' --save', (err, stdout, stderr) ->
-    return done err if err? and done?
-    return console.error err if err?
+config = {}
+try
+  config = require path.resolve appRoot, opts.config || \./config.ls
+catch e
+  console.log "No config, taking default one." e
 
-    done() if done?
+config = config || {}
+config <<< port: opts.port if opts.port?
 
-npmDevInstall = (action, pack, done) ->
-  nameSplited = pack.split('/')
-  name = nameSplited[nameSplited.length - 1]
-  packCapit = ''
-  if pack.split('-').length is 2
-    packCapit = capitalize(pack.split('-')[0]) + '-' + capitalize(pack.split('-')[1])
-  else
-    packCapit = capitalize pack
-
-  orig = path.resolve(NodulatorRoot, packCapit)
-
-  exec 'mkdir -p ./node_modules', (err, stdout, stderr) ->
-    return done err if err? and done?
-
-    # exec  'cd ' + appRoot + ' && ln -sf ' + appRoot + '/' + packCapit + ' ' + appRoot + '/node_modules/' + name.toLowerCase() + '&& cd ..', (err, stdout, stderr) ->
-    exec  "cd #appRoot && ln -sf #appRoot/#packCapit #appRoot/node_modules/#{name.toLowerCase!} && cd ..", (err, stdout, stderr) ->
-      return done err if err? and done?
-      return console.error err if err?
-
-      done() if done?
-
-usage = ->
-  console.error 'Usage: Nodulator (init | console(or c)) | ((install |  install-dev | remove) moduleName1 [, moduleName2])'
-
-generateMain = (modules) ->
-
-  mainBefore = 'N = require \'nodulator\'\n'
-  mainBefore += 'Server = require \'./server\'\n'
-
-  mainAfter = ''
-  mainAfter += '\n\n' if modules.length
-  for module in (_(modules).sortBy (item) -> _(moduleOrder).indexOf item)
-    name = module.split('-')[1]
-    mainBefore += '\n' + capitalize(name) + ' = require \'' + module + '\''
-    mainAfter += 'N.Use ' + capitalize(name) + '\n'
-
-  mainAfter += '\nServer.Init!\n'
-  mainAfter += 'N.Run!\n' if 'nodulator-assets' in modules
-
-  fs.writeFileSync appRoot + '/index.ls', mainBefore + mainAfter
-
-if args.length is 1 and args[0] not in ['init', 'install', 'remove', 'install-dev', 'console', 'c']
-  return usage()
+global.N = require NodulatorRoot
 
 #launch project
-if not args[0]?
+if not opts.console? and not opts.init?
 
-  # Manage modules and dependencies installation and require at startup
-  # Read settings files or take default config
-
-  global.N = require NodulatorRoot
-
-  config = {}
-  try
-    config = require path.resolve appRoot, \./config.ls
-  catch e
-    console.log "No config, taking default one." e
-
-  N.Config config || {}
+  N.Config config
   require path.resolve appRoot
   N.PostConfig!
+  console.log "Listening to :#{N.config.port}..."
 
-if args[0] in ['console', 'c']
-  if not args[1]?
-    args[1] := './settings/dev'
-  if not args[2]?
-    args[2] := './server/resources'
+if opts.console?
 
-  # cons =  require "#{appRoot}/node_modules/nodulator/bin/Console"
   cons = require __dirname + \/Console
-  cons args[1], args[2]
+  cons (opts.config || \./config.ls), \./
 
-if args[0] is 'init'
+if opts.init?
+  console.log "Temporary disabled"
+  return
+
   async.series [
-    (done) ->
-      exists "#{appRoot}/node_modules/nodulator", (exist) ->
-        if not exist
-          process.stdout.write 'Installing Nodulator..............'
-          npmStandard 'install', 'nodulator', (err) ->
-            return done err if err?
-
-            process.stdout.write 'Ok\n'
-            done()
-
-        else
-          done()
-
     (done) ->
       process.stdout.write 'Installing base folder tree.......'
       exec 'mkdir -p node_modules', (err, stdout, stderr) ->
@@ -147,8 +88,6 @@ if args[0] is 'init'
         nodulatorFiles = _(files).filter (name) -> name.split('-').length > 1 and name.split('-')[0] is 'nodulator'
         toWrite = if not nodulatorFiles.length then 'None\n' else nodulatorFiles.length
         process.stdout.write toWrite + '\n'
-
-        generateMain nodulatorFiles
 
         i = 1
         async.eachSeries (_(nodulatorFiles).sortBy (item) -> _(moduleOrder).indexOf item), (file, done) ->
@@ -173,57 +112,3 @@ if args[0] is 'init'
 
   ], (err, results) ->
     return console.error err if err?
-
-else if args[0] in ['install', 'remove', 'install-dev']
-
-  npm = npmStandard
-  if args[0] is 'install-dev'
-    npm = npmDevInstall
-
-  exec 'mkdir -p node_modules', (err, stdout, stderr) ->
-
-    exists 'node_modules/nodulator', (exist) ->
-      if not exist
-        console.log 'Installing nodulator'
-        npm(args[0], 'nodulator')
-      else
-        console.log 'Already installed: nodulator'
-
-      for packageName in args[1 til]
-
-        async.series [
-
-          (done) ->
-            #install dependencies
-            if dependencies['nodulator-' + packageName]? and args[0] in ['install', 'install-dev']
-              async.eachSeries dependencies['nodulator-' + packageName], (item, done) ->
-                exists 'node_modules/' + item, (exist) ->
-                  if not exist
-                    console.log 'Installing ' + item
-                    newItem = capitalize(item.split('-')[0]) + '-' + capitalize item.split('-')[1]
-                    npm 'install', './node_modules/nodulator/src/Modules/' + newItem, done
-                  else
-                    console.log 'Already installed: ' + item
-                    done()
-              , done
-            else
-              done()
-
-          (done) ->
-            toInstall = 'nodulator-' + packageName
-            if packageName? and toInstall in moduleOrder
-              exists 'node_modules/' + toInstall, (exist) ->
-                if exist
-                  console.log 'Already installed: ' + toInstall
-                  return done()
-
-                console.log 'Installing ' + toInstall
-                item = capitalize(toInstall.split('-')[0]) + '-' + capitalize toInstall.split('-')[1]
-                npm args[0], './node_modules/nodulator/src/Modules/' + item, done
-
-            else if args[1]?
-              console.error 'Unknown module: ', toInstall
-              return done()
-
-        ], (err) ->
-          console.error err if err?
