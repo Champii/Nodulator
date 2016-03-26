@@ -4,6 +4,7 @@ require! {
   async
   underscore: __
   polyparams: ParamWraper
+  hacktiv : Hacktiv
 }
 
 cache = null

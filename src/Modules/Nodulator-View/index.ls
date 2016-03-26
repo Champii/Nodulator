@@ -62,7 +62,7 @@ class NView extends NModule
     b.add path.resolve '.'
     b.ignore 'redis'
 
-   # class Socket extends N.Socket!
+    # class Socket extends N.Socket!
 
     #  OnConnect: (socket) ->
 
@@ -101,13 +101,6 @@ class NView extends NModule
 
     View.DOM = {}
     N.View = View
-
-    # files =
-    #   * \index.ls
-    #
-    # files |> map -> livescript.compile fs.readFileSync it
-
-    {name: 'View'}
 
 
 module.exports = NView
