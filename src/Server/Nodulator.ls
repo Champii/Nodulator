@@ -70,6 +70,7 @@ class N extends require \../Common/Nodulator
   PostConfig: ->
     for name, module of @modules
       module.PostConfig!
+    map (.Init!), values @resources
 
   _ListEndpoints: (done) ->
     endpoints = []
@@ -83,7 +84,5 @@ class N extends require \../Common/Nodulator
 f = ((...args) ->
   f.Config {} if not f.config?
   f.Resource.apply f, args) <<<< new N
-
-#f = f <<<< new N
 
 module.exports = f

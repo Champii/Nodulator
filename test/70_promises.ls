@@ -111,3 +111,13 @@ describe 'N Promises', ->
         assert.equal it.1.b, 2
         done!
       .Catch -> done new Error it
+
+  test 'Chaining should work with custom function', (done) ->
+    class Tmp2 extends N \tmp2
+      Test: -> @Set toto: \toto
+
+    Tmp2.Create!Test!
+      .Then ->
+        assert.equal it.toto, \toto
+        done!
+      .Catch -> done new Error it

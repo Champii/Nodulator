@@ -48,7 +48,7 @@ config = {}
 try
   config = require path.resolve appRoot, opts.config || \./config.ls
 catch e
-  console.log "No config, taking default one." e
+  console.log "No './config.ls', taking default one."
 
 config = config || {}
 config <<< port: opts.port if opts.port?
@@ -61,7 +61,9 @@ if not opts.console? and not opts.init?
   N.Config config
   require path.resolve appRoot
   N.PostConfig!
-  console.log "Listening to :#{N.config.port}..."
+  if N.app?
+    console.log "Listening to :#{N.config.port}..."
+  console.log \Ready...
 
 if opts.console?
 

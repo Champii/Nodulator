@@ -48,11 +48,11 @@ class N
       @resources[name] = resource := ExtendedResource
       @resources[name]._PrepareResource config, routes, name, _parent
     else
-      @resources[name] = resource :=
-        @resource config, routes, name, @
+      @resources[name] = resource := @resource config, routes, name, @
 
     @debug-nodulator.Log "Resource added : #{name + getParentChain @resources[name]}"
 
+    @[capitalize name] = @resources[name]
     resource
 
   Route: {}

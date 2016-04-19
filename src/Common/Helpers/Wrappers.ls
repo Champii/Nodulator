@@ -31,9 +31,9 @@ class Wrappers
 
       ret = cb.apply @, args
 
-      if d? and @Init?
+      if d? and @_PrepareResource? and @Init?
         @Init!
-        new resource d
+        new @resource d
       # else if @_promise? and d?
       #   @_promise.then d.promise
       #   @
@@ -50,7 +50,7 @@ class Wrappers
     findDone = @_FindDone
     (...args) ->
       doneIdx = findDone args
-      oldDone = args[doneIdx]
+      oldDone = args[doneIdx] if doneIdx?
       if @_promise? and doneIdx?
         @
           .Then ->
