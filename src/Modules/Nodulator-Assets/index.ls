@@ -6,6 +6,7 @@ cookieParser = require 'cookie-parser'
 coffeeMiddleware = require 'coffee-middleware'
 livescriptMiddleware = require 'livescript-middleware'
 grunt = require 'grunt'
+path = require 'path'
 
 NModule = require \../NModule
 
@@ -24,9 +25,9 @@ class NAssets extends NModule
       app:
         path: '/client'
         public:
-          '/img': ''
-          js: []
-          css: []
+          '/img': '/'
+          js: ['/']
+          css: ['/']
 
     viewRoot: 'client'
     engine: 'jade' #FIXME: no other possible engine
@@ -36,9 +37,9 @@ class NAssets extends NModule
     N.assets = @
 
     for site, obj of @config.sites
-      @AddFolders do
-        "#{@config.sites[site].path}/public/#{site}.min.js" : @config.sites[site].public.js
-        "#{@config.sites[site].path}/public/#{site}.min.css" : @config.sites[site].public.css
+      @AddFoldersRec do
+        "#{@config.sites[site].path}/#{site}.min.js" : @config.sites[site].public.js
+        "#{@config.sites[site].path}/#{site}.min.css" : @config.sites[site].public.css
 
     thus = this
 
@@ -87,20 +88,21 @@ class NAssets extends NModule
     grunt.task.init = ->
 
     coffee = {}
-    for name, files of @list
+    /*for name, files of @list
       if name.split('/')[name.split('/').length - 1].split('.')[2] is 'js'
-        name_ = name[1 to].replace /\.min/g, '.coffee'
+        name_ = (name[1 to]*'').replace /\.min/g, '.coffee'
         coffee[name_] = _(files).filter (item) -> item.split('.')[1] is 'coffee'
-        coffee[name_] = _(coffee[name_]).map (item) -> item[1 to]*''
+        coffee[name_] = _(coffee[name_]).map (item) -> item[1 to]*''*/
 
     minifiedJs = {}
     for name, files of @list
       if name.split('/')[name.split('/').length - 1].split('.')[2] is 'js'
-        coffeeName = name[1 to]*'' .replace /\.min/g, '.coffee'
+        /*coffeeName = name[1 to]*''.replace /\.min/g, '.coffee'*/
+        /*console.log \ASDASD name[1 to]*'', coffeeName*/
         name_ = name[1 to]*''
         minifiedJs[name_] = _(files).filter (item) -> item.split('.')[item.split('.').length - 1] is 'js'
         minifiedJs[name_] = _(minifiedJs[name_]).map (item) -> item[1 to]*''
-        minifiedJs[name_].push coffeeName
+        /*minifiedJs[name_].push coffeeName*/
 
     minifiedCss = {}
     for name, files of @list
@@ -109,35 +111,60 @@ class NAssets extends NModule
         minifiedCss[name_] = _(files).filter (item) -> item.split('.')[item.split('.').length - 1] is 'css'
         minifiedCss[name_] = _(minifiedCss[name_]).map (item) -> item[1 to]*''
 
-    grunt.initConfig do
+    gruntConf = {}
+
+    coffeeConf =
       coffee:
         compile:
           options:
             join: true
           #   bare: true
           files: coffee
+
+    uglifyConf =
       uglify:
         assets:
           options:
             # beautify: true
             mangle: false
+          /*files: src: (values minifiedJs |> fold1 concat)*/
           files: minifiedJs
+
+    cssminConf =
       cssmin:
         assets:
           files: minifiedCss
 
-    grunt.loadNpmTasks('grunt-contrib-coffee');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-cssmin');
+    oldDir = process.cwd!
+    process.chdir N.libRoot
+
+    @tasks = {}
+
+    @tasks.coffee = !!that if (flatten values @list |> filter (-> it.match /\.coffee/g)).length
+    @tasks.cssmin = !!that if (flatten values @list |> filter (-> it.match /\.css/g)   ).length
+    @tasks.uglify = !!that if (flatten values @list                                    ).length
+
+    gruntConf import coffeeConf if @tasks.coffee
+    gruntConf import cssminConf if @tasks.cssmin
+    gruntConf import uglifyConf if @tasks.uglify
+
+    grunt.initConfig gruntConf
+
+    grunt.loadNpmTasks('grunt-contrib-coffee') if @tasks.coffee
+    grunt.loadNpmTasks('grunt-contrib-uglify') if @tasks.uglify
+    grunt.loadNpmTasks('grunt-contrib-cssmin') if @tasks.cssmin
+
+    process.chdir oldDir
 
   _RunGrunt: ->
-    grunt.tasks ['coffee', 'uglify', 'cssmin'], {}, ->
-      grunt.log.ok('Done running tasks.');
+    if keys @tasks .length
+      grunt.tasks keys(@tasks), {force: true}, ->
+        grunt.log.ok('Done running tasks.');
 
-  _GetFiles: (name, dirs, rec = false) ->
-    console.log \wow dirs
+  _GetFiles: (name, dirs, ext, rec = false) ->
+    _site = (name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.2)
     for dir in dirs when dir?
-      console.log \Getfiles dir
+      dir = path.resolve @config.sites[_site].path , '.' + dir
 
       if dir[dir.length - 1] isnt '/'
         dir += '/'
@@ -146,7 +173,7 @@ class NAssets extends NModule
 
       files = _(entries).filter (entry) ~>
         fs.statSync(N.appRoot + dir + entry).isFile() and
-          (entry.match(/\.coffee$/g) or entry.match(/\.js$/g) or entry.match(/\.css$/g))
+          entry.match (new RegExp '\.'+ext+'$', \gi) and !entry.match /\.min/g
 
       if rec
         folders = _(entries).filter (entry) ~>
@@ -156,11 +183,7 @@ class NAssets extends NModule
 
         @_GetFiles name, folders, true
 
-      files = _(files).map (file) ~>
-        if file.match(/\.coffee$/g)
-          dir + file
-        else if file.match(/\.js$/g) or file.match(/\.css$/g)
-          dir + file
+      files = _(files).map (file) ~> dir + file
 
       if not @list[name]
         @list[name] = files
@@ -169,14 +192,15 @@ class NAssets extends NModule
 
   AddFoldersRec: (list) ->
     for name, dirs of list
-      @_GetFiles name, dirs, true
+      ext = (name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.0)
+      @_GetFiles name, dirs, ext, true
 
   AddFolders: (list) ->
     for name, dirs of list
-      @_GetFiles name, dirs
+      ext = (name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.0)
+      @_GetFiles name, dirs, ext
 
   _Serve: ->
-
     if @config.minified
       @_InitGrunt()
       @_RunGrunt()
@@ -189,9 +213,9 @@ class NAssets extends NModule
 
       for name, list of @list
         site_ = name.split('/')[name.split('/').length - 1].split('.')[0]
-        @compiled[site_] = jcompile[site_]() if not @compiled[site_]?
+        @compiled[site_] = jcompile[site_]() if not @compiled[site_]? and jcompile[site_]?
 
-      @compiled[site]
+      @compiled[site] || ''
 
     url_to_paths = {}
     if @config.minified
@@ -214,7 +238,8 @@ class NAssets extends NModule
           @list[site] = _(paths).map (item) ->
             if item.split('.')[1] is 'coffee'
               item.replace /\.coffee/g, '.js'
-            else              item
+            else
+              item
 
 
       N.app.use coffeeMiddleware do
@@ -230,25 +255,20 @@ class NAssets extends NModule
       # url_to_paths: {'/img/': '/client/public/img'}
       production: @config.minified
       # debug: true
-    console.log \TAMER
     for site, config of @config.sites
-      console.log \tessur
       for destPath, origPath of @config.sites[site].public
         for p in origPath
           if p[0] is '/'
             p = '.' + p
-          console.log \lol p
 
           N.app.use "#{destPath}",  N.express.static path.resolve N.appRoot, p
 
-    console.log \wtf
     if not @config.minified
       N.app.use N.express.static path.resolve N.appRoot
     else
       for name, paths of @list
         siteName = name.split('/')[name.split('/').length - 1]
         site = '/' + siteName.split('.')[0] + '/' + siteName.split('.')[siteName.split('.').length - 1] + name
-        console.log \Lol name
         N.app.use name,  N.express.static path.resolve N.appRoot, name[1 to]*''
 
     N.app.use cookieParser 'nodulator'
@@ -265,10 +285,12 @@ class NAssets extends NModule
           @compiled = {}
           comp = Compile site
         else
-          comp = @compiled[site]
+          comp = @compiled[site] || ''
 
-        comp += res.locals.cachify_js "#{@config.sites[site].path}/public/#{site}.min.js"
-        comp += res.locals.cachify_css "#{@config.sites[site].path}/public/#{site}.min.css"
+        _path = "#{@config.sites[site].path}/#{site}.min."
+
+        comp += res.locals.cachify_js "#{_path}js" if @list["#{_path}js"].length
+        comp += res.locals.cachify_css "#{_path}css" if @list["#{_path}css"].length
 
         if N.AccountResource?
           comp += N.AccountResource._AccountResource._InjectUser req

@@ -93,7 +93,6 @@ describe 'N Promises', ->
     Tests.Fetch 111
       .Set (.test++)
       .Set (.toto = \tata)
-      .Log!
       .Catch -> done!
       .Then -> throw new Error it
 
