@@ -22,14 +22,13 @@ class NAssets extends NModule
 
   defaultConfig:
     sites:
-      app:
-        path: '/client'
+      root:
+        path: '/'
         public:
           '/img': '/'
           js: ['/']
           css: ['/']
 
-    viewRoot: 'client'
     engine: 'jade' #FIXME: no other possible engine
     minified: false
 
@@ -38,31 +37,37 @@ class NAssets extends NModule
 
     for site, obj of @config.sites
       @AddFoldersRec do
-        "#{@config.sites[site].path}/#{site}.min.js" : @config.sites[site].public.js
-        "#{@config.sites[site].path}/#{site}.min.css" : @config.sites[site].public.css
+        "#{@config.sites[site].path}/#{site}.min.js" :  @config.sites[site].public?.js || [\/]
+        "#{@config.sites[site].path}/#{site}.min.css" : @config.sites[site].public?.css || [\/]
 
     thus = this
 
     # To be called last
-    N.Run = ->
+    N.Run = ~>
 
       for process in thus.extendedRun
         process!
 
       # FIXME: ugly fix for favicon
-      @app.get '/favicon.ico', (req, res) ~>
+      N.app.get '/favicon.ico', (req, res) ~>
         res.status(200).end()
 
-      @app.get '*', (req, res) ~>
-        @Render req, res
+      for site, arr of @config.sites
+        do ~>
+          _site = if site is \root then '' else site + \/
+          N.app.get \/ + _site, (req, res) ~>
+            N.Render _site, req, res
 
-    N.Render = (req, res) ->
+      N.app.get '*', (req, res) ~>
+        res.status 404 .send \404
+
+    N.Render = (site, req, res) ->
 
       for process in thus.extendedRender
         if not process req, res
           return
 
-      res.render 'index'
+      res.render site + 'index'
 
     N.ExtendBeforeRender = (process) ~>
       @extendedRender.unshift process
@@ -169,7 +174,9 @@ class NAssets extends NModule
       if dir[dir.length - 1] isnt '/'
         dir += '/'
 
-      entries = fs.readdirSync path.resolve N.appRoot, '.' + dir
+      try entries = fs.readdirSync path.resolve N.appRoot, '.' + dir
+      catch e
+        return
 
       files = _(entries).filter (entry) ~>
         fs.statSync(N.appRoot + dir + entry).isFile() and
@@ -241,7 +248,6 @@ class NAssets extends NModule
             else
               item
 
-
       N.app.use coffeeMiddleware do
         src: path.resolve N.appRoot, '.'
         prefix: 'coffee'
@@ -273,7 +279,7 @@ class NAssets extends NModule
 
     N.app.use cookieParser 'nodulator'
 
-    N.app.set 'views', path.resolve N.appRoot, @config.viewRoot
+    N.app.set 'views', path.resolve N.appRoot
     N.app.engine '.' + @config.engine, jade.__express
     N.app.set 'view engine', @config.engine
 
@@ -299,7 +305,7 @@ class NAssets extends NModule
 
       next()
 
-  AddView: (view, site = 'app') ->
+  AddView: (view, site = 'root') ->
     @views[site] = '' if not @views[site]?
     @views[site] += view
 
