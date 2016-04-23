@@ -24,6 +24,7 @@ class NAssets extends NModule
     sites:
       root:
         path: '/'
+        mount: '/'
         public:
           '/img': '/'
           js: ['/']
@@ -52,11 +53,10 @@ class NAssets extends NModule
       N.app.get '/favicon.ico', (req, res) ~>
         res.status(200).end()
 
-      for site, arr of @config.sites
-        do ~>
-          _site = if site is \root then '' else site + \/
-          N.app.get \/ + _site, (req, res) ~>
-            N.Render _site, req, res
+      for site, conf of @config.sites
+        let config = conf, site = site
+          N.app.get config.mount || config.path || '/', (req, res) ~>
+            N.Render config.path || config.mount || '/', req, res
 
       N.app.get '*', (req, res) ~>
         res.status 404 .send \404
@@ -67,6 +67,9 @@ class NAssets extends NModule
         if not process req, res
           return
 
+      site = site[1 to]*''
+      if site.length
+        site += \/
       res.render site + 'index'
 
     N.ExtendBeforeRender = (process) ~>
@@ -169,7 +172,7 @@ class NAssets extends NModule
   _GetFiles: (name, dirs, ext, rec = false) ->
     _site = (name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.2)
     for dir in dirs when dir?
-      dir = path.resolve @config.sites[_site].path , '.' + dir
+      dir = path.resolve (@config.sites[_site].path || '/') , '.' + dir
 
       if dir[dir.length - 1] isnt '/'
         dir += '/'
