@@ -4,6 +4,7 @@
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
     |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.5
 
+[![Coverage Status](https://coveralls.io/repos/github/Champii/Nodulator/badge.svg?branch=master)](https://coveralls.io/github/Champii/Nodulator?branch=master)
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
 
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=develop)](https://travis-ci.org/Champii/Nodulator) (Develop)
