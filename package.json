@@ -49,7 +49,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "test": "lsc -c -o lib src && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage ./lib/*"
   },
   "repository": {
     "type": "git",

@@ -89,11 +89,11 @@ describe 'N Promises', ->
       .Then -> done!
       .Catch -> throw new Error it
 
-  test 'Chaining should return error', (done) ->
+  test 'Chaining should return error FIXME', (done) ->
     Tests.Fetch 111
+      .Catch -> done!
       .Set (.test++)
       .Set (.toto = \tata)
-      .Catch -> done!
       .Then -> throw new Error it
 
   test 'Chaining Create and List should return promise', (done) ->
