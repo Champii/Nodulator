@@ -61,7 +61,6 @@ ___
 - Models and associations over different DB systems
 - Reactive values [Hacktiv](https://github.com/Champii/Hacktiv)
 - Promises or Callbacks
-- Fliped callback parameters
 - Log and Debug system
 - Console mode
 
@@ -128,8 +127,7 @@ ___
 
 By order of priority
 
-- Isomorphic reactive view system
-- Fix config and default config for modules
+- Fix bug when using Add() on MayHasOne relationship that is already linked: no replacement for the child id so two references coexist simultaneously
 - Bind Route 'this' to Resource by default, and rename SetInstance to BindThis to change it (to an instance for exemple)
 - Customise error codes in Route
 - Paginated Resource
@@ -142,9 +140,7 @@ By order of priority
 - Relations not only based on id but on every property types
 - Persistant sessions in Console
 - 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
-- Decentralize modules config
 - Scaling (cluster, distributed bus)
-- Split Resource into smaller Classes
 - List return a resource that can act on each item (Set, Add, ...) ( Extend Array ? )
 - Better tests
   - Request
@@ -158,16 +154,50 @@ By order of priority
   - Cache
   - Config oveloading
   - Schema
-    - HasOne
-    - HasMany
     - HasOneThrough
     - HasManyThrough
-    - HasAndBelongsToMany
 
 ___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
-  -
+  - Isomorphic view system (NView)
+    - The whole project has been abstracted and subdivided into common, client and server folder
+    - The client part of the project is sent to the client, helpers available, isomorphic API
+    - Added ClientDB that is replicated-on-the-fly from the server db into the client. It implements events to notify other parts of the program, and a sort of prediction system that revert changes if server reply gone wrong.
+    - Home-made React-like dom manipulation system (Lived)
+      - Render system that take a view
+      - View system: functions that return a node, can be nested
+      - Shadow-dom that handle node change and propagate to real dom
+        - Node Watchers (Hacktiv)
+        - Allow to reference the dom inside of itself (node = input type: text)
+        - Events bindings (click and change for the moment)
+      - Bindings to Resources as a Route
+        - Activate RPC based Routes
+        - Allow to attach a View to an Resource. Doing so allow to use a Promise or a Resource instance directly inside a View. Will reload the node when the data is ready or change.
+
+  -  Better module system and configuration
+    - PostConfig for modules
+    - Modules are now correctly preinstalled with N binary
+    - NModule abstract class to handle pre/post configuration process
+    - Rework of NAssets
+      - Manage more than one site with one or more mountpoints
+      - Language preprocessors (Livescript/Coffeescript)
+      - Grunt tasks to compile/minify for production mode (when {minified: true})
+      - Default client root is now the root of the project. Configuration available
+
+  - Launcher wrapper to handle every Nodulator early and late modules work  
+  - Better binary helper and usage
+  - Better cache configuration
+  - Removed fliped done parameters (useless)
+  - Better general configuration
+  - Removed ugly '@.__proto__.constructor.* ' from Resource ctor, using prototype inheritance for that
+  - Better Watch system for Resource class (all, new, updated, deleted)
+  - Added '@_type' property for reflexivity (replaced '@lname')
+  - Better limit and sortBy
+  - Added tests for
+    - Resource
+    - HasAndBelongsToMany
+    - Promises
 
 01/12/15: 0.1.5
   - Added Unique() property

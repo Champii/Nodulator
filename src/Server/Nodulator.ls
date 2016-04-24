@@ -47,11 +47,11 @@ class N extends require \../Common/Nodulator
   Reset: (done) ->
     @debug-nodulator.Warn "Reset"
 
-    cache = require \../Common/Helpers/Cache.ls
+    cache = require \../Common/Helpers/Cache
     if cache.client?
       cache.Reset!
 
-    require \../Common/Helpers/Wrappers.ls .Reset!
+    require \../Common/Helpers/Wrappers .Reset!
     require \./Resource/Connectors .Reset!
 
     @inited = {}

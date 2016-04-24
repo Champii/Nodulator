@@ -26,3 +26,5 @@ build
 node_modules
 Nodulator.sublime-project
 Nodulator.sublime-workspace
+
+lib/

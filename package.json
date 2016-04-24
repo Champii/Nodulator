@@ -12,6 +12,7 @@
     "express": "*",
     "express-session": "*",
     "hacktiv": "0.0.4",
+    "istanbul": "^0.4.3",
     "livescript": "1.4.0",
     "mocha": "*",
     "mongous": "*",
@@ -43,11 +44,12 @@
     "test": "test"
   },
   "devDependencies": {
-    "mocha": "~2.0.1",
-    "livescript": "^1.4.0"
+    "coveralls": "^2.11.9",
+    "livescript": "^1.4.0",
+    "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "mocha --compilers ls:livescript test"
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "repository": {
     "type": "git",
