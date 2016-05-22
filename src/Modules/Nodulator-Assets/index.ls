@@ -12,7 +12,6 @@ NModule = require \../NModule
 
 class NAssets extends NModule
 
-  list: {}
   views: {}
   extendedRun: []
   extendedRender: []
@@ -23,7 +22,7 @@ class NAssets extends NModule
   defaultConfig:
     sites:
       root:
-        path: '/'
+        path: './'
         mount: '/'
         public:
           '/img': '/'
@@ -34,6 +33,7 @@ class NAssets extends NModule
     minified: false
 
   Init: ->
+    @list = {}
     N.assets = @
 
     N.Route._InitServer!
@@ -69,9 +69,9 @@ class NAssets extends NModule
           return
 
       /*site = site[1 to]*''*/
-      console.log \SITE site
       if site.length
         site += \/
+      console.log \SITE site
       res.render site + 'index'
 
     N.ExtendBeforeRender = (process) ~>
@@ -169,21 +169,26 @@ class NAssets extends NModule
       grunt.tasks keys(@tasks), {force: true}, ->
         grunt.log.ok('Done running tasks.');
 
-  _GetFiles: (name, dirs, ext, rec = false) ->
+  _GetFiles: (name, dirs, ext, rec = false, before = false) ->
     _site = (name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.2)
+    /*console.log '_SITE' dirs, _site*/
+
     for dir in dirs when dir?
       dir2 = dir
+      basePath = path.resolve N.appRoot, @config.sites[_site].path
       if dir2 is \/
-        dir2 = path.resolve N.appRoot, @config.sites[_site].path
+        dir2 = basePath
       else if dir2.0 isnt \/
         dir2 = path.resolve @config.sites[_site].path, dir
       else
         isAbsolute = true
+        dir2 = path.resolve @config.sites[_site].path, dir2
 
       if dir2[dir.length - 1] isnt '/'
         dir2 += '/'
 
-      _path = if dir2.0 is \/ then dir2 else path.resolve N.appRoot, dir2
+      _path = path.resolve N.basePath, dir2
+      console.log '_PATH'  _path
       try entries = fs.readdirSync _path
 
       if not entries?
@@ -198,39 +203,50 @@ class NAssets extends NModule
         folders = _(entries).filter (entry) ~>
           fs.statSync(_path + \/ + entry).isDirectory() and not entry.match(/^\./g)
         folders = _(folders).map (folder) ~>
-          dir2 + \/ + folder
+          path.resolve dir2, folder
 
         @_GetFiles name, folders, ext, true
 
       if isAbsolute
-        _(files).each (file) ~>
+        files = _(files).map (file) ~>
           _mount = @config.sites[_site].mount
           if _mount is \/
             _mount = ''
 
-          console.log \ABSOLUTE "#{_mount}/#file", dir2 + file
           if file.split('.')[1] is 'coffee'
             file2 = file.replace /\.coffee/g, '.js'
           else
             file2 = file
-          N.app.use "#{_mount}/#file2", (req, res) -> res.send fs.readFileSync dir2 + file
-      else
-        files = _(files).map (file) ~> @config.sites[_site].path + \/ + file
+          /*console.log \ABSOLUTE "#{_mount}/#file", file2*/
+          #BUG !!!HERE ! MUST COMPILE COFFEE !!!!
+          /*N.app.use "#{_mount}/#file2", (req, res) -> res.send fs.readFileSync path.resolve dir2,  file*/
+      /*else*/
+      files = files
+        |> map (file) ~> path.resolve dir2, file
+        |> map (file) ~>
+          file.replace new RegExp("#{N.appRoot}/", 'gi'), ''
+        |> map (file) ~>
+          file.replace new RegExp("#{N.libRoot}/", 'gi'), ''
+
 
       if not @list[name]
         @list[name] = files
       else
-        @list[name] = @list[name].concat files
+        console.log 'BEFORE' before
+        if before
+          @list[name] = files.concat @list[name]
+        else
+          @list[name] = @list[name].concat files
 
-  AddFoldersRec: (list, _ext) ->
+  AddFoldersRec: (list, _ext, before = false) ->
     for name, dirs of list
       ext = _ext || ((name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.0))
-      @_GetFiles name, dirs, ext, true
+      @_GetFiles name, dirs, ext, true, before
 
-  AddFolders: (list, _ext) ->
+  AddFolders: (list, _ext, before = false) ->
     for name, dirs of list
       ext = _ext || ((name.split \/ |> reverse |> (.0)).split \. |> reverse |> (.0))
-      @_GetFiles name, dirs, ext
+      @_GetFiles name, dirs, ext, before
 
   _Serve: ->
     if @config.minified
@@ -263,7 +279,7 @@ class NAssets extends NModule
               item.replace /\.coffee/g, '.js'
             else
               item
-          console.log @list[site]
+      /*console.log @list[site]*/
 
       N.app.use coffeeMiddleware do
         src: path.resolve N.appRoot, '.'
@@ -272,7 +288,8 @@ class NAssets extends NModule
         force: true
 
       N.app.use coffeeMiddleware do
-        src: path.resolve \/home/fgreiner/prog/js/Nodulator/node_modules/nodulator-angular/assets
+        /*src: path.resolve \/home/fgreiner/prog/js/Nodulator/node_modules/nodulator-angular/assets*/
+        src: N.libRoot
         prefix: 'coffee'
         bare: true
         force: true
@@ -313,14 +330,19 @@ class NAssets extends NModule
         comp = {}
         if not @config.minified
           @compiled = {}
+          console.log 'TMERE' site
           comp = Compile site
         else
           comp = @compiled[site] || ''
 
         _path = "#{@config.sites[site].path}/#{site}.min."
 
+        /*if N.modules.angular?
+          comp += res.locals.cachify_js "/nodulator-angular.min.js"*/
+
         comp += res.locals.cachify_js "#{_path}js" if @list["#{_path}js"].length
         comp += res.locals.cachify_css "#{_path}css" if @list["#{_path}css"].length
+        console.log 'COMP' comp
 
         if N.AccountResource?
           comp += N.AccountResource._AccountResource._InjectUser req

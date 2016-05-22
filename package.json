@@ -2,7 +2,7 @@
   "name": "nodulator",
   "version": "0.1.5",
   "dependencies": {
-    "assert": "*",
+    "assert": "^1.3.0",
     "async": "*",
     "body-parser": "*",
     "commander": "^2.9.0",

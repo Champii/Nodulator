@@ -3,6 +3,10 @@ require! {
   \./Helpers/Debug
 }
 
+/**
+ * Represents a book.
+ * @constructor
+ */
 class N
 
   resources: {}

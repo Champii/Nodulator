@@ -27,19 +27,26 @@ class NAngular extends NModule
     for site, obj of N.config.modules.assets.sites
       o = {}
       o["#{N.config.modules.assets.sites[site].path}/#{site}.min.js"] = [
+        path.resolve __dirname, '../../../src/Modules/Nodulator-Angular/assets']
+      N.modules.assets.AddFoldersRec o, \coffee, true
+      o["#{N.config.modules.assets.sites[site].path}/#{site}.min.js"] = [
+        path.resolve __dirname, '../../../src/Modules/Nodulator-Angular/assets'
         @config.servicesPath
         @config.directivesPath
         @config.controllersPath
         @config.factoriesPath
-        path.resolve __dirname, '../../../node_modules/nodulator-angular/assets'
       ]
 
       N.modules.assets.AddFoldersRec o, \coffee
+    console.log 'lIST' N.modules.assets.list
+
 
   InjectViewsRec: (site, _path) ->
-    dirPath = path.resolve N.appRoot, \./ + N.config.modules.assets.sites[site].path, \./ + _path
+    dirPath = path.resolve N.appRoot, N.config.modules.assets.sites[site].path, _path
 
     try files = fs.readdirSync  dirPath
+    catch e
+      files = []
 
     j = ''
     f = []
@@ -54,7 +61,7 @@ class NAngular extends NModule
           f.push file.split('.')[0]
           j += '\n'
           j += 'script#' + file.split('.')[0] + '-tpl(type="text/ng-template")\n'
-          j += '  include '+ N.config.modules.assets.sites[site].path + \/ + _path + '/' + file.split('.')[0] + '\n'
+          /*j += '  include ./'+ _path + '/' + file.split('.')[0] + '\n'*/
 
     [j, f]
 
@@ -79,12 +86,10 @@ class NAngular extends NModule
 
     [j, f] = @InjectViewsRec site, @config.templatesPath
 
-    j += '
-      script#_nodulator-assets' + "
-        var _views = #{JSON.stringify f};
-        var _nbDirectives = #{@ListDirectives(site)};
-        var _resources = #{JSON.stringify _(N.resources).keys()};\n
-    "
+    j += "script\#_nodulator-assets\n"
+    j += "  var _views = #{JSON.stringify f};\n"
+    j += "  var _nbDirectives = #{@ListDirectives(site)};\n"
+    j += "  var _resources = #{JSON.stringify _(N.resources).keys()};\n"
 
     j += "
        script(src=\"/socket.io/socket.io.js\")
@@ -97,9 +102,11 @@ class NAngular extends NModule
       N.modules.assets.views[site] = ''
       N.modules.assets.AddView @InjectViews(site), site
 
-      console.log \COMPILE N.modules.assets.views[site]
-      jcompile[site] = N.modules.assets.engine.compile N.modules.assets.views[site],
-        filename: path.resolve N.appRoot, \./ + obj.path
+      console.log \COMPILE N.modules.assets.views[site], path.resolve N.appRoot, obj.path
+      console.log \COMPILE######
+      jcompile[site] = N.modules.assets.engine.compile N.modules.assets.views[site], do
+        filename: path.resolve N.appRoot, obj.path
+      console.log \COMPILE2 jcompile
     jcompile
 
 
