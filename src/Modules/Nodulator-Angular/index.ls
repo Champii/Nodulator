@@ -28,9 +28,10 @@ class NAngular extends NModule
       o = {}
       o["#{N.config.modules.assets.sites[site].path}/#{site}.min.js"] = [
         path.resolve __dirname, '../../../src/Modules/Nodulator-Angular/assets']
+
       N.modules.assets.AddFoldersRec o, \coffee, true
+
       o["#{N.config.modules.assets.sites[site].path}/#{site}.min.js"] = [
-        path.resolve __dirname, '../../../src/Modules/Nodulator-Angular/assets'
         @config.servicesPath
         @config.directivesPath
         @config.controllersPath

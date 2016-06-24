@@ -27,6 +27,7 @@ class NAssets extends NModule
         public:
           '/img': '/'
           js: ['/']
+          vendors: ['/']
           css: ['/']
 
     engine: 'jade' #FIXME: no other possible engine
@@ -39,6 +40,7 @@ class NAssets extends NModule
     N.Route._InitServer!
     for site, obj of @config.sites
       @AddFoldersRec do
+        "#{@config.sites[site].path}/#{site}.vendors_min.js" :  @config.sites[site].public?.vendors || [\/]
         "#{@config.sites[site].path}/#{site}.min.js" :  @config.sites[site].public?.js || [\/]
         "#{@config.sites[site].path}/#{site}.min.css" : @config.sites[site].public?.css || [\/]
 
@@ -174,6 +176,7 @@ class NAssets extends NModule
     /*console.log '_SITE' dirs, _site*/
 
     for dir in dirs when dir?
+      console.log 'GETFILES' dir, ext
       dir2 = dir
       basePath = path.resolve N.appRoot, @config.sites[_site].path
       if dir2 is \/
@@ -188,55 +191,60 @@ class NAssets extends NModule
         dir2 += '/'
 
       _path = path.resolve N.basePath, dir2
-      console.log '_PATH'  _path
       try entries = fs.readdirSync _path
 
       if not entries?
-        console.error 'Warning: Cannot read folder: ' + _path
-        continue
+        if fs.statSync _path .isDirectory!
+          console.error 'Warning: Cannot read folder: ' + _path
+          continue
+        else
+          _path = path.resolve @config.sites[_site].path
+          entries = [dir]
 
+      console.log 'ENTRIES' _path, entries
       files = _(entries).filter (entry) ~>
         fs.statSync(_path + \/ + entry).isFile() and
           entry.match (new RegExp '\.'+ext+'$', \gi) and !entry.match /\.min/g
 
       if rec
-        folders = _(entries).filter (entry) ~>
-          fs.statSync(_path + \/ + entry).isDirectory() and not entry.match(/^\./g)
-        folders = _(folders).map (folder) ~>
-          path.resolve dir2, folder
+        folders = entries
+          |> filter (entry) ~> fs.statSync(_path + \/ + entry).isDirectory() and not entry.match(/^\./g)
+          |> map (folder) ~> path.resolve dir2, folder
 
-        @_GetFiles name, folders, ext, true
+        @SaveAssets _site, isAbsolute, name, dir2, files, before
+        @_GetFiles name, folders, ext, true, before
 
-      if isAbsolute
-        files = _(files).map (file) ~>
-          _mount = @config.sites[_site].mount
-          if _mount is \/
-            _mount = ''
+      if not rec
+        @SaveAssets _site, isAbsolute, name, dir2, files, before
 
-          if file.split('.')[1] is 'coffee'
-            file2 = file.replace /\.coffee/g, '.js'
-          else
-            file2 = file
-          /*console.log \ABSOLUTE "#{_mount}/#file", file2*/
-          #BUG !!!HERE ! MUST COMPILE COFFEE !!!!
-          /*N.app.use "#{_mount}/#file2", (req, res) -> res.send fs.readFileSync path.resolve dir2,  file*/
-      /*else*/
-      files = files
-        |> map (file) ~> path.resolve dir2, file
-        |> map (file) ~>
-          file.replace new RegExp("#{N.appRoot}/", 'gi'), ''
-        |> map (file) ~>
-          file.replace new RegExp("#{N.libRoot}/", 'gi'), ''
+  SaveAssets: (_site, isAbsolute, name, _path, files, before) ->
+    if isAbsolute
+      files = _(files).map (file) ~>
+        _mount = @config.sites[_site].mount
+        if _mount is \/
+          _mount = ''
 
-
-      if not @list[name]
-        @list[name] = files
-      else
-        console.log 'BEFORE' before
-        if before
-          @list[name] = files.concat @list[name]
+        if file.split('.')[1] is 'coffee'
+          file.replace /\.coffee/g, '.js'
         else
-          @list[name] = @list[name].concat files
+          file
+
+    files = files
+      |> map (file) ~> path.resolve _path, file
+      |> map (file) ~>
+        file.replace new RegExp("#{N.appRoot}/", 'gi'), ''
+      |> map (file) ~>
+        file.replace new RegExp("#{N.libRoot}/", 'gi'), ''
+
+    if not @list[name]
+      @list[name] = files
+    else
+      /*if before
+        @list[name] = files.concat @list[name]
+      else*/
+      @list[name] = @list[name].concat files
+    console.log 'Saved'
+
 
   AddFoldersRec: (list, _ext, before = false) ->
     for name, dirs of list
@@ -340,9 +348,12 @@ class NAssets extends NModule
         /*if N.modules.angular?
           comp += res.locals.cachify_js "/nodulator-angular.min.js"*/
 
+        console.log "TROLL #{@config.sites[site].path}/#{site}.vendors_min.js"
+
+        comp += a = res.locals.cachify_js "#{@config.sites[site].path}/#{site}.vendors_min.js"
         comp += res.locals.cachify_js "#{_path}js" if @list["#{_path}js"].length
         comp += res.locals.cachify_css "#{_path}css" if @list["#{_path}css"].length
-        console.log 'COMP' comp
+        console.log 'COMP' a
 
         if N.AccountResource?
           comp += N.AccountResource._AccountResource._InjectUser req
