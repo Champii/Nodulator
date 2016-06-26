@@ -35,7 +35,7 @@ class NSocket extends NModule
   _InitSockets: ->
     @io = socket.listen N.server
     N.io = @io
-    io = @io
+    io := @io
     onAuthorizeSuccess = (data, accept) ->
       accept null, true
 
@@ -88,13 +88,16 @@ class NSocket extends NModule
     for k, v of args
       if v.ToJSON?
         args[k] = v.ToJSON!
+    # console.log 'EMIT' room, args
     room.emit.apply room, args
   #
   @NewRoom = (name) ->
     @rooms.push name
     for prefix in prefixes
-      do (prefix) ->
+      let prefix = prefix
+        # console.log 'CREATE' prefix + name
         N.bus.on prefix + name, (item) ~>
+          # console.log 'TRIGGER' prefix + name
           NSocket.EmitRoom name, prefix + name, item
 
   @Init = ->
@@ -102,8 +105,9 @@ class NSocket extends NModule
     N.socket = new res
 
 N.bus.on 'new_resource', (name) ->
-  # console.log 'New_resource', name
-  NSocket.NewRoom name
+  # console.log 'New_resource', name.toLowerCase!
+
+  NSocket.NewRoom name.toLowerCase!
 
 
 #N.Socket = ->

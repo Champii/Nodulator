@@ -34,6 +34,7 @@ module.exports = (config, routes, name, N) ->
 
     # Save without wrap
     _SaveUnwrapped: (config, done) ->
+      # console.log 'SAVE'
       if not done?
         done = config
         config = @_config
@@ -41,6 +42,7 @@ module.exports = (config, routes, name, N) ->
       serie = @Serialize!
       @_schema.Validate serie, (err) ~>
         exists = @id?
+        # console.log "MAIS WHAT"
         debug-resource.Log "Saving  #{JSON.stringify serie}"
 
         switch
@@ -51,9 +53,10 @@ module.exports = (config, routes, name, N) ->
               | _     =>
                 if !exists
                   @id = instance.id
-                  N.bus.emit \new_ + name, @
+                  # console.log 'EMIT NEW' @_type
+                  N.bus.emit \new_ + @_type, @
                 else
-                  N.bus.emit \update_ + name, @
+                  # N.bus.emit \update_ + @_type, @
                 ChangeWatcher.Invalidate!
 
                 debug-resource.Log "Saved  {id: #{@id}}"

@@ -8,7 +8,7 @@ tags = <[a abbr address area article aside audio b base bdo blockquote body br b
 selfClosingTags = <[area base br col command embed hr img input keygen link meta param source track wbr]>
 customTags = <[root text func]>
 
-events = <[click change]>
+events = <[click change keyup]>
 
 window.DOM = {}
 class Node
@@ -149,11 +149,10 @@ class Node
     return '' if not @attrs?
     res = ''
     for k, v of @attrs when k isnt \click
-      res += " #k=\"#v\""
+      res += " #{k}=\"#{v}\""
     res
 
   _ResolveType: (child, done) ->
-    # console.log 'Child', child
     switch
       | child is undefined            => @_String '', done
       | typeof! child is \String      => @_String child, done
@@ -234,9 +233,11 @@ class WatchableNode extends Node
     return d.promise
 
   Rerender: (first) ->
+    # console.log 'RERENDER FUNC' @
     d = q.defer!
     if first
       @func!
+      # console.log 'RERENDER' a
       d.resolve null
       return d.promise
     @Resolve!

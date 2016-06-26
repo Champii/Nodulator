@@ -8,6 +8,7 @@ module.exports = (config, routes, name) ->
   class Resource extends require(\../../Common/Resource)(config, routes, name, N)
 
     Save: @_WrapPromise @_WrapResolvePromise (done) ->
+      # console.log ''
       # serie = @Serialize()
 
     Delete: @_WrapPromise @_WrapResolvePromise (done) ->
@@ -25,13 +26,18 @@ module.exports = (config, routes, name) ->
 
       toChange = {}
 
-      for k, v of blob
-        if k in map (.name), @_schema.properties
+      if is-type \Function blob
+        blob @
+        toChange = @
+      else
+        for k, v of blob
+          # if k in map (.name), @_schema.properties
           if typeof! v is \Function
             toChange[k] = v!
           else
             toChange[k] = v
 
+      # console.log 'BLOB' blob, toChange
       id = null
       if typeof! @id is \Function
         id = @id!
@@ -45,6 +51,7 @@ module.exports = (config, routes, name) ->
 
 
     @_Changed = -> @_watchers |> each (.dep._Changed!)
+    Changed: -> @Res._Changed!
 
     ResolveFuncs: ->
       res = {}

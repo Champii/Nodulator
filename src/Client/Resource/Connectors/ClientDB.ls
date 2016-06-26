@@ -30,6 +30,7 @@ class RESTClient
       .catch done
 
   Set: (id, blob, done) ->
+    # console.log 'CLIENT SET' id, blob
     Client method: \POST path: \/api/1/ + @name + '/set/' + id, headers: {'Content-Type': 'application/json'}, entity: blob
       .then ~> done null it.entity
       .catch done
@@ -64,7 +65,7 @@ class ClientDB
     @resource.N.bus.emit \new_ + @resource._type, it
 
   OnUpdate: (item) ->
-    console.log 'Update' item
+    # console.log 'Update' item
     item = @ExtractAssocs item
     # console.log 'Update', item
     # return if item.id not in (@collection |> map (.id))
@@ -72,12 +73,12 @@ class ClientDB
     # console.log idx, @collection.idx
     if idx?
       # console.log 'Id ?', idx, item, @collection[idx]
-      console.log 'Change' @collection[idx], item
+      # console.log 'Change' @collection[idx], item
       diff = @GetChange @collection[idx], item
       # console.log 'diff ?', diff
       @collection[idx] = item
     # @resource._Changed!0
-      console.log 'diff' diff
+      # console.log 'diff' diff
       if keys diff .length
         @resource.N.bus.emit \update_ + @resource._type + \_ + item.id, diff
     else
