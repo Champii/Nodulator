@@ -31,23 +31,29 @@ N.Render App
 ```
 
 
-#### Compenent based and reutilisation
+#### Compenent based and reusability
 
 ```livescript
-Foo = N \foo, N.Route.RPC
-Bar = N \bar, N.Route.RPC
+FooView = N.View -> "Foo: #{@bar}"
+BarView = N.View -> "Bar: #{@foo}"
 
-CreateButton = N.View (Resource, obj) ->
-  button do
-    click: -> Resource.Create obj
-    \Create Resource._type
+Foo = N \foo FooView
+Bar = N \bar BarView
+
+Component = N.View (Resource, obj) ->
+  div do
+    button do
+      click: -> Resource.Create obj
+      \Create Resource._type
+    Resource.List!
 
 App = N.View ->
   div do
-    CreateButton Foo, bar: 42
-    CreateButton Bar, foo: 42
+    Component Foo, bar: 42
+    Component Bar, foo: 42
 
 N.Render App
+
 ```
 
 #### TodoList (client only)
