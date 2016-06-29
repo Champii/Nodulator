@@ -72,9 +72,7 @@ View = (context, fn) ->
         first := false
         if isInstance
           name = @_type
-          # console.log 'Instance' \update_ + name + \_ + @id
           listener := (changed) ~>
-            # console.log 'Tamere' changed
             for k, v of changed when @[k]?
               # @[k + \_] v
               @[k] = v

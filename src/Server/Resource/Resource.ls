@@ -56,7 +56,7 @@ module.exports = (config, routes, name, N) ->
                   # console.log 'EMIT NEW' @_type
                   N.bus.emit \new_ + @_type, @
                 else
-                  # N.bus.emit \update_ + @_type, @
+                  N.bus.emit \update_ + @_type, @
                 ChangeWatcher.Invalidate!
 
                 debug-resource.Log "Saved  {id: #{@id}}"
