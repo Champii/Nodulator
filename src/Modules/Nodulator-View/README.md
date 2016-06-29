@@ -78,7 +78,6 @@ List = N.View {list: []}, ->
 N.Render List
 ```
 
-
 #### TodoList (client/server)
 
 ```livescript

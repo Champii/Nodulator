@@ -87,7 +87,7 @@ class ClientDB
   OnDelete: (item) ->
     item = @ExtractAssocs item
     # return if it.id not in @collection |> map (.id)
-    @collection = _(@collection).reject (record) -> record.id is item.id
+    @collection.splice @collection.indexOf(item), 1
     @resource._Changed!
 
   ExtractAssocs: (blob) ->
