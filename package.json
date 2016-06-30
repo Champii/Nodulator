@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "coveralls": "^2.11.9",
-    "livescript": "^1.4.0",
+    "livescript": "1.4.0",
     "mocha": "~2.0.1"
   },
   "scripts": {

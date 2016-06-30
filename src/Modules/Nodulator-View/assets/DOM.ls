@@ -93,6 +93,7 @@ class Node
   SetEvents: ->
     node = @GetElement!
     if @name isnt \root and any (in events), keys @attrs
+      console.log 'SET EVENT', keys @attrs
       if @attrs.click?
         node.onclick = ~>
           @attrs.click ...
