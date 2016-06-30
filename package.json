@@ -3,20 +3,20 @@
   "version": "0.1.5",
   "dependencies": {
     "assert": "^1.3.0",
-    "async": "*",
-    "body-parser": "*",
+    "async": "1.5.2",
+    "body-parser": "1.15.0",
     "commander": "^2.9.0",
     "connect-redis": "^3.0.0",
-    "cookie-parser": "*",
+    "cookie-parser": "1.4.1",
     "debug": "2.2.0",
-    "express": "*",
-    "express-session": "*",
+    "express": "4.13.4",
+    "express-session": "1.13.0",
     "hacktiv": "0.0.4",
     "istanbul": "^0.4.3",
     "livescript": "1.4.0",
-    "mocha": "*",
-    "mongous": "*",
-    "mysql": "*",
+    "mocha": "2.4.5",
+    "mongous": "0.2.7",
+    "mysql": "2.10.2",
     "nodulator-account": "file:./src/Modules/Nodulator-Account",
     "nodulator-angular": "file:./src/Modules/Nodulator-Angular",
     "nodulator-assets": "file:./src/Modules/Nodulator-Assets",
@@ -29,9 +29,9 @@
     "repl.history": "0.1.3",
     "rest": "^1.3.1",
     "rest-js": "^1.1.2",
-    "superagent": "*",
-    "supertest": "*",
-    "underscore": "*",
+    "superagent": "1.8.3",
+    "supertest": "1.2.0",
+    "underscore": "1.8.3",
     "validator": "~3.27.0"
   },
   "description": "Complete NodeJS Framework for Restfull APIs",
@@ -49,7 +49,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
-    "test": "lsc -v; lsc -c -o lib src && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage ./lib/*"
+    "test": "lsc -c -o lib src && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage ./lib/*"
   },
   "repository": {
     "type": "git",
