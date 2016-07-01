@@ -1,141 +1,135 @@
 _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
-assert = require 'assert'
+expect = require 'chai' .expect
 
 N = require '..'
 
-test = it
+Test = null
 
-Tests = null
-
-describe 'N Resource', ->
+describe 'N Resource', (...) ->
 
   before (done) ->
     N.Reset ->
-      Tests := N \tests
-
-      assert Tests?
+      Test := N \test
+      # assert Test?
       done()
 
-  test 'should not fetch first resource', (done) ->
-    Tests.Fetch 1, (err, test) ->
-      return done! if err?
+  it 'should not fetch first resource and display correct error', (done) ->
+    Test.Fetch 1, (err, test) ->
+      expect err        .to.be.a \object
+      expect err.status .to.equal \not_found
+      expect err.reason .to.equal '{"id":1}'
+      expect err.source .to.equal \test
+      expect test       .to.be.undefined
+      done!
 
-      throw new Error 'Fetched non-existant resource !'
+  it 'should add first resource', (done) ->
+    Test.Create {test: 'test'}, (err, test) ->
+      expect err       .to.be.null
+      expect test      .to.be.a \object
+      expect test.test .to.equal \test
+      done!
 
-  test 'should add first resource', (done) ->
-    Tests.Create {test: 'test'}, (err, test) ->
-      throw new Error 'Cannot Create test' if err?
+  it 'should fetch first resource', (done) ->
+    Test.Fetch 1, (err, test) ->
+      expect err       .to.be.null
+      expect test      .to.be.a \object
+      expect test.id   .to.equal 1
+      expect test.test .to.equal \test
+      done!
 
-      assert.equal test.test, 'test'
+  it 'should list all resources', (done) ->
+    Test.List (err, tests) ->
+      expect err          .to.be.null
+      expect tests        .to.be.a \array
+      expect tests.length .to.equal 1
+      expect tests.0.test .to.equal \test
+      done!
 
-      done()
+  it 'should save changed resource', (done) ->
 
-  test 'should fetch first resource', (done) ->
-    Tests.Fetch 1, (err, test) ->
-      throw new Error JSON.stringify err if err?
-
-      assert.equal test.id, 1
-      assert.equal test.test, 'test'
-
-      done()
-
-  test 'should list all resources', (done) ->
-    Tests.List (err, tests) ->
-      throw new Error 'Cannot List resources' if err?
-
-      assert.equal tests.length, 1
-      done()
-
-  test 'should save changed resource', (done) ->
-
-    err, test <- Tests.Fetch 1
-    throw new Error err if err?
+    err, test <- Test.Fetch 1
+    expect err .to.be.null
 
     test.test = 'test2'
 
     err, test2 <- test.Save!
-    throw new Error err if err?
+    expect err .to.be.null
 
-    err, test3 <- Tests.Fetch 1
-    throw new Error err if err?
+    err, test3 <- Test.Fetch 1
+    expect err .to.be.null
 
-    assert.equal test3.test, 'test2'
+    expect test3.test .to.equal \test2
 
-    done()
+    done!
 
-  test 'should delete resource', (done) ->
-    err, test <- Tests.Fetch 1
-    throw new Error err if err?
+  it 'should delete resource', (done) ->
+    err, test <- Test.Fetch 1
+    expect err .to.be.null
 
     err <- test.Delete!
-    throw new Error err if err?
+    expect err .to.be.null
 
-    err, test2 <- Tests.Fetch 1
-    return done() if err?
+    err, test2 <- Test.Fetch 1
+    expect err   .to.be.a \object
+    expect test2 .to.be.undefined
+    done!
 
-    throw new Error 'Has not deleted resource'
-
-  test 'should Create from an array of obj', (done) ->
+  it 'should Create from an array of obj', (done) ->
     blob = [{field1: 1, field2: 1}
             {field1: 2, field2: 2}]
 
-    Tests.Create blob, (err, tests) ->
-      throw new Error err if err?
+    Test.Create blob, (err, tests) ->
+      expect err .to.be.null
 
-      assert.equal tests[0].field1, 1
-      assert.equal tests[0].field2, 1
-      assert.equal tests[1].field1, 2
-      assert.equal tests[1].field2, 2
+      expect tests[0].field1 .to.equal 1
+      expect tests[0].field2 .to.equal 1
+      expect tests[1].field1 .to.equal 2
+      expect tests[1].field2 .to.equal 2
 
-      Tests.List (err, tests) ->
-        throw new Error err if err?
+      Test.List (err, tests) ->
+        expect err .to.be.null
 
-        assert.equal tests[0].field1, 1
-        assert.equal tests[0].field2, 1
-        assert.equal tests[1].field1, 2
-        assert.equal tests[1].field2, 2
+        expect tests[0].field1 .to.equal 1
+        expect tests[0].field2 .to.equal 1
+        expect tests[1].field1 .to.equal 2
+        expect tests[1].field2 .to.equal 2
 
-        # console.log tests
-        done()
+        done!
 
-  test 'should Fetch from an obj', (done) ->
-    Tests.Fetch {field1: 1, field2: 1}, (err, tests) ->
-      throw new Error err if err?
+  it 'should Fetch from an obj', (done) ->
+    Test.Fetch {field1: 1, field2: 1}, (err, tests) ->
+      expect err .to.be.null
 
-      assert.equal tests.field1, 1
-      assert.equal tests.field2, 1
+      expect tests.field1 .to.equal 1
+      expect tests.field2 .to.equal 1
 
-      # console.log tests
-      done()
+      done!
 
-  test 'should Fetch from an array of id', (done) ->
-    Tests.Fetch [2, 3], (err, tests) ->
-      throw new Error err if err?
+  it 'should Fetch from an array of id', (done) ->
+    Test.Fetch [2, 3], (err, tests) ->
+      expect err .to.be.null
 
-      throw new Error 'Result is not an array' if not Array.isArray tests
+      expect tests .to.be.a \array
 
-      # console.log err, tests
+      expect tests[0].field1 .to.equal 1
+      expect tests[0].field2 .to.equal 1
+      expect tests[1].field1 .to.equal 2
+      expect tests[1].field2 .to.equal 2
 
-      assert.equal tests[0].field1, 1
-      assert.equal tests[0].field2, 1
-      assert.equal tests[1].field1, 2
-      assert.equal tests[1].field2, 2
+      done!
 
-      done()
-
-  test 'should Fetch from an array of obj', (done) ->
+  it 'should Fetch from an array of obj', (done) ->
     blob = [{field1: 1, field2: 1}
             {field1: 2, field2: 2}]
 
-    Tests.Fetch blob, (err, tests) ->
-      throw new Error err if err?
+    Test.Fetch blob, (err, tests) ->
+      expect err .to.be.null
 
-      assert.equal tests[0].field1, 1
-      assert.equal tests[0].field2, 1
-      assert.equal tests[1].field1, 2
-      assert.equal tests[1].field2, 2
+      expect tests[0].field1 .to.equal 1
+      expect tests[0].field2 .to.equal 1
+      expect tests[1].field1 .to.equal 2
+      expect tests[1].field2 .to.equal 2
 
-      # console.log tests
-      done()
+      done!

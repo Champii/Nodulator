@@ -3,15 +3,10 @@ async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
-
+expect = require 'chai' .expect
 N = require '..'
 
-client = null
-Tests = null
-
-test = it
-
-describe 'N Route', ->
+describe 'N Route', (...) ->
 
   before (done) ->
     N.Reset ->
@@ -24,12 +19,11 @@ describe 'N Route', ->
           @Get -> {message: 'Coucou'}
 
       new TestRoute
-      N._ListEndpoints console.log
-      done()
+      done!
 
-  test 'should get resource', (done) ->
+  it 'should get resource', (done) ->
     N.client.Get '/api/1/tests', (err, res) ->
-      throw err if err?
+      expect err .to.be.null
 
-      assert.equal res.body.message, 'Coucou'
-      done()
+      expect res.body.message .to.equal 'Coucou'
+      done!

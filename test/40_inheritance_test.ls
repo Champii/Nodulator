@@ -1,7 +1,7 @@
 _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
-assert = require 'assert'
+expect = require 'chai' .expect
 Client = require './common/client'
 
 N = require '..'
@@ -9,11 +9,9 @@ N = require '..'
 client = null
 ATests = null
 
-test = it
-
 TestRoute = null
 
-describe 'N Inheritance', ->
+describe 'N Inheritance', (...) ->
 
   before (done) ->
     N.Reset ->
@@ -21,37 +19,35 @@ describe 'N Inheritance', ->
 
         FetchByName: (name, done) ->
           @table.FindWhere '*', {name: name}, (err, blob) ~>
-            throw new Error err if err?
+            expect err .to.be.null
 
             @resource._Deserialize blob, done
 
-      assert AbTests?
+      expect AbTests .to.be.not.null
       ATests := AbTests
       ATests.Init()
 
-      done()
+      done!
 
-  test 'should have Extend function', (done) ->
-    assert ATests.Extend?
-    done()
+  it 'should have Extend function', (done) ->
+    expect ATests.Extend .to.be.a \function
+    done!
 
-  test 'should have inherited methods', (done) ->
+  it 'should have inherited methods', (done) ->
     class TestResource extends ATests.Extend 'test'
 
-    assert TestResource::FetchByName?
-    t = new TestResource {}
-    assert t.FetchByName?
-    done()
+    expect TestResource::FetchByName .to.be.a \function
 
-  test 'should have inherited in route', (done2) ->
+    t = new TestResource {}
+    expect t.FetchByName .to.be.a \function
+    done!
+
+  it 'should have inherited in route', (done2) ->
 
     class Players extends N \players
 
-      level: 1
-
-      LevelUp: @_WrapPromise (done) ->
-        @level++
-        @Save done
+      LevelUp: ->
+        @Set ~> @level++
 
       @ListUsernames = @_WrapPromise (done) ->
         @List (err, list) ->
@@ -70,14 +66,15 @@ describe 'N Inheritance', ->
     a = new PlayerRoute
 
     err <- Players.Create {test: 1, level: 1}
-    throw new Error err if err?
-    err, {body} <- N.client.Put \/api/1/players/1/levelup, {}
-    throw new Error err if err?
+    expect err .to.be.null
 
-    assert body.level, 2
+    err, {body} <- N.client.Put \/api/1/players/1/levelup, {}
+    expect err .to.be.null
+
+    expect body.level .to.equal 2
     done2!
 
-  test 'should have inherited in route 2', (done2) ->
+  it 'should have inherited in route 2', (done2) ->
 
     class PlayerRoute extends N.Route.Collection
 
@@ -86,13 +83,10 @@ describe 'N Inheritance', ->
         super()
         @Put '/:id/levelup' ~> it.instance.LevelUp!
 
-    class Players extends N 'player2', PlayerRoute
+    class Players extends N 'p', PlayerRoute
 
-      level: 1
-
-      LevelUp: @_WrapPromise (done) ->
-        @level++
-        @Save done
+      LevelUp: ->
+        @Set ~> @level++
 
       @ListUsernames = @_WrapPromise (done) ->
         @List (err, list) ->
@@ -102,15 +96,16 @@ describe 'N Inheritance', ->
 
 
     err <- Players.Create {test: 1, level: 1}
-    throw new Error err if err?
-    err, {body} <- N.client.Put \/api/1/players/1/levelup, {}
-    throw new Error err if err?
+    expect err .to.be.null
 
-    assert body.level, 2
+    err, {body} <- N.client.Put \/api/1/p/1/levelup, {}
+    expect err .to.be.null
+
+    expect body.level .to.equal 2
     done2!
     # console.log err, body
 
-  test 'should have inherited fields', (done) ->
+  it 'should have inherited fields', (done) ->
     P = N \ps
 
     P.Field \a \int .Default 0
@@ -118,11 +113,11 @@ describe 'N Inheritance', ->
     C = P.Extend \cs
 
     C.Create!
-      .Then -> assert.equal it.a, 0
+      .Then -> expect it.a .to.equal 0
       .Then -> done!
       .Catch done
 
-  test 'should not have inherited fields', (done) ->
+  it 'should not have inherited fields', (done) ->
     P2 = N \p2s
 
     P2.Field \a \int .Default 0
@@ -132,7 +127,7 @@ describe 'N Inheritance', ->
     C2.Field \b \int .Default 1
 
     P2.Create!
-      .Then -> assert.equal it.a, 0
-      .Then -> assert.equal it.b, undefined
+      .Then -> expect it.a .to.equal 0
+      .Then -> expect it.b .to.be.undefined
       .Then -> done!
       .Catch done
