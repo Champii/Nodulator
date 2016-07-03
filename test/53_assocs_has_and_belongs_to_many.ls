@@ -1,7 +1,7 @@
 _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
-assert = require 'assert'
+expect = require 'chai' .expect
 
 N = require '..'
 
@@ -9,9 +9,7 @@ Item = null
 Inventory = null
 News = null
 
-test = it
-
-describe 'N Associations HasAndBelongsToMany', ->
+describe 'N Associations HasAndBelongsToMany', (...) ->
 
   beforeEach (done) ->
     N.Reset ->
@@ -23,56 +21,60 @@ describe 'N Associations HasAndBelongsToMany', ->
 
       done!
 
-  test 'should create inventory without parent', (done) ->
+  it 'should create inventory without parent', (done) ->
     Inventory.Create!
       .Then -> done!
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should create item without parent', (done) ->
+  it 'should create item without child', (done) ->
     Item.Create!
       .Then -> done!
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should create with Add', (done) ->
-    Item.Create name: \item1 .Add Inventory.Create name: \inv1
-      .Then -> assert.equal it.name, \item1
+  it 'should create with Add', (done) ->
+    Item
+      .Create name: \item1
+      .Add Inventory.Create name: \inv1
+      .Then -> expect it.name .to.equal \item1
+      .Then -> Item.Fetch 1
       .Then ->
-        Item.Fetch 1
-          .Then ->
-            assert.equal it.name, \item1
-            assert.equal it.Inventorys.0.name, \inv1
-            done!
+        expect it.name .to.equal \item1
+        expect it.Inventorys.0.name .to.equal \inv1
+        done!
 
-          .Catch -> done new Error it
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should create with Add reverse', (done) ->
-    Inventory.Create name: \inv1 .Add(Item.Create name: \item1)
+  it 'should create with Add reverse', (done) ->
+    Inventory
+      .Create name: \inv1
+      .Add Item.Create name: \item1
+      .Then -> expect it.name .to.equal \inv1
+      .Then -> Item.Fetch 1
       .Then ->
-        assert.equal it.name, \inv1
-      .Then ->
-        Item.Fetch 1
-          .Then ->
-            assert.equal it.name, \item1
-            assert.equal it.Inventorys.0.name, \inv1
-            done!
+        expect it.name .to.equal \item1
+        expect it.Inventorys.0.name .to.equal \inv1
+        done!
 
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should remove child with promise', (done) ->
-    Item.Create name: \item1 .Add Inventory.Create name: \inv1
+  it 'should remove child with promise', (done) ->
+    Item
+      .Create name: \item1
+      .Add Inventory.Create name: \inv1
+      .Then -> Item.Fetch 1
+      .Remove Inventory.Fetch 1
       .Then ->
-        Item.Fetch 1 .Remove Inventory.Fetch 1
-          .Then ->
-            assert.equal it.Inventorys.length, 0
-            done!
-      .Catch -> done new Error it
+        expect it.Inventorys.length .to.equal 0
+        done!
 
-  test 'should remove child with instance', (done) ->
-    Inventory.Create name: \inv1 .Add Item.Create name: \item1
+      .Catch done
+
+  it 'should remove child with instance', (done) ->
+    Inventory
+      .Create name: \inv1
+      .Add Item.Create name: \item1
+      .Then -> Item.Fetch 1 .Remove it
       .Then ->
-        Item.Fetch 1 .Remove it
-          .Then ->
-            assert.equal it.Inventorys.length, 0
-            done!
-      .Catch -> done new Error it
+        expect it.Inventorys.length .to.equal 0
+        done!
+      .Catch done

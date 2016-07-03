@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "coffee-script": "^1.9.3",
-    "jade": "~1.8.1"
+    "pug": "^0.1.0"
   }
 }

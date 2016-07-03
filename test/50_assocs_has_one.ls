@@ -1,7 +1,7 @@
 _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
-assert = require 'assert'
+expect = require 'chai' .expect
 
 N = require '..'
 
@@ -9,9 +9,7 @@ Tests = null
 Childs = null
 News = null
 
-test = it
-
-describe 'N Associations HasOne', ->
+describe 'N Associations HasOne', (...) ->
 
   beforeEach (done) ->
     N.Reset ->
@@ -23,34 +21,38 @@ describe 'N Associations HasOne', ->
 
       done!
 
-  test 'should not create child without parent', (done) ->
-    Childs.Create!
+  #TODO Test depth
+
+  it 'should not create child without parent', (done) ->
+    Childs.
+      Create!
       .Then -> done new Error JSON.stringify it
       .Catch -> done!
 
-  test 'should create with id', (done) ->
-    Childs.Create name: \child1 testId: Tests.Create name: \test
-      .Then -> assert.equal it.name, \child1
+  it 'should create with id', (done) ->
+    Childs
+      .Create name: \child1 testId: Tests.Create name: \test
+      .Then -> expect it.name .to.equal \child1
+      .Then -> Tests.Fetch 1
       .Then ->
-        Tests.Fetch 1
-          .Then ->
-            assert.equal it.name, \test
-            assert.equal it.Child.name, \child1
-            assert.equal it.Child.testId, 1
-            done!
+        expect it.name .to.equal \test
+        expect it.Child.name .to.equal \child1
+        expect it.Child.testId .to.equal 1
+        done!
 
-        .Catch -> done  it
+      .Catch done
 
-  test 'should not remove child with promise', (done) ->
-    Childs.Create name: \child1 testId: Tests.Create name: \test
-      .Then ->
-        Tests.Fetch 1 .Remove Childs.Fetch 1
-          .Then -> done 'Has deleted ?!'
-          .Catch -> done!
+  it 'should not remove child with promise', (done) ->
+    Childs
+      .Create name: \child1 testId: Tests.Create name: \test
+      .Then -> Tests.Fetch 1
+      .Remove Childs.Fetch 1
+      .Then -> done 'Has deleted ?!'
+      .Catch -> done!
 
-  test 'should not remove child', (done) ->
-    Childs.Create name: \child1 testId: Tests.Create name: \test
-      .Then ->
-        Tests.Fetch 1 .Remove it
-          .Then -> done 'Has deleted ?!'
-          .Catch -> done!
+  it 'should not remove child', (done) ->
+    Childs
+      .Create name: \child1 testId: Tests.Create name: \test
+      .Then -> Tests.Fetch 1 .Remove it
+      .Then -> done 'Has deleted ?!'
+      .Catch -> done!

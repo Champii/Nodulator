@@ -2,6 +2,7 @@ _ = require 'underscore'
 async = require 'async'
 supertest = require 'supertest'
 assert = require 'assert'
+expect = require 'chai' .expect
 
 N = require '..'
 
@@ -9,9 +10,7 @@ Tests = null
 Childs = null
 News = null
 
-test = it
-
-describe 'N Associations MayHasOne', ->
+describe 'N Associations MayHasOne', (...) ->
 
   beforeEach (done) ->
     N.Reset ->
@@ -23,65 +22,70 @@ describe 'N Associations MayHasOne', ->
 
       done!
 
-  test 'should create child without parent', (done) ->
-    Childs.Create!
+  it 'should create child without parent', (done) ->
+    Childs
+      .Create!
       .Then -> done!
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should create with id', (done) ->
-    Childs.Create name: \child1 testId: Tests.Create name: \test
-      .Then -> assert.equal it.name, \child1
+  it 'should create with id', (done) ->
+    Childs
+      .Create name: \child1 testId: Tests.Create name: \test
+      .Then -> expect it.name .to.equal \child1
+      .Then -> Tests.Fetch 1
       .Then ->
-        Tests.Fetch 1
-          .Then ->
-            assert.equal it.name, \test
-            assert.equal it.Child.name, \child1
-            assert.equal it.Child.testId, 1
-            done!
+        expect it.name .to.equal \test
+        expect it.Child.name .to.equal \child1
+        expect it.Child.testId .to.equal 1
+        done!
 
       .Catch -> done new Error JSON.stringify it
 
-  test 'should create with Add', (done) ->
-    Tests.Create name: \test .Add Childs.Create name: \child1
-      .Then -> assert.equal it.name, \test
+  it 'should create with Add', (done) ->
+    Tests
+      .Create name: \test
+      .Add Childs.Create name: \child1
+      .Then -> expect it.name .to.equal \test
+      .Then -> Tests.Fetch 1
       .Then ->
-        Tests.Fetch 1
-          .Then ->
-            assert.equal it.name, \test
-            assert.equal it.Child.name, \child1
-            assert.equal it.Child.testId, 1
-            done!
+        expect it.name .to.equal \test
+        expect it.Child.name .to.equal \child1
+        expect it.Child.testId .to.equal 1
+        done!
 
-          .Catch -> done new Error it
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should create with Add reverse', (done) ->
-    Childs.Create name: \child1 .Add(Tests.Create name: \test)
-      .Then -> assert.equal it.name, \child1
+  it 'should create with Add reverse', (done) ->
+    Childs
+      .Create name: \child1
+      .Add(Tests.Create name: \test)
+      .Then -> expect it.name, \child1
+      .Then -> Tests.Fetch 1
       .Then ->
-        Tests.Fetch 1
-          .Then ->
-            assert.equal it.name, \test
-            assert.equal it.Child.name, \child1
-            assert.equal it.Child.testId, 1
-            done!
+        expect it.name .to.equal \test
+        expect it.Child.name .to.equal \child1
+        expect it.Child.testId .to.equal 1
+        done!
 
-      .Catch -> done new Error it
+      .Catch done
 
-  test 'should remove child with promise', (done) ->
-    Tests.Create name: \test .Add Childs.Create name: \child1
+  it 'should remove child with promise', (done) ->
+    Tests
+      .Create name: \test
+      .Add Childs.Create name: \child1
+      .Then -> Tests.Fetch 1
+      .Remove Childs.Fetch 1
       .Then ->
-        Tests.Fetch 1 .Remove Childs.Fetch 1
-          .Then ->
-            assert.equal it.Child, undefined
-            done!
-      .Catch -> done new Error it
+        expect it.Child .to.equal undefined
+        done!
+      .Catch done
 
-  test 'should remove child with instance', (done) ->
-    Childs.Create name: \child1 .Add Tests.Create name: \test
+  it 'should remove child with instance', (done) ->
+    Childs
+      .Create name: \child1
+      .Add Tests.Create name: \test
+      .Then -> Tests.Fetch 1 .Remove it
       .Then ->
-        Tests.Fetch 1 .Remove it
-          .Then ->
-            assert.equal it.Child, undefined
-            done!
-      .Catch -> done new Error it
+        expect it.Child .to.equal undefined
+        done!
+      .Catch done

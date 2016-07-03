@@ -5,12 +5,12 @@ expect = require 'chai' .expect
 
 N = require '..'
 
-# test = it
-
 describe 'N', (...) ->
 
   before (done) ->
     N.Reset done
+
+  #TODO: test config process
 
   it 'should be correctly defined', (done) ->
     expect N             .to.be.a \function

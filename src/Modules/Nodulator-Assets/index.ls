@@ -1,7 +1,7 @@
 _ = require 'underscore'
 fs = require 'fs'
 path = require 'path'
-jade = require 'jade'
+jade = require 'pug'
 cookieParser = require 'cookie-parser'
 coffeeMiddleware = require 'coffee-middleware'
 livescriptMiddleware = require 'livescript-middleware'
@@ -30,7 +30,7 @@ class NAssets extends NModule
           vendors: ['/']
           css: ['/']
 
-    engine: 'jade' #FIXME: no other possible engine
+    engine: 'pug' #FIXME: no other possible engine
     minified: false
 
   Init: ->
@@ -43,6 +43,12 @@ class NAssets extends NModule
         "#{@config.sites[site].path}/#{site}.vendors_min.js" :  @config.sites[site].public?.vendors || [\/]
         "#{@config.sites[site].path}/#{site}.min.js" :  @config.sites[site].public?.js || [\/]
         "#{@config.sites[site].path}/#{site}.min.css" : @config.sites[site].public?.css || [\/]
+      @AddFoldersRec do
+        "#{@config.sites[site].path}/#{site}.min.js" :  @config.sites[site].public?.js || [\/]
+        \ls
+      @AddFoldersRec do
+        "#{@config.sites[site].path}/#{site}.min.js" :  @config.sites[site].public?.js || [\/]
+        \coffee
 
     thus = this
 
@@ -73,7 +79,7 @@ class NAssets extends NModule
       /*site = site[1 to]*''*/
       if site.length
         site += \/
-      console.log \SITE site
+      # console.log \SITE site
       res.render site + 'index'
 
     N.ExtendBeforeRender = (process) ~>
@@ -176,7 +182,7 @@ class NAssets extends NModule
     /*console.log '_SITE' dirs, _site*/
 
     for dir in dirs when dir?
-      console.log 'GETFILES' dir, ext
+      # console.log 'GETFILES' dir, ext
       dir2 = dir
       basePath = path.resolve N.appRoot, @config.sites[_site].path
       if dir2 is \/
@@ -187,7 +193,7 @@ class NAssets extends NModule
         isAbsolute = true
         dir2 = path.resolve @config.sites[_site].path, dir2
 
-      if dir2[dir.length - 1] isnt '/'
+      if dir2[dir2.length - 1] isnt '/'
         dir2 += '/'
 
       _path = path.resolve N.basePath, dir2
@@ -201,7 +207,7 @@ class NAssets extends NModule
           _path = path.resolve @config.sites[_site].path
           entries = [dir]
 
-      console.log 'ENTRIES' _path, entries
+      # console.log 'ENTRIES' ext, _path, entries
       files = _(entries).filter (entry) ~>
         fs.statSync(_path + \/ + entry).isFile() and
           entry.match (new RegExp '\.'+ext+'$', \gi) and !entry.match /\.min/g
@@ -211,7 +217,7 @@ class NAssets extends NModule
           |> filter (entry) ~> fs.statSync(_path + \/ + entry).isDirectory() and not entry.match(/^\./g)
           |> map (folder) ~> path.resolve dir2, folder
 
-        @SaveAssets _site, isAbsolute, name, dir2, files, before
+        @SaveAssets _site, isAbsolute, name, _path, files, before
         @_GetFiles name, folders, ext, true, before
 
       if not rec
@@ -224,11 +230,14 @@ class NAssets extends NModule
         if _mount is \/
           _mount = ''
 
-        if file.split('.')[1] is 'coffee'
+        if file.split('.')[*-1] is 'coffee'
           file.replace /\.coffee/g, '.js'
+        else if file.split('.')[*-1] is 'ls'
+          file.replace /\.ls/g, '.js'
         else
           file
 
+    # console.log 'SAVE RESOLVE' _path, files
     files = files
       |> map (file) ~> path.resolve _path, file
       |> map (file) ~>
@@ -243,7 +252,7 @@ class NAssets extends NModule
         @list[name] = files.concat @list[name]
       else*/
       @list[name] = @list[name].concat files
-    console.log 'Saved'
+    # console.log 'Saved' files
 
 
   AddFoldersRec: (list, _ext, before = false) ->
@@ -270,6 +279,7 @@ class NAssets extends NModule
       for name, list of @list
         site_ = name.split('/')[name.split('/').length - 1].split('.')[0]
         @compiled[site_] = jcompile[site_]() if not @compiled[site_]? and jcompile[site_]?
+        # console.log "AFTER ANGULAR" @compiled[site_]
 
       @compiled[site] || ''
 
@@ -338,7 +348,7 @@ class NAssets extends NModule
         comp = {}
         if not @config.minified
           @compiled = {}
-          console.log 'TMERE' site
+          # console.log 'TMERE' site
           comp = Compile site
         else
           comp = @compiled[site] || ''
@@ -348,12 +358,12 @@ class NAssets extends NModule
         /*if N.modules.angular?
           comp += res.locals.cachify_js "/nodulator-angular.min.js"*/
 
-        console.log "TROLL #{@config.sites[site].path}/#{site}.vendors_min.js"
+        # console.log "TROLL #{@config.sites[site].path}/#{site}.vendors_min.js"
 
         comp += a = res.locals.cachify_js "#{@config.sites[site].path}/#{site}.vendors_min.js"
         comp += res.locals.cachify_js "#{_path}js" if @list["#{_path}js"].length
         comp += res.locals.cachify_css "#{_path}css" if @list["#{_path}css"].length
-        console.log 'COMP' a
+        # console.log 'COMP' a
 
         if N.AccountResource?
           comp += N.AccountResource._AccountResource._InjectUser req

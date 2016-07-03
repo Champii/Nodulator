@@ -29,4 +29,4 @@ class Socket extends Nodulator.Factory 'socket', '$rootScope'
     document.addEventListener "DOMContentLoaded", (event) ->
       r.socket = io()
 
-Socket.Init()
+# Socket.Init()

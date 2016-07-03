@@ -19,6 +19,7 @@ class _N
     if not @directives[name]?
       @directives[name] = directive
       @nb++
+      # console.log 'NB', @nb, _nbDirectives
       if @nb is _nbDirectives
         @CreateEmptyTemplateDirective()
 
