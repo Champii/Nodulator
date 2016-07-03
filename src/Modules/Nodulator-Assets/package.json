@@ -12,6 +12,7 @@
     "grunt-contrib-coffee": "0.13.0",
     "grunt-contrib-cssmin": "0.14.0",
     "grunt-contrib-uglify": "0.11.0",
+    "jade": "^1.11.0",
     "livescript": "^1.4.0",
     "livescript-middleware": "^1.0.1",
     "pug": "^2.0.0-alpha6",
