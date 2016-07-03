@@ -43,7 +43,6 @@ class NAngular extends NModule
 
 
   InjectViewsRec: (site, _path) ->
-    # console.log 'INJECT' N.config.modules.assets.sites[site].path, _path
     dirPath = path.resolve N.appRoot, N.config.modules.assets.sites[site].path, _path
 
     try files = fs.readdirSync  dirPath
@@ -63,7 +62,6 @@ class NAngular extends NModule
           f.push file.split('.')[0]
           j += '\n'
           j += 'script#' + file.split('.')[0] + '-tpl(type="text/ng-template")\n'
-          # console.log 'TOINCLUDE' '  include ./'+ _path + '/' + file + '\n'
           j += '  include ./'+ _path + '/' + file + '\n'
 
     [j, f]

@@ -316,8 +316,8 @@ class NAssets extends NModule
     N.app.use require('connect-cachify').setup @list,
       root: path.join N.appRoot, '.'
       # root:  N.appRoot
-      #url_to_paths: {'/img/': '/client/public/img'}
-      url_to_paths: {'/out/': '\/home/fgreiner/prog/js/Nodulator/node_modules/nodulator-angular/assets'}
+      # url_to_paths: {'/img/': '/home/fgreiner/prog/js/nodulator-doc-website/client/public/img/'}
+      # url_to_paths: {'/out/': '\/home/fgreiner/prog/js/Nodulator/node_modules/nodulator-angular/assets'}
       production: @config.minified
       # debug: true
     for site, config of @config.sites
@@ -326,7 +326,8 @@ class NAssets extends NModule
           if p[0] is '/'
             p = '.' + p
 
-          N.app.use "#{destPath}",  N.express.static path.resolve N.appRoot, p
+          N.app.use "#{destPath}",  N.express.static path.resolve N.appRoot, config.path, p
+          console.log "USE #{destPath}", path.resolve N.appRoot, config.path, p
 
     if not @config.minified
       N.app.use N.express.static path.resolve N.appRoot

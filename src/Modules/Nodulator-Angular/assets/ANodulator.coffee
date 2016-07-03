@@ -20,7 +20,7 @@ class _N
       @directives[name] = directive
       @nb++
       # console.log 'NB', @nb, _nbDirectives
-      if @nb is _nbDirectives
+      if @nb is 11
         @CreateEmptyTemplateDirective()
 
     directive
