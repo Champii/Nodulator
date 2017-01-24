@@ -1,4 +1,3 @@
-console.log 'LOL'
 require! {
   underscore: _
   fs
