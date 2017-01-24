@@ -197,7 +197,8 @@ class Schema
           if not typeCheck.array blob[description.localKey]
             return done new Error 'Model association needs array of integer as ids and localKeys'
 
-        description.type._FetchUnwrapped blob[description.localKey], done, _depth
+        # description.type._FetchUnwrapped blob[description.localKey], done, _depth
+        description.type.Fetch blob[description.localKey], done, _depth
 
     else if description.distantKey?
       foreign = description.distantKey
@@ -207,9 +208,11 @@ class Schema
           return done()
 
         if !isArray
-          description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth
+          # description.type._FetchUnwrapped {"#{description.distantKey}": blob.id} , done, _depth
+          description.type.Fetch {"#{description.distantKey}": blob.id} , done, _depth
         else
-          description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth
+          # description.type._ListUnwrapped {"#{description.distantKey}": blob.id}, done, _depth
+          description.type.List {"#{description.distantKey}": blob.id}, done, _depth
 
     toPush  =
       keyType: keyType

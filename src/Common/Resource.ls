@@ -340,7 +340,8 @@ module.exports = (config, routes, name, N) ->
       @Init!
       @_schema.Field.apply @_schema, args
 
-    Fetch: @_WrapPromise @_WrapResolveArgPromise (done) ->
+    Fetch: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise (done) ->
+      # @@Fetch @id, done
       N[capitalize @_type].Fetch @id, done
 
     Add: @_WrapPromise @_WrapResolvePromise @_WrapResolveArgPromise  (instance, done) ->
