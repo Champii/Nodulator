@@ -2,7 +2,7 @@
     | \ | | ___   __| |_   _| | __ _| |_ ___  _ __
     |  \| |/ _ \ / _` | | | | |/ _` | __/ _ \| '__|
     | |\  | (_) | (_| | |_| | | (_| | || (_) | |
-    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.1.5
+    |_| \_|\___/ \__,_|\__,_|_|\__,_|\__\___/|_|   V0.2.1
 
 [![Coverage Status](https://coveralls.io/repos/github/Champii/Nodulator/badge.svg?branch=master)](https://coveralls.io/github/Champii/Nodulator?branch=master)
 [![Build Status](https://travis-ci.org/Champii/Nodulator.svg?branch=master)](https://travis-ci.org/Champii/Nodulator) (Master)
@@ -43,8 +43,8 @@ ___
 - [Philosophy](#philosophy)
 - [Developers](#developers)
 - [Contributors](#contributors)
-- [TODO](#todo)
 - [Changelog](#changelog)
+- [TODO](#todo)
 
 ___
 ## Features
@@ -126,41 +126,6 @@ ___
 - [SkinyMonkey](https://github.com/skinymonkey)
 
 ___
-## ToDo
-
-By order of priority
-
-- Fix bug when using Add() on MayHasOne relationship that is already linked: no replacement for the child id so two references coexist simultaneously
-- Bind Route 'this' to Resource by default, and rename SetInstance to BindThis to change it (to an instance for exemple)
-- Customise error codes in Route
-- Paginated Resource
-- When cache expire, remove correspondant Watcher /!\
-- Better query on Resource (gt, gte, lt, lte, not, range, ...)
-- Migration system
-- Auto wrap new methods in `Resource`
-- Association Polymorphism
-- Watch a specific field
-- Relations not only based on id but on every property types
-- Persistant sessions in Console
-- 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
-- Scaling (cluster, distributed bus)
-- List return a resource that can act on each item (Set, Add, ...) ( Extend Array ? )
-- Better tests
-  - Request
-  - Multi Driver fetch/list
-  - Db
-    - SqlMem
-    - Mysql
-    - Mongo
-    - Ids
-    - HABTM tables
-  - Cache
-  - Config oveloading
-  - Schema
-    - HasOneThrough
-    - HasManyThrough
-
-___
 ## ChangeLog
 XX/XX/XX: current (not released yet)
   - Isomorphic view system (NView)
@@ -188,7 +153,7 @@ XX/XX/XX: current (not released yet)
       - Grunt tasks to compile/minify for production mode (when {minified: true})
       - Default client root is now the root of the project. Configuration available
 
-  - Launcher wrapper to handle every Nodulator early and late modules work  
+  - Launcher wrapper to handle every Nodulator early and late modules work
   - Better binary helper and usage
   - Better cache configuration
   - Removed fliped done parameters (useless)
@@ -361,3 +326,37 @@ XX/XX/XX: current (not released yet)
   - Replace old method `@All()` into `@_All()`. Is now a private call.
   - Improved README (added [Modules](#modules) section)
   - Global `Nodulator` now manage dependencies installation
+
+___
+## ToDo
+
+By order of priority
+
+- Fix bug when using Add() on MayHasOne relationship that is already linked: no replacement for the child id so two references coexist simultaneously
+- Bind Route 'this' to Resource by default, and rename SetInstance to BindThis to change it (to an instance for exemple)
+- Paginated Resource
+- When cache expire, remove correspondant Watcher /!\
+- Better query on Resource (gt, gte, lt, lte, not, range, ...)
+- Migration system
+- Association Polymorphism
+- Watch a specific field
+- Relations not only based on id but on every property types
+- Persistant sessions in Console
+- 0bject OwnRoute that perform from logged user (/api/1/player or /api/1/tasks for exemple)
+- Scaling (cluster, distributed bus)
+- List return a resource that can act on each item (Set, Add, ...) ( Extend Array ? )
+- Better tests
+  - Request
+  - Multi Driver fetch/list
+  - Db
+    - SqlMem
+    - Mysql
+    - Mongo
+    - Ids
+    - HABTM tables
+  - Cache
+  - Config oveloading
+  - Schema
+    - HasOneThrough
+    - HasManyThrough
+

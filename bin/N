@@ -13,10 +13,11 @@ require! {
   commander: opts
   underscore: _
   child_process: {exec}
+  \../package.json : pack
 }
 
 opts
-  .version \1.5.0
+  .version pack.version
   .usage '[options]'
   .option '-p, --port <n>'        'Specify the port. Override the configuration.'
   .option '-s, --settings [path]' 'The path where to find the \'config.ls\''
