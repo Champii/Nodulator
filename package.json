@@ -54,7 +54,8 @@
     "test-unit": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test",
     "coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "clean": "rm -rf ./coverage ./lib/*",
-    "test": "NODULATOR_COVERAGE=1 npm run compile && npm run test-unit && npm run coverage && npm run clean"
+    "test": "NODULATOR_COVERAGE=1 npm run compile && npm run test-unit && npm run coverage && npm run clean",
+    "release": "./scripts/release.sh"
   },
   "repository": {
     "type": "git",

@@ -35,8 +35,8 @@ describe 'N Associations MayHasOne', (...) ->
       .Then -> Tests.Fetch 1
       .Then ->
         expect it.name .to.equal \test
-        expect it.Child.name .to.equal \child1
-        expect it.Child.testId .to.equal 1
+        expect it.child.name .to.equal \child1
+        expect it.child.testId .to.equal 1
         done!
 
       .Catch -> done new Error JSON.stringify it
@@ -49,8 +49,8 @@ describe 'N Associations MayHasOne', (...) ->
       .Then -> Tests.Fetch 1
       .Then ->
         expect it.name .to.equal \test
-        expect it.Child.name .to.equal \child1
-        expect it.Child.testId .to.equal 1
+        expect it.child.name .to.equal \child1
+        expect it.child.testId .to.equal 1
         done!
 
       .Catch done
@@ -63,8 +63,8 @@ describe 'N Associations MayHasOne', (...) ->
       .Then -> Tests.Fetch 1
       .Then ->
         expect it.name .to.equal \test
-        expect it.Child.name .to.equal \child1
-        expect it.Child.testId .to.equal 1
+        expect it.child.name .to.equal \child1
+        expect it.child.testId .to.equal 1
         done!
 
       .Catch done
@@ -76,7 +76,7 @@ describe 'N Associations MayHasOne', (...) ->
       .Then -> Tests.Fetch 1
       .Remove Childs.Fetch 1
       .Then ->
-        expect it.Child .to.equal undefined
+        expect it.child .to.equal undefined
         done!
       .Catch done
 
@@ -86,6 +86,6 @@ describe 'N Associations MayHasOne', (...) ->
       .Add Tests.Create name: \test
       .Then -> Tests.Fetch 1 .Remove it
       .Then ->
-        expect it.Child .to.equal undefined
+        expect it.child .to.equal undefined
         done!
       .Catch done

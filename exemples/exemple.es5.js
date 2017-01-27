@@ -9,27 +9,28 @@ WeaponRoute.prototype.Config = function () {
   });
 };
 
-var Weapon = N('weapon', WeaponRoute, {schema: 'strict'});
+var Weapon = N('weapons', WeaponRoute, { schema: 'strict' });
+
 Weapon.Field('power', 'int').Default(10);
 
-var Unit = N('unit', {abstract: true, schema: 'strict'});
+var Unit = N('unit', { abstract: true, schema: 'strict' });
 
 Unit.prototype.LevelUp = function () {
-  return this.Set({level: this.level + 1});
+  return this.Set({ level: this.level + 1 });
 };
 
 Unit.prototype.Attack = function (targetId) {
   var thus = this;
+
   if (!this.Weapon)
     throw('No weapon');
 
-  var Target;
-  if (this._type === 'player')
-    Target = Monster;
-  else if (this._type === 'monster')
-    Target = Player;
+  var Target = this._type === 'player' ? Monster : Player;
 
-  return Target.Fetch(targetId).Set(function (target) {target.life -= thus.Weapon.power});
+  return Target
+    .Fetch(targetId)
+    .Set(function (target) { target.life -= thus.Weapon.power })
+  ;
 };
 
 Unit.Field('level', 'int') .Default(1);
@@ -50,12 +51,19 @@ UnitRoute.prototype.Config = function () {
   });
 };
 
-var Player =  Unit.Extend('player',  UnitRoute);
-var Monster = Unit.Extend('monster', UnitRoute);
+var Player =  Unit.Extend('players',  UnitRoute);
+var Monster = Unit.Extend('monsters', UnitRoute);
 
 // Exemple seed:
-Player.Create().Add(Weapon.Create({power: 25}));
-Monster.Create().Add(Weapon.Create());
+Player
+  .Create()
+  .Add(Weapon.Create({ power: 25 }))
+;
+
+Monster
+  .Create()
+  .Add(Weapon.Create())
+;
 
 // Created routes :
 //  - GET    /api/1/players                       => Get all players

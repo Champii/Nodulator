@@ -36,8 +36,8 @@ describe 'N Associations HasOne', (...) ->
       .Then -> Tests.Fetch 1
       .Then ->
         expect it.name .to.equal \test
-        expect it.Child.name .to.equal \child1
-        expect it.Child.testId .to.equal 1
+        expect it.child.name .to.equal \child1
+        expect it.child.testId .to.equal 1
         done!
 
       .Catch done

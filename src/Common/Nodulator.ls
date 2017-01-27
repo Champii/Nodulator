@@ -23,7 +23,7 @@ class N
       throw new Error "Trying to create Resource before N.Config()"
 
     getParentChain = ->
-      | it?._parent? => " <= #{that.name}" + getParentChain that
+      | it?._parent? and it._parent isnt it => " <= #{it._parent.name}" + getParentChain it._parent
       | _   => ''
 
     @debug-nodulator.Log "Start creating resource: #{name + getParentChain @resources[name]}"

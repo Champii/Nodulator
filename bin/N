@@ -13,8 +13,13 @@ require! {
   commander: opts
   underscore: _
   child_process: {exec}
-  \../package.json : pack
 }
+
+NodulatorRoot = path.resolve fs.realpathSync(path.resolve __dirname, __filename), '../..'
+appRoot = path.resolve '.'
+
+packagePath = path.resolve NodulatorRoot, 'package.json'
+pack = require packagePath
 
 opts
   .version pack.version
@@ -25,8 +30,6 @@ opts
   .option '-i, --init'            'Create a base folder structure based on which modules you have in your config.'
   .parse process.argv
 
-NodulatorRoot = path.resolve fs.realpathSync(path.resolve __dirname, __filename), '../..'
-appRoot = path.resolve '.'
 
 moduleOrder = ['nodulator-socket', 'nodulator-assets', 'nodulator-angular', 'nodulator-account']
 

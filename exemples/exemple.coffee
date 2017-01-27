@@ -4,7 +4,8 @@ class WeaponRoute extends N.Route
   Config: ->
     @Get => @resource.List()
 
-Weapon = N 'weapon', WeaponRoute, schema: 'strict'
+Weapon = N 'weapons', WeaponRoute, schema: 'strict'
+
 Weapon.Field('power', 'int').Default 10
 
 class Unit extends N 'unit', {abstract: true, schema: 'strict'}
@@ -24,8 +25,8 @@ class UnitRoute extends N.Route.Collection
     @Put '/:id/levelup',          (req) -> req.instance.LevelUp()
     @Put '/:id/attack/:targetId', (req) -> req.instance.Attack +req.params.targetId
 
-Player =  Unit.Extend 'player',  UnitRoute
-Monster = Unit.Extend 'monster', UnitRoute
+Player =  Unit.Extend 'players',  UnitRoute
+Monster = Unit.Extend 'monsters', UnitRoute
 
 # Exemple seed:
 Player.Create().Add Weapon.Create power: 25

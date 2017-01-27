@@ -1,7 +1,6 @@
-// var coffeescript = require('coffee-script').register();
-var livescript = require('livescript');
 try {
-  // module.exports = require('./lib');
-  module.exports = require('./src');
+  module.exports = require('./lib');
 } catch (e) {
+  var livescript = require('livescript');
+  module.exports = require('./src');
 }

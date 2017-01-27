@@ -262,7 +262,7 @@ module.exports = (config, routes, name, N) ->
         obj.localKey = key
 
       if prepare
-        @_schema.PrepareRelationship isArray, capitalize(fieldName + if isArray => 's' else ''), obj
+        @_schema.PrepareRelationship isArray, fieldName, obj
 
     @HasOne = @_WrapParams do
       * \Function
@@ -513,7 +513,7 @@ module.exports = (config, routes, name, N) ->
         return @
       if N.inited[@_type]?
         return @
-      #   throw new Error 'ALREADY _INITED !!!! BUUUUUUUUUG' + @_type
+        # throw new Error 'ALREADY _INITED !!!! BUUUUUUUUUG' + @_type
 
       @resource = @
 

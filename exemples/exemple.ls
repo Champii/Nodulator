@@ -4,7 +4,7 @@ class WeaponRoute extends Route
   Config: ->
     @Get ~> @resource.List!
 
-Weapon = N \weapon WeaponRoute, schema: \strict
+Weapon = N \weapons WeaponRoute, schema: \strict
   ..Field \power \int .Default 10
 
 class Unit extends N \unit abstract: true schema: \strict
@@ -27,12 +27,17 @@ class UnitRoute extends Collection
     @Put \/:id/levelup          (.instance.LevelUp!)
     @Put \/:id/attack/:targetId (.instance.Attack +it.params.targetId)
 
-Player =  Unit.Extend \player  UnitRoute
-Monster = Unit.Extend \monster UnitRoute
+Player =  Unit.Extend \players  UnitRoute
+Monster = Unit.Extend \monsters UnitRoute
 
 # Exemple seed:
-Player.Create!Add Weapon.Create power: 25
-Monster.Create!Add Weapon.Create!
+Player
+  .Create!
+  .Add Weapon.Create power: 25
+
+Monster
+  .Create!
+  .Add Weapon.Create!
 
 # Created routes :
 #  - GET    /api/1/players                       => Get all players

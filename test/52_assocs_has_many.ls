@@ -35,8 +35,8 @@ describe 'N Associations HasMany', (...) ->
       .Then -> Tests.Fetch 1
       .Then ->
         expect it.name .to.equal \test
-        expect it.Childs.0.name .to.equal \child1
-        expect it.Childs.0.testId .to.equal 1
+        expect it.child.0.name .to.equal \child1
+        expect it.child.0.testId .to.equal 1
         done!
 
       .Catch -> done new Error JSON.stringify it

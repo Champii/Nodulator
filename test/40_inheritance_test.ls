@@ -17,6 +17,8 @@ describe 'N Inheritance', (...) ->
     N.Reset ->
       class AbTests extends N 'atest', {abstract: true}
 
+        @StaticMethod = -> 1
+
         FetchByName: (name, done) ->
           @table.FindWhere '*', {name: name}, (err, blob) ~>
             expect err .to.be.null
@@ -37,6 +39,9 @@ describe 'N Inheritance', (...) ->
     class TestResource extends ATests.Extend 'test'
 
     expect TestResource::FetchByName .to.be.a \function
+
+    expect TestResource.StaticMethod .to.be.a \function
+    expect TestResource.StaticMethod! .to.be.equal 1
 
     t = new TestResource {}
     expect t.FetchByName .to.be.a \function

@@ -127,7 +127,11 @@ ___
 
 ___
 ## ChangeLog
-XX/XX/XX: current (not released yet)
+
+28/01/17: 0.2.2
+  - Remove capitalization and pluralization of association names when fetched. You can still choose the name you want.
+
+25/01/17: 0.2.0
   - Isomorphic view system (NView)
     - The whole project has been abstracted and subdivided into common, client and server folder
     - The client part of the project is sent to the client, helpers available, isomorphic API
