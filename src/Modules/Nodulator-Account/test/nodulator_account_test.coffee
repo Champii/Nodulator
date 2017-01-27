@@ -4,8 +4,12 @@ supertest = require 'supertest'
 assert = require 'assert'
 Client = require './common/client'
 
-N = require 'nodulator'
-Account = require '../'
+N = require '../../../../'
+global.N = N
+N.Config
+  modules:
+    account: {}
+
 client = null
 TestRoute = null
 TestResource = null
@@ -14,26 +18,18 @@ Test2Resource = null
 
 describe 'N Account', ->
 
-  before (done) ->
-    N.Use Account
-    done()
-
   it 'should create account resource', (done) ->
-    class TestRoute extends N.Route.DefaultRoute
+    class TestRoute extends N.Route.Collection
       Config: ->
-        @Get '/test', @Auth(), (req, res) =>
-          res.sendStatus(200)
+        @Get '/test', @Auth(), (req) => true
 
-        @Get '/test2', @HasProperty(id:1), (req, res) =>
-          res.sendStatus(200)
+        @Get '/test2', @HasProperty(id:1), (req) => true
 
-        @Get '/test3', @HasProperty(id:2), (req, res) =>
-          res.sendStatus(200)
+        @Get '/test3', @HasProperty(id:2), (req) => true
 
         super()
 
-        @Get '/:id/test4', @IsOwn('id'), (req, res) =>
-          res.sendStatus(200)
+        @Get '/:id/test4', @IsOwn('id'), (req) => true
 
     class TestResource extends N.AccountResource 'test', TestRoute
 
@@ -42,8 +38,7 @@ describe 'N Account', ->
     class Test2Route extends N.Route
       Config: ->
         super()
-        @Put '/test', @Auth(), (req, res) ->
-          res.sendStatus(200)
+        @Put '/test', @Auth(), (req, res) -> true
 
 
     class Test2Resource extends N.Resource 'test2', Test2Route
@@ -52,7 +47,7 @@ describe 'N Account', ->
 
     client = new Client N.app
 
-    client.Post '/api/1/tests', {username: 'user1', password: 'pass', test: 'test', group: 1}, (err, res) ->
+    client.Post '/api/1/test', {username: 'user1', password: 'pass', test: 'test', group: 1}, (err, res) ->
       throw new Error err if err?
       throw new Error 'No results' if not res?
 
@@ -71,13 +66,13 @@ describe 'N Account', ->
         done()
 
   it 'should not allow call for non authenticated user', (done) ->
-    client.Get '/api/1/tests/test', (err, data) ->
+    client.Get '/api/1/test/test', (err, data) ->
       throw new Error 'Has allowed to non authenticated user' if not err?
 
       done()
 
   it 'should not allow call for non authenticated user (2)', (done) ->
-    client.Put '/api/1/test2s/test', {}, (err, data) ->
+    client.Put '/api/1/test2/test', {}, (err, data) ->
       throw new Error 'Has allowed to non authenticated user' if not err?
 
       done()
@@ -90,37 +85,37 @@ describe 'N Account', ->
       done()
 
   it 'should allow call for authenticated user', (done) ->
-    client.Get '/api/1/tests/test', (err, data) ->
+    client.Get '/api/1/test/test', (err, data) ->
       throw new Error err if err?
 
       done()
 
   it 'should allow call for authenticated user (2)', (done) ->
-    client.Put '/api/1/test2s/test', {}, (err, data) ->
+    client.Put '/api/1/test2/test', {}, (err, data) ->
       throw new Error err if err?
 
       done()
 
   it 'should allow call for authenticated user with id == 1', (done) ->
-    client.Get '/api/1/tests/test2', (err, data) ->
+    client.Get '/api/1/test/test2', (err, data) ->
       throw new Error err if err?
 
       done()
 
   it 'should not allow call for authenticated user with id != 2', (done) ->
-    client.Get '/api/1/tests/test3', (err, data) ->
+    client.Get '/api/1/test/test3', (err, data) ->
       throw new Error 'Has allowed' if not err?
 
       done()
 
   it 'should allow call for authenticated user with id == 1', (done) ->
-    client.Get '/api/1/tests/1/test4', (err, data) ->
+    client.Get '/api/1/test/1/test4', (err, data) ->
       throw new Error err if err?
 
       done()
 
   it 'should not allow call for authenticated user with id != 2', (done) ->
-    client.Get '/api/1/tests/2/test4', (err, data) ->
+    client.Get '/api/1/test/2/test4', (err, data) ->
       throw new Error 'Has allowed' if not err?
 
       done()

@@ -52,7 +52,7 @@ config = {}
 try
   config = require path.resolve appRoot, opts.config || \./config.ls
 catch e
-  console.log "No './config.ls', taking default one."
+  console.log "Warning: No `config.ls`, taking default config."
 
 config = config || {}
 config <<< port: opts.port if opts.port?

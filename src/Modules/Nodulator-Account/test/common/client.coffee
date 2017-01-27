@@ -11,7 +11,7 @@ class Client
 
   Login: (done) ->
     @request
-      .post('/api/1/tests/login')
+      .post('/api/1/test/login')
       .send(@identity)
       .expect(200)
       .end (err, res) ->
@@ -20,19 +20,25 @@ class Client
         agent.saveCookies res
         done()
 
+    null
+
   Logout: (done) ->
-    req = @request.post('/api/1/tests/logout')
+    req = @request.post('/api/1/test/logout')
 
     @AttachCookie req
     req
       .expect(200)
       .end done
 
+    null
+
   Get: (url, done) ->
     req = @request.get url
 
     @AttachCookie req
     req.expect 200, done
+
+    null
 
   Post: (url, data, done) ->
     req = @request.post url
@@ -43,6 +49,8 @@ class Client
       .expect(200)
       .end done
 
+    null
+
   Put: (url, data, done) ->
     req = @request.put url
 
@@ -52,11 +60,15 @@ class Client
       .expect(200)
       .end done
 
+    null
+
   Delete: (url, done) ->
     req = @request.delete url
 
     @AttachCookie req
     req.expect 200, done
+
+    null
 
   AttachCookie: (req) ->
     agent.attachCookies req

@@ -222,7 +222,6 @@ module.exports = (config, routes, name, N) ->
 
     # Watch the Resource for a particular event or any changes
     @Watch = (...args) ->
-
       @Init!
 
       query = {}
@@ -240,7 +239,7 @@ module.exports = (config, routes, name, N) ->
 
       for type in types
         switch
-          | type in <[new update delete]>   => N.bus.on type + '_' + name, done
+          | type in <[new update delete]>   => N.bus.on type + '_' + @_type, done
           | \all                            => N.Watch ~> @List query .Then done .Catch done
 
       @

@@ -43,12 +43,10 @@ describe 'N Multi Route', (...) ->
       done!
 
   it 'should save changed resource (PUT)', (done) ->
-    err, {body} <- N.client.Get '/api/1/tests/1'
-    expect err .to.be.null
+    newObj =
+      test: 'test2'
 
-    body.test = 'test2'
-
-    err, {body} <- N.client.Put '/api/1/tests/1', body
+    err, {body} <- N.client.Put '/api/1/tests/1', newObj
     expect err .to.be.null
 
 

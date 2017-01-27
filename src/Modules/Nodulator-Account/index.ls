@@ -51,15 +51,15 @@ class NAccount extends NModule
       if @resources[args[0]]?
         return @resources[args[0]]
 
-      res = AccountResource.Extend.apply AccountResource, args
+      Account = AccountResource.Extend ...args
 
-      if res.config? and res.config.fields?
-        res.userField = res.config.fields
+      if Account.config? and Account.config.fields?
+        Account.userField = Account.config.fields
 
-      res._InitPassport()
-      res._InitLoginRoutes args[0]
+      Account._InitPassport()
+      Account._InitLoginRoutes args[0]
 
-      res
+      Account
 
     N.AccountResource._AccountResource = AccountResource
 

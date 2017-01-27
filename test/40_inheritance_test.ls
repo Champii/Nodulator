@@ -136,3 +136,13 @@ describe 'N Inheritance', (...) ->
       .Then -> expect it.b .to.be.undefined
       .Then -> done!
       .Catch done
+
+  it 'should have every inherited static methods', (done) ->
+    P3 = N \p3
+    C3 = P3.Extend \c3
+
+    expect C3.Watch .to.be.not.null
+
+    C3.Watch \new -> done!
+
+    C3.Create!

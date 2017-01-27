@@ -1,5 +1,7 @@
 LocalStrategy = require('passport-local').Strategy
 
+# N = require '../../../'
+
 class AccountResource extends N '_account', {abstract: true}
 
   @userField =
@@ -29,14 +31,14 @@ class AccountResource extends N '_account', {abstract: true}
 
   @_InitLoginRoutes = (resName) ->
     @app = N.app
-    @app.post '/api/1/' + resName + 's' + '/login', N.passport.authenticate('local'), (req, res) ~>
+    @app.post '/api/1/' + resName + '/login', N.passport.authenticate('local'), (req, res) ~>
       if @config? and @config.loginCallback?
         @config.loginCallback req, ->
           res.sendStatus(200)
       else
         res.sendStatus(200)
 
-    @app.post '/api/1/' + resName + 's' + '/logout', (req, res) ~>
+    @app.post '/api/1/' + resName + '/logout', (req, res) ~>
       if @config? and @config.logoutCallback?
         @config.logoutCallback req, ->
           req.logout()
