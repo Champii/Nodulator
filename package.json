@@ -17,11 +17,6 @@
     "mocha": "2.4.5",
     "mongous": "0.2.7",
     "mysql": "2.10.2",
-    "nodulator-account": "file:./src/Modules/Nodulator-Account",
-    "nodulator-angular": "file:./src/Modules/Nodulator-Angular",
-    "nodulator-assets": "file:./src/Modules/Nodulator-Assets",
-    "nodulator-socket": "file:./src/Modules/Nodulator-Socket",
-    "nodulator-view": "file:./src/Modules/Nodulator-View",
     "polyparams": "0.0.4",
     "prelude-ls": "1.1.2",
     "q": "1.4.1",
@@ -50,6 +45,7 @@
     "mocha": "~2.0.1"
   },
   "scripts": {
+    "install": "./scripts/post-install.sh",
     "compile": "lsc -c -o lib src",
     "test-unit": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --compilers ls:livescript test",
     "coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
