@@ -318,8 +318,8 @@ module.exports = (config, routes, name, N) ->
       (...args) -> @BelongsTo.apply @, args
 
     @HasOneThrough = (res, through) ->
-      @HasOne through
-      through.HasOne res
+      # @HasOne through
+      # through.HasOne res
       @_schema.HasOneThrough res, through
 
     @HasManyThrough = (res, through) ->

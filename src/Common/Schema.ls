@@ -183,6 +183,9 @@ class Schema
 
     # debug-res.Log "Preparing Relationships with #{description.type.name}"
 
+    if @assocs.find (.name is field)
+      return
+
     if description.localKey?
       keyType = \local
       foreign = description.localKey
@@ -229,17 +232,18 @@ class Schema
 
     # @debug.Log "Fetching #{@assocs.length} assocs with Depth #{_depth}"
     async.eachSeries @assocs, (resource, _done) ~>
-      done = (err, data)->
+      done = (err, data) ~>
         _done err, data
 
       # @debug.Log "Assoc: Fetching #{resource.name}"
-      resource.Get blob, (err, instance) ->
+      resource.Get blob, (err, instance) ~>
         assocs[resource.name] = resource.default if resource.default?
 
-        if err? and resource.type is \distant => done!
-        else
-          assocs[resource.name] = instance if instance?
-          done!
+        return done! if err? and resource.keyType is \distant
+
+        assocs[resource.name] = instance if instance?
+        done!
+
       , _depth
     , (err) ->
       return done err if err?
@@ -248,19 +252,21 @@ class Schema
 
   HasOneThrough: (res, through) ->
     get = (blob, done, _depth) ~>
-      return done! if not _depth or not blob.id?
+      return done! if _depth < 0 or not blob.id?
 
-      assoc = _(@assocs).findWhere name: capitalize through.name
-      assoc.Get blob, (err, instance) ->
+      console.log 'HasoneThroug' @assocs.map (.name)
+      assoc = _(@assocs).findWhere name: through._type
+      assoc.Get blob, (err, instance) ~>
         return done err if err?
 
-        done null, instance[capitalize res._type]
+        done null, instance[res._type]
+
       , _depth + 1
 
     toPush  =
       keyType: 'distant'
       type: res
-      name: capitalize res._type
+      name: res._type
       Get: get
     @assocs.push toPush
 
