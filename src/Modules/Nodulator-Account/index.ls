@@ -87,6 +87,13 @@ class NAccount extends NModule
 
         next()
 
+    N.Route.IsOwnDeep = (predicat) ->
+      (req, res, next) ~>
+        return res.sendStatus(403) if not req.user?
+        return res.sendStatus(403) if predicat(req) isnt req.user.id
+
+        next()
+
     # N.Route.IsOwnObject = (key) ->
     #   (req, res, next) ~>
     #     return res.sendStatus(403) if not req.user?
@@ -110,6 +117,9 @@ class NAccount extends NModule
 
     N.Route.prototype.IsOwn = (...args) ->
       N.Route.IsOwn ...args
+
+    N.Route.prototype.IsOwnDeep = (...args) ->
+      N.Route.IsOwnDeep ...args
 
 
     #Used to wrap _Add call to allow global permissions restrictions on Route
