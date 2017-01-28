@@ -10,6 +10,10 @@ class SqlMem
 
     res = map (-> _({}).extend it), _(tables[table]).where(where)
 
+    if fields isnt '*'
+      res = map (-> _.pick(it, fields)), res
+
+
     if options.sortBy?
       rev = 0
       if options.sortBy.0 is \-

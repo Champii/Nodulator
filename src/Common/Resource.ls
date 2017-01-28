@@ -192,7 +192,7 @@ module.exports = (config, routes, name, N) ->
       (arg, options, done, _depth) ->
 
         midDone = (constraints, done) ~>
-          @_table.Select '*', (constraints || {}), options, (err, blobs) ~>
+          @_table.Select options.fields || '*', (constraints || {}), options, (err, blobs) ~>
             return done err if err?
 
             async.map blobs, (blob, done) ~>
