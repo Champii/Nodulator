@@ -254,7 +254,6 @@ class Schema
     get = (blob, done, _depth) ~>
       return done! if _depth < 0 or not blob.id?
 
-      console.log 'HasoneThroug' @assocs.map (.name)
       assoc = _(@assocs).findWhere name: through._type
       assoc.Get blob, (err, instance) ~>
         return done err if err?
