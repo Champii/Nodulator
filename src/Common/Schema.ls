@@ -167,7 +167,9 @@ class Schema
 
   _CheckUnique: (blob, Resource, done) ->
     res = []
-    async.eachSeries filter((.unique), @properties), (property, done) ->
+    uniqueProperties = filter((.unique), @properties)
+    return done! if not uniqueProperties.length
+    async.eachSeries uniqueProperties, (property, done) ->
       Resource.Fetch (property.name): blob[property.name]
         .Then ->
           res.push validationError property.name, blob[property.name], ' must be unique'
@@ -255,6 +257,7 @@ class Schema
       return done! if _depth < 0 or not blob.id?
 
       assoc = _(@assocs).findWhere name: through._type
+      return done { error: "Cannot fetch HasOneThrough association: #{through._type}" } if not assoc?
       assoc.Get blob, (err, instance) ~>
         return done err if err?
 

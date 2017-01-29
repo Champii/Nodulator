@@ -271,7 +271,7 @@ module.exports = (config, routes, name, N) ->
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, false, true, may, key || @_type + \Id , fieldName || res._type
-        res.BelongsTo @, fieldName || @_type, key || @_type + \Id , may if belongsTo
+        res.BelongsTo @, @_type, key || @_type + \Id , may if belongsTo
         @
 
     @HasMany = @_WrapParams do
@@ -282,7 +282,7 @@ module.exports = (config, routes, name, N) ->
       * \Boolean : default: true
       (res, belongsTo, fieldName, key, may) ->
         @_AddRelationship res, true, true, may, key || @_type + \Id , fieldName || res._type
-        res.BelongsTo @, fieldName || @_type, key || @_type + \Id , may if belongsTo
+        res.BelongsTo @, @_type, key || @_type + \Id , may if belongsTo
         @
 
     @BelongsTo = @_WrapParams do
