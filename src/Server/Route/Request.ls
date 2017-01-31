@@ -33,7 +33,7 @@ class Request
 
     status = it.code || errors[it.status] || 500
 
-    it = that if it.message?
+    it = that if it.stack?
 
     @res.status(status).send err: it
     @sent = true

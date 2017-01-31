@@ -3,7 +3,6 @@ require! {
   underscore: _
   validator: Validator
   \./Helpers/Debug
-  # \../../ : N
 }
 
 validationError = (field, value, message) ->
@@ -23,13 +22,13 @@ typeCheck =
 
 class SchemaProperty
 
-  name: null
-  default: null
-  unique: false
-  optional: true
-  internal: false
-  unique: false
-  type: null
+  name:       null
+  default:    null
+  unique:     false
+  optional:   true
+  internal:   false
+  unique:     false
+  type:       null
   validation: null
 
   (@name, @type, @optional) ->
@@ -40,13 +39,13 @@ class SchemaProperty
     else
       @validation = typeCheck[@type]
 
-  Default: (@default) ->  @
-  Unique: (@unique = true) -> @
+  Default:  (@default)         -> @
+  Unique:   (@unique   = true) -> @
   Optional: (@optional = true) -> @
-  Required: (required = true) -> @optional = !required; @
-  Virtual: (@virtual = null) -> @
+  Required: (required  = true) -> @optional = !required; @
+  Virtual:  (@virtual  = null) -> @
   Internal: (@internal = true) -> @
-  Unique: (@unique = true) -> @
+  Unique:   (@unique   = true) -> @
 
 class Schema
 
