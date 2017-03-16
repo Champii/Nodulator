@@ -146,7 +146,7 @@ class Schema
     res
 
   _CheckPresence: (blob, property) ->
-    if !property.optional and not property.default? and not blob[property.name]? and not property.virtual?
+    if not property.optional and not property.default? and not blob[property.name]? and not property.virtual?
       [validationError property.name, blob[property.name], ' was not present.']
     else
       []

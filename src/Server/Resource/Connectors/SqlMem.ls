@@ -15,13 +15,16 @@ class SqlMem
 
 
     if options.sortBy?
-      rev = 0
+      rev = false
       if options.sortBy.0 is \-
         options.sortBy = options.sortBy[1 to]*''
-        rev = 1
+        rev = true
       res = sort-by (.[options.sortBy]), res
+      console.log 'before' rev, res
       if rev
         res = reverse res
+      console.log 'after' res
+
     if options.limit?
       offset = options.offset || 0
       res = res[offset til options.limit]

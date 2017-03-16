@@ -336,7 +336,9 @@ ___
 
 By order of priority
 
+- Improve Fetch to allow _depth parameter without specifying done
 - Fix bug when using Add() on MayHasOne relationship that is already linked: no replacement for the child id so two references coexist simultaneously
+- Deport association management into the Property associated (to allow to make it internal for example)
 - Bind Route 'this' to Resource by default, and rename SetInstance to BindThis to change it (to an instance for exemple)
 - Paginated Resource
 - When cache expire, remove correspondant Watcher /!\
