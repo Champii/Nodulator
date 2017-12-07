@@ -85,6 +85,9 @@ var N = require('nodulator');
 ___
 ### Compatible modules
 
+- [Nodulator-View](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-View):
+  - Isomorphic reactive view system (alpha)
+  - Create complex apps within few code
 - [Nodulator-Assets](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Assets):
   - Automatic assets management
 - [Nodulator-Socket](https://github.com/Champii/Nodulator/tree/master/src/Modules/Nodulator-Socket):
